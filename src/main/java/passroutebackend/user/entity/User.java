@@ -4,21 +4,21 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-//db 테이블과 연결되는 엔터티클래스라는 뜻
 @Entity
-//연결될 테이블 이름과 제약조건 설정
 @Table(
         name = "users",
         uniqueConstraints = {
-                //중복되면 안되는 조건 정의
                 @UniqueConstraint(name = "uk_users_email", columnNames = "email"),
+                @UniqueConstraint(name = "uk_users_phone", columnNames = "phone"),
                 @UniqueConstraint(name = "uk_users_provider_provider_id", columnNames = {"provider", "provider_id"})
         }
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Builder
 public class User {
 
@@ -46,7 +46,28 @@ public class User {
     private String phone;
 
     @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified;
+    @Builder.Default
+    private boolean emailVerified = false;
+
+    @Column(name = "phone_verified", nullable = false)
+    @Builder.Default
+    private boolean phoneVerified = false;
+
+    @Column(name = "experience_years")
+    private Integer experienceYears;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_preferred_job_types", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "job_type", length = 50, nullable = false)
+    @Builder.Default
+    private Set<JobType> preferredJobTypes = new HashSet<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "user_preferred_companies", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "company_name", length = 100, nullable = false)
+    @Builder.Default
+    private Set<String> preferredCompanies = new HashSet<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

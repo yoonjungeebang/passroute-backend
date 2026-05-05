@@ -33,7 +33,9 @@ public class SecurityConfig {
     private static final String[] PUBLIC_POST = {
             "/auth/login",
             "/auth/signup",
-            "/auth/reissue"
+            "/auth/reissue",
+            "/auth/phone/send",
+            "/auth/phone/verify"
     };
 
     private static final String[] PUBLIC_GET = {

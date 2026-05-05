@@ -11,10 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import passroutebackend.global.ApiResponse;
-import passroutebackend.user.dto.LoginRequest;
-import passroutebackend.user.dto.LoginResponse;
-import passroutebackend.user.dto.ReissueRequest;
-import passroutebackend.user.dto.SignUpRequest;
+import passroutebackend.user.dto.*;
+import passroutebackend.user.service.PhoneVerificationService;
 import passroutebackend.user.service.UserService;
 
 @Tag(name = "Auth", description = "인증 API")
@@ -24,21 +22,43 @@ import passroutebackend.user.service.UserService;
 public class UserController {
 
     private final UserService userService;
+    private final PhoneVerificationService phoneVerificationService;
 
-    @Operation(summary = "회원가입", description = "이메일과 비밀번호로 회원가입합니다.")
+    @Operation(summary = "휴대폰 인증번호 발송", description = "회원가입 시 휴대폰 인증번호를 발송합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 가입된 휴대폰번호", content = @Content(schema = @Schema(hidden = true)))
+    })
+    @SecurityRequirements
+    @PostMapping("/phone/send")
+    public ResponseEntity<ApiResponse<Void>> sendPhoneVerification(@Valid @RequestBody PhoneSendRequest request) {
+        phoneVerificationService.sendVerificationCode(request.getPhone());
+        return ResponseEntity.ok(ApiResponse.success("인증번호가 발송되었습니다.", null));
+    }
+
+    @Operation(summary = "휴대폰 인증번호 확인", description = "발송된 인증번호를 검증합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 만료", content = @Content(schema = @Schema(hidden = true)))
+    })
+    @SecurityRequirements
+    @PostMapping("/phone/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyPhone(@Valid @RequestBody PhoneVerifyRequest request) {
+        phoneVerificationService.verifyCode(request.getPhone(), request.getCode());
+        return ResponseEntity.ok(ApiResponse.success("휴대폰 인증이 완료되었습니다.", null));
+    }
+
+    @Operation(summary = "회원가입", description = "이메일, 비밀번호, 휴대폰 인증을 통해 회원가입합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "회원가입 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류 또는 휴대폰 미인증", content = @Content(schema = @Schema(hidden = true))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 이메일", content = @Content(schema = @Schema(hidden = true)))
     })
     @SecurityRequirements
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<Long>> signUp(@Valid @RequestBody SignUpRequest request) {
-        Long userId = userService.signUp(
-                request.getEmail(),
-                request.getPassword(),
-                request.getName()
-        );
+        Long userId = userService.signUp(request);
         return ResponseEntity.ok(ApiResponse.success("회원가입 성공!", userId));
     }
 

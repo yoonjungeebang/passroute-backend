@@ -8,9 +8,12 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.global.jwt.JwtTokenProvider;
 import passroutebackend.user.dto.LoginResponse;
+import passroutebackend.user.dto.SignUpRequest;
 import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
+
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -19,22 +22,35 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PhoneVerificationService phoneVerificationService;
 
     @Transactional
-    public Long signUp(String email, String password, String name) {
-        if (userRepository.findByEmail(email).isPresent()) {
+    public Long signUp(SignUpRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw CustomException.of(ErrorCode.DUPLICATE_EMAIL);
         }
 
+        phoneVerificationService.checkPhoneVerified(request.getPhone());
+
         User user = User.builder()
-                .email(email)
-                .password(passwordEncoder.encode(password))
-                .name(name)
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .name(request.getName())
+                .phone(request.getPhone())
+                .phoneVerified(true)
                 .provider(AuthProvider.LOCAL)
-                .emailVerified(false)
+                .experienceYears(request.getExperienceYears())
+                .preferredJobTypes(request.getPreferredJobTypes() != null
+                        ? new HashSet<>(request.getPreferredJobTypes())
+                        : new HashSet<>())
+                .preferredCompanies(request.getPreferredCompanies() != null
+                        ? new HashSet<>(request.getPreferredCompanies())
+                        : new HashSet<>())
                 .build();
 
-        return userRepository.save(user).getId();
+        Long userId = userRepository.save(user).getId();
+        phoneVerificationService.deleteVerification(request.getPhone());
+        return userId;
     }
 
     @Transactional(readOnly = true)
