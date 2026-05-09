@@ -70,7 +70,15 @@ jobs:
             docker rm passroute-dev || true
 
             # 새 컨테이너 실행
-            docker run -d --name passroute-dev --restart always -p 8080:8080 -e SPRING_DATASOURCE_URL=${{ secrets.DEV_MYSQL_URL }} -e SPRING_DATASOURCE_USERNAME=${{ secrets.DEV_MYSQL_USER }} -e SPRING_DATASOURCE_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }} -e FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop
+            docker run -d \
+              --name passroute-dev \
+              --restart always \
+              -p 8080:8080 \
+              -e "SPRING_DATASOURCE_URL=${{ secrets.DEV_MYSQL_URL }}" \
+              -e "SPRING_DATASOURCE_USERNAME=${{ secrets.DEV_MYSQL_USER }}" \
+              -e "SPRING_DATASOURCE_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
+              -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
+              "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"
 
             # 사용하지 않는 이미지 정리
             docker image prune -f
