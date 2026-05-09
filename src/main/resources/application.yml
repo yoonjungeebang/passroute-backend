@@ -17,3 +17,8 @@ swagger:
   server-url:
     local: http://localhost:8080/api
     prod: https://pass-route.com/api
+
+follow-up:
+  ai-server-url: ${AI_SERVER_URL:http://localhost:8000}
+  max-turn: 1
+  timeout-seconds: 10
