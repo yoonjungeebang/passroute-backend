@@ -47,9 +47,6 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'com.h2database:h2'
-    testImplementation 'it.ozimov:embedded-redis:0.7.3'
-
-
     //social login(kakoa, google)
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
