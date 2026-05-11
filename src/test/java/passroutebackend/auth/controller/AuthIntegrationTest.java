@@ -1,4 +1,4 @@
-package passroutebackend.user.controller;
+package passroutebackend.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -11,11 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import passroutebackend.auth.entity.PhoneVerification;
+import passroutebackend.auth.repository.PhoneVerificationRepository;
+import passroutebackend.auth.dto.request.LoginRequest;
+import passroutebackend.auth.dto.request.SignUpRequest;
 import passroutebackend.global.sms.SmsService;
-import passroutebackend.user.dto.LoginRequest;
-import passroutebackend.user.dto.SignUpRequest;
-import passroutebackend.user.entity.PhoneVerification;
-import passroutebackend.user.repository.PhoneVerificationRepository;
 
 import java.time.LocalDateTime;
 
