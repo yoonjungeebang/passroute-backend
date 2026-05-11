@@ -78,6 +78,14 @@ public class User {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();

@@ -1,4 +1,4 @@
-package passroutebackend.user.dto;
+package passroutebackend.auth.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;
