@@ -15,11 +15,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import passroutebackend.auth.handler.OAuth2FailureHandler;
+import passroutebackend.auth.handler.OAuth2SuccessHandler;
+import passroutebackend.auth.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import passroutebackend.auth.service.CustomOAuth2UserService;
 import passroutebackend.global.jwt.JwtAccessDeniedHandler;
 import passroutebackend.global.jwt.JwtAuthenticationEntryPoint;
 import passroutebackend.global.jwt.JwtAuthenticationFilter;
 import passroutebackend.global.property.CorsProperties;
 import passroutebackend.global.property.JwtProperties;
+import passroutebackend.global.property.OAuth2Properties;
 import passroutebackend.global.property.SwaggerProperties;
 
 import java.util.List;
@@ -27,7 +32,7 @@ import java.util.List;
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, JwtProperties.class, OAuth2Properties.class})
 public class SecurityConfig {
 
     private static final String[] PUBLIC_POST = {
@@ -35,7 +40,11 @@ public class SecurityConfig {
             "/auth/signup",
             "/auth/reissue",
             "/auth/phone/send",
-            "/auth/phone/verify"
+            "/auth/phone/verify",
+            "/auth/find-email/send",
+            "/auth/find-email/confirm",
+            "/auth/find-password/send",
+            "/auth/find-password/reset"
     };
 
     private static final String[] PUBLIC_GET = {
@@ -52,6 +61,10 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final OAuth2FailureHandler oAuth2FailureHandler;
+    private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -76,6 +89,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
                         .anyRequest().authenticated()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(oAuth2SuccessHandler)
+                        .failureHandler(oAuth2FailureHandler)
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

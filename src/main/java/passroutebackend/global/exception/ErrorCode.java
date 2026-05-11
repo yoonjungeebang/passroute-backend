@@ -27,6 +27,8 @@ public enum ErrorCode {
   USER_DELETED(HttpStatus.NOT_FOUND, "U002", "탈퇴 처리된 유저입니다."),
   DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 사용중인 이메일입니다."),
   DUPLICATE_PHONE(HttpStatus.CONFLICT, "U004", "이미 가입된 휴대폰번호입니다."),
+  PHONE_NOT_REGISTERED(HttpStatus.NOT_FOUND, "U005", "가입되지 않은 휴대폰번호입니다."),
+  SOCIAL_USER_NO_PASSWORD(HttpStatus.BAD_REQUEST, "U006", "소셜 로그인 계정은 비밀번호를 변경할 수 없습니다."),
 
   // Phone Verification
   PHONE_VERIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "P001", "인증 요청 내역이 없습니다. 인증번호를 먼저 발송해주세요."),
