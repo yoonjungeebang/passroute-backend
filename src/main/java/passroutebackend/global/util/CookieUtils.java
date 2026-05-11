@@ -3,12 +3,20 @@ package passroutebackend.global.util;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.util.SerializationUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.Optional;
 
 public class CookieUtils {
+
+    private static final String ALLOWED_PACKAGES =
+            "org.springframework.security.oauth2.*;java.util.*;java.lang.*;java.net.*;!*";
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
@@ -45,11 +53,23 @@ public class CookieUtils {
     }
 
     public static String serialize(Object object) {
-        return Base64.getUrlEncoder().encodeToString(SerializationUtils.serialize(object));
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(object);
+            return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to serialize object", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
     public static <T> T deserialize(Cookie cookie, Class<T> cls) {
-        return cls.cast(SerializationUtils.deserialize(Base64.getUrlDecoder().decode(cookie.getValue())));
+        byte[] bytes = Base64.getUrlDecoder().decode(cookie.getValue());
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+            ois.setObjectInputFilter(ObjectInputFilter.Config.createFilter(ALLOWED_PACKAGES));
+            return cls.cast(ois.readObject());
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to deserialize cookie value", e);
+        }
     }
 }

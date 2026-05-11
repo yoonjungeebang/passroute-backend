@@ -28,10 +28,10 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String accessToken = jwtTokenProvider.generateAccessToken(oAuth2User.getUserId());
         String refreshToken = jwtTokenProvider.generateRefreshToken(oAuth2User.getUserId());
 
+        String fragment = "accessToken=" + accessToken + "&refreshToken=" + refreshToken;
         String redirectUri = UriComponentsBuilder
                 .fromUriString(oAuth2Properties.getRedirectUri())
-                .queryParam("accessToken", accessToken)
-                .queryParam("refreshToken", refreshToken)
+                .fragment(fragment)
                 .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, redirectUri);

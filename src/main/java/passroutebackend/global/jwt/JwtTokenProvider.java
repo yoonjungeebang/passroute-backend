@@ -78,7 +78,11 @@ public class JwtTokenProvider {
     }
 
     public long getExpiration(String token) {
-        Date expiration = getClaims(token).getExpiration();
-        return expiration.getTime() - System.currentTimeMillis();
+        try {
+            Date expiration = getClaims(token).getExpiration();
+            return Math.max(0, expiration.getTime() - System.currentTimeMillis());
+        } catch (ExpiredJwtException e) {
+            return 0;
+        }
     }
 }
