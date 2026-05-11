@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.global.jwt.JwtTokenProvider;
+import passroutebackend.user.dto.response.UserInfoResponse;
 import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
@@ -43,5 +44,24 @@ public class UserService {
         String token = accessToken.startsWith("Bearer ") ? accessToken.substring(7) : accessToken;
         long expiration = jwtTokenProvider.getExpiration(token);
         redisTemplate.opsForValue().set("blacklist:" + token, "withdraw", expiration, TimeUnit.MILLISECONDS);
+    }
+
+    @Transactional(readOnly = true)
+    public UserInfoResponse getMyInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
+        return new UserInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getPhone(),
+                user.getProvider().name(),
+                user.isEmailVerified(),
+                user.isPhoneVerified(),
+                user.getExperienceYears(),
+                user.getPreferredCompanies(),
+                user.getPreferredJobTypes(),
+                user.getCreatedAt()
+        );
     }
 }

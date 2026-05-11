@@ -9,6 +9,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.user.dto.request.WithdrawRequest;
+import passroutebackend.user.dto.response.UserInfoResponse;
 import passroutebackend.user.service.UserService;
 
 @Tag(name = "User", description = "사용자 관리 API")
@@ -18,6 +19,17 @@ import passroutebackend.user.service.UserService;
 public class UserController {
 
     private final UserService userService;
+
+    @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 정보를 조회합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserInfoResponse>> getMyInfo(
+            @AuthenticationPrincipal Long userId) {
+        return ResponseEntity.ok(ApiResponse.success("내 정보 조회 성공", userService.getMyInfo(userId)));
+    }
 
     @Operation(summary = "회원탈퇴", description = "계정을 탈퇴합니다. 소셜 로그인 계정은 password 없이 요청하세요.")
     @ApiResponses({
@@ -32,4 +44,6 @@ public class UserController {
         userService.withdraw(userId, accessToken, request != null ? request.password() : null);
         return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다.", null));
     }
+
+
 }
