@@ -13,7 +13,7 @@ import passroutebackend.global.jwt.JwtTokenProvider;
 import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
-import org.springframework.data.redi:qs.core.RedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;

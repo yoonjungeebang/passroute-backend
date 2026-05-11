@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.global.jwt.JwtTokenProvider;
+import passroutebackend.user.dto.request.UpdateProfileRequest;
 import passroutebackend.user.dto.response.UserInfoResponse;
 import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
@@ -44,6 +45,32 @@ public class UserService {
         String token = accessToken.startsWith("Bearer ") ? accessToken.substring(7) : accessToken;
         long expiration = jwtTokenProvider.getExpiration(token);
         redisTemplate.opsForValue().set("blacklist:" + token, "withdraw", expiration, TimeUnit.MILLISECONDS);
+    }
+
+    @Transactional
+    public UserInfoResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getDeletedAt() != null) {
+            throw CustomException.of(ErrorCode.USER_DELETED);
+        }
+
+        user.updateProfile(request.experienceYears(), request.preferredJobTypes(), request.preferredCompanies());
+
+        return new UserInfoResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getPhone(),
+                user.getProvider().name(),
+                user.isEmailVerified(),
+                user.isPhoneVerified(),
+                user.getExperienceYears(),
+                user.getPreferredCompanies(),
+                user.getPreferredJobTypes(),
+                user.getCreatedAt()
+        );
     }
 
     @Transactional(readOnly = true)

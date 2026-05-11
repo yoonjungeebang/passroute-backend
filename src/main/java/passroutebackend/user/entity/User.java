@@ -86,6 +86,12 @@ public class User {
         this.password = encodedPassword;
     }
 
+    public void updateProfile(Integer experienceYears, Set<JobType> preferredJobTypes, Set<String> preferredCompanies) {
+        if (experienceYears != null) this.experienceYears = experienceYears;
+        if (preferredJobTypes != null) this.preferredJobTypes = preferredJobTypes;
+        if (preferredCompanies != null) this.preferredCompanies = preferredCompanies;
+    }
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
