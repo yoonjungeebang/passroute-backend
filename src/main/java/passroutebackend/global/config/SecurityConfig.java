@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import passroutebackend.global.property.CorsProperties;
+import passroutebackend.global.property.FollowUpProperties;
 import passroutebackend.global.property.SwaggerProperties;
 
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.List;
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, FollowUpProperties.class})
 public class SecurityConfig {
 
   private static final String[] PUBLIC_POST = {
