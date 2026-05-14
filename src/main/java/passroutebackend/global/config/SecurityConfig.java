@@ -88,6 +88,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
+
                         .anyRequest().authenticated()
                 )
 
