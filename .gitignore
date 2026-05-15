@@ -38,3 +38,5 @@ out/
 
 ## 환경 변수
 .env
+
+application-local.yml
