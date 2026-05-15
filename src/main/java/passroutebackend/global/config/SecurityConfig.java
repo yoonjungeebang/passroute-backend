@@ -25,6 +25,7 @@ import passroutebackend.global.jwt.JwtAuthenticationFilter;
 import passroutebackend.global.property.CorsProperties;
 import passroutebackend.global.property.JwtProperties;
 import passroutebackend.global.property.OAuth2Properties;
+import passroutebackend.global.property.FollowUpProperties;
 import passroutebackend.global.property.SwaggerProperties;
 
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.List;
 @EnableMethodSecurity
 @RequiredArgsConstructor
 @EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, JwtProperties.class, OAuth2Properties.class})
+@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, FollowUpProperties.class})
 public class SecurityConfig {
 
     private static final String[] PUBLIC_POST = {

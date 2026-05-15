@@ -40,3 +40,6 @@ out/
 .env
 
 application-local.yml
+
+/docs/
+CLAUDE.md

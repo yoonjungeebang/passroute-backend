@@ -40,6 +40,11 @@ public enum ErrorCode {
   // Document
   DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "문서를 찾을 수 없습니다.");
 
+  // Interview
+  SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "면접 세션을 찾을 수 없습니다."),
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "I002", "면접 질문을 찾을 수 없습니다."),
+  SESSION_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "I003", "이미 종료된 면접 세션입니다.");
+
   private final HttpStatus status;
   private final String code;
   private final String message;
