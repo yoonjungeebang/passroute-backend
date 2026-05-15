@@ -35,10 +35,17 @@ public enum ErrorCode {
   PHONE_VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "P002", "인증번호가 만료되었습니다. 다시 발송해주세요."),
   PHONE_VERIFICATION_INVALID_CODE(HttpStatus.BAD_REQUEST, "P003", "인증번호가 올바르지 않습니다."),
   PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "P004", "휴대폰 인증이 완료되지 않았습니다."),
+
+  // Self Intro
   SELF_INTRO_NOT_FOUND(HttpStatus.NOT_FOUND, "SI001", "자기소개서를 찾을 수 없습니다."),
 
   // Document
-  DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "문서를 찾을 수 없습니다.");
+  DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "문서를 찾을 수 없습니다."),
+
+  // Interview
+  SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "면접 세션을 찾을 수 없습니다."),
+  QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "I002", "면접 질문을 찾을 수 없습니다."),
+  SESSION_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "I003", "이미 종료된 면접 세션입니다.");
 
   // Interview
   SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "면접 세션을 찾을 수 없습니다."),
