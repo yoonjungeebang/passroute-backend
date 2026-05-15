@@ -1,4 +1,4 @@
-package passroutebackend.selfintro.dto.request;
+package passroutebackend.selfintro.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
