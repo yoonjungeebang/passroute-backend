@@ -76,10 +76,11 @@ jobs:
               --name passroute-dev \
               --restart always \
               -p 8080:8080 \
-              -e "SPRING_PROFILES_ACTIVE=prod" \
-              -e "PROD_MYSQL_URL=${{ secrets.DEV_MYSQL_URL }}" \
-              -e "PROD_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
-              -e "PROD_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
+              -e "SPRING_PROFILES_ACTIVE=dev" \
+              -e "DEV_MYSQL_URL=${{ secrets.DEV_MYSQL_URL }}" \
+              -e "DEV_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
+              -e "DEV_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
+              -e "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" \
               -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
               -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
               "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"

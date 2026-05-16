@@ -1,0 +1,36 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: ${DEV_MYSQL_URL}
+    username: ${DEV_MYSQL_USER}
+    password: ${DEV_MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  sql:
+    init:
+      mode: never
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    open-in-view: false
+
+cors:
+  allowed-origins:
+    - ${FRONT_ORIGIN}
+
+logging:
+  level:
+    root: info
+
+swagger:
+  server-url:
+    local: ${SWAGGER_LOCAL_URL:http://localhost:8080/api}
+    prod: ${SWAGGER_PROD_URL:https://pass-route.com/api}
