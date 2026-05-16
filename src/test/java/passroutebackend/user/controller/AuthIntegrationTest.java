@@ -42,7 +42,7 @@ class AuthIntegrationTest {
         mockMvc.perform(post(SIGNUP_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("success"));
     }
 
