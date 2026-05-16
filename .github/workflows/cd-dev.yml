@@ -29,6 +29,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: ./gradlew bootJar
 
       - name: Set up Docker Buildx
@@ -79,6 +81,7 @@ jobs:
               -e "PROD_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
               -e "PROD_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
               -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
+              -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
               "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"
 
             # 사용하지 않는 이미지 정리
