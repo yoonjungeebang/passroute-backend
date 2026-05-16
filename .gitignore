@@ -40,4 +40,4 @@ out/
 .env
 
 /docs/
-CLAUDE.md
+.claude/CLAUDE.md
