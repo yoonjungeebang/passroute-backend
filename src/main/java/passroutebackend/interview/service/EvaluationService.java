@@ -36,17 +36,17 @@ public class EvaluationService {
 
       QuestionEvaluationResponse evalResponse = aiServerClient.evaluateQuestion(
           new QuestionEvaluationRequest(
-              ctx.jobPosition(),
-              ctx.companyName(),
+              ctx.getJobPosition(),
+              ctx.getCompanyName(),
               List.of(),
-              ctx.interviewType(),
-              ctx.questionText(),
-              ctx.answerText()
+              ctx.getInterviewType(),
+              ctx.getQuestionText(),
+              ctx.getAnswerText()
           )
       );
 
       StarEvaluationResponse starResponse = aiServerClient.evaluateStar(
-          new StarEvaluationRequest(ctx.questionText(), ctx.answerText())
+          new StarEvaluationRequest(ctx.getQuestionText(), ctx.getAnswerText())
       );
 
       if (evalResponse == null || starResponse == null) {
@@ -58,10 +58,10 @@ public class EvaluationService {
       double voicePenalty = calculateVoicePenalty(voiceData);
       double concisenessFinal = calculateConcisenessFinal(
           llmScores != null ? llmScores.getConciseness() : null, voicePenalty);
-      double percentage = calculatePercentage(llmScores, concisenessFinal, ctx.interviewType());
+      double percentage = calculatePercentage(llmScores, concisenessFinal, ctx.getInterviewType());
 
       String llmScoresJson = toJson(evalResponse.getLlmScores());
-      evaluationTransactionService.saveResult(ctx.answerId(), percentage, starResponse.getStarScore(), llmScoresJson);
+      evaluationTransactionService.saveResult(ctx.getAnswerId(), percentage, starResponse.getStarScore(), llmScoresJson);
 
     } catch (Exception e) {
       log.warn("평가 처리 실패, questionId={}", questionId, e);
