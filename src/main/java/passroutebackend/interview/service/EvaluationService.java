@@ -48,6 +48,11 @@ public class EvaluationService {
           new StarEvaluationRequest(ctx.questionText(), ctx.answerText())
       );
 
+      if (evalResponse == null || starResponse == null) {
+        log.warn("AI 서버 응답이 null, questionId={}", questionId);
+        return;
+      }
+
       LlmScores llmScores = evalResponse.getLlmScores();
       double voicePenalty = calculateVoicePenalty(voiceData);
       double concisenessFinal = calculateConcisenessFinal(
