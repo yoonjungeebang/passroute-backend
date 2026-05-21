@@ -81,6 +81,11 @@ public class ReportService {
   @Async("evaluationExecutor")
   public void generateReportAsync(Long sessionId) {
     try {
+      if (reportTransactionService.findReport(sessionId).isPresent()) {
+        log.info("리포트 이미 존재, 생성 생략 sessionId={}", sessionId);
+        return;
+      }
+
       ReportContext ctx = reportTransactionService.loadContext(sessionId);
 
       if (ctx.questionAnswers().isEmpty()) {
