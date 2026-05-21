@@ -93,4 +93,8 @@ public class ApiResponse<T> {
       data
     );
   }
+
+  public static <T> ApiResponse<T> accepted(String message) {
+    return new ApiResponse<>(STATUS_SUCCESS, HttpStatus.ACCEPTED.value(), "ACCEPTED", message, null);
+  }
 }
