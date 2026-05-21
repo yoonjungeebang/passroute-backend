@@ -22,6 +22,7 @@ import passroutebackend.interview.dto.report.ReportGenerationRequest;
 import passroutebackend.interview.dto.report.ReportGenerationResponse;
 import passroutebackend.interview.dto.report.StarEvalForReport;
 import passroutebackend.interview.dto.report.SessionResult;
+import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.dto.report.SessionScore;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
 import passroutebackend.interview.dto.report.SessionSummaryResponse;
@@ -386,7 +387,7 @@ public class ReportService {
         .keyWeakness(parseJsonToList(report.getKeyWeakness()))
         .overall(report.getOverall())
         .strengths(report.getStrengths())
-        .weaknesses(parseJsonToList(report.getWeaknesses()))
+        .weaknesses(parseJsonToWeaknessItemList(report.getWeaknesses()))
         .improvements(report.getImprovements())
         .questionFeedback(parseJsonToListOfMaps(report.getQuestionFeedback()))
         .recommendedQuestions(parseJsonToList(report.getRecommendedQuestions()))
@@ -419,6 +420,15 @@ public class ReportService {
   }
 
   private List<String> parseJsonToList(String json) {
+    if (json == null) return null;
+    try {
+      return objectMapper.readValue(json, new TypeReference<>() {});
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  private List<WeaknessItem> parseJsonToWeaknessItemList(String json) {
     if (json == null) return null;
     try {
       return objectMapper.readValue(json, new TypeReference<>() {});

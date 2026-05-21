@@ -18,7 +18,7 @@ public class InterviewReportResponse {
   private List<String> keyWeakness;
   private String overall;
   private String strengths;
-  private List<String> weaknesses;
+  private List<WeaknessItem> weaknesses;
   private String improvements;
   private List<Map<String, Object>> questionFeedback;
   private List<String> recommendedQuestions;

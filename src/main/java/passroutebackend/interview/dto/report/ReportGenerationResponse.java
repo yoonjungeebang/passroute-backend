@@ -13,7 +13,7 @@ public class ReportGenerationResponse {
 
   private String overall;
   private String strengths;
-  private List<String> weaknesses;
+  private List<WeaknessItem> weaknesses;
   private String improvements;
 
   @JsonProperty("question_feedback")
