@@ -42,4 +42,4 @@ swagger:
 follow-up:
   ai-server-url: ${AI_SERVER_URL:http://localhost:8000}
   max-turn: 1
-  timeout-seconds: 10
+  timeout-seconds: 120
