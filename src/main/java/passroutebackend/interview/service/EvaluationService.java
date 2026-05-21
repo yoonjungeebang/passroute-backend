@@ -110,7 +110,7 @@ public class EvaluationService {
     totalWeight += weightOf(scores.getSpecificity(), 0.15);
 
     double concisenessWeight = isTechnical ? 0.10 : 0.15;
-    if (scores.getConciseness() != null) {
+    if (scores.getConciseness() != null && scores.getConciseness().getScore() != null) {
       weightedSum += concisenessFinal * concisenessWeight;
       totalWeight += concisenessWeight;
     }
