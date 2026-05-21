@@ -34,6 +34,15 @@ public class InterviewAnswer {
   @Column(nullable = false, columnDefinition = "LONGTEXT")
   private String answerText;
 
+  @Column
+  private Double percentage;
+
+  @Column
+  private Integer starScore;
+
+  @Column(columnDefinition = "TEXT")
+  private String llmScores;
+
   @CreationTimestamp
   private LocalDateTime answeredAt;
 
@@ -41,5 +50,11 @@ public class InterviewAnswer {
   public InterviewAnswer(InterviewQuestion question, String answerText) {
     this.question = question;
     this.answerText = answerText;
+  }
+
+  public void updateEvaluationResult(Double percentage, Integer starScore, String llmScores) {
+    this.percentage = percentage;
+    this.starScore = starScore;
+    this.llmScores = llmScores;
   }
 }
