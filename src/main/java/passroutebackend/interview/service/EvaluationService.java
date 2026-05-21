@@ -63,7 +63,7 @@ public class EvaluationService {
       evaluationTransactionService.saveResult(ctx.answerId(), percentage, starResponse.getStarScore(), llmScoresJson);
 
     } catch (Exception e) {
-      log.warn("평가 처리 실패, questionId={}: {}", questionId, e.getMessage());
+      log.warn("평가 처리 실패, questionId={}", questionId, e);
     }
   }
 
