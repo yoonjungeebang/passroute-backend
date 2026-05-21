@@ -12,4 +12,6 @@ public interface InterviewQuestionRepository extends JpaRepository<InterviewQues
 
   List<InterviewQuestion> findBySessionAndSetNumberOrderByQuestionOrderAsc(
       InterviewSession session, int setNumber);
+
+  List<InterviewQuestion> findBySession(InterviewSession session);
 }
