@@ -43,6 +43,9 @@ public class InterviewAnswer {
   @Column(columnDefinition = "TEXT")
   private String llmScores;
 
+  @Column
+  private Double concisenessFinal;
+
   @CreationTimestamp
   private LocalDateTime answeredAt;
 
@@ -52,9 +55,10 @@ public class InterviewAnswer {
     this.answerText = answerText;
   }
 
-  public void updateEvaluationResult(Double percentage, Integer starScore, String llmScores) {
+  public void updateEvaluationResult(Double percentage, Integer starScore, String llmScores, Double concisenessFinal) {
     this.percentage = percentage;
     this.starScore = starScore;
     this.llmScores = llmScores;
+    this.concisenessFinal = concisenessFinal;
   }
 }

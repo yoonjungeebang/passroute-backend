@@ -61,7 +61,7 @@ public class EvaluationService {
       double percentage = calculatePercentage(llmScores, concisenessFinal, ctx.getInterviewType());
 
       String llmScoresJson = toJson(evalResponse.getLlmScores());
-      evaluationTransactionService.saveResult(ctx.getAnswerId(), percentage, starResponse.getStarScore(), llmScoresJson);
+      evaluationTransactionService.saveResult(ctx.getAnswerId(), percentage, starResponse.getStarScore(), llmScoresJson, concisenessFinal);
 
     } catch (Exception e) {
       log.warn("평가 처리 실패, questionId={}", questionId, e);
