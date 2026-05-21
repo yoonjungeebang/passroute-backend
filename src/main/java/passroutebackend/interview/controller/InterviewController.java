@@ -25,10 +25,8 @@ public class InterviewController {
 
   @PostMapping("/{sessionId}/end")
   public ResponseEntity<ApiResponse<Void>> endSession(@PathVariable Long sessionId) {
-    boolean ended = reportTransactionService.endSession(sessionId);
-    if (ended) {
-      reportService.generateReportAsync(sessionId);
-    }
+    reportTransactionService.endSession(sessionId);
+    reportService.generateReportAsync(sessionId);
     return ResponseEntity.status(HttpStatus.ACCEPTED)
         .body(ApiResponse.accepted("리포트를 생성 중입니다."));
   }

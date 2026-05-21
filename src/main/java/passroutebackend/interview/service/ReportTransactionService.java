@@ -34,14 +34,10 @@ public class ReportTransactionService {
   private final InterviewReportRepository reportRepository;
 
   @Transactional
-  public boolean endSession(Long sessionId) {
+  public void endSession(Long sessionId) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
-    if (session.getStatus() == SessionStatus.COMPLETED) {
-      return false;
-    }
     session.end(SessionStatus.COMPLETED);
-    return true;
   }
 
   @Transactional(readOnly = true)
