@@ -24,7 +24,7 @@ public class EvaluationTransactionService {
     InterviewQuestion question = questionRepository.findById(questionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.QUESTION_NOT_FOUND));
     InterviewAnswer answer = answerRepository.findByQuestion(question)
-        .orElseThrow(() -> new IllegalStateException("답변을 찾을 수 없습니다. questionId=" + questionId));
+        .orElseThrow(() -> CustomException.of(ErrorCode.ANSWER_NOT_FOUND));
     InterviewRoom room = question.getSession().getInterviewRoom();
 
     return new EvaluationContext(
@@ -40,7 +40,8 @@ public class EvaluationTransactionService {
 
   @Transactional
   public void saveResult(Long answerId, Double percentage, Integer starScore, String llmScoresJson) {
-    InterviewAnswer answer = answerRepository.findById(answerId).orElseThrow();
+    InterviewAnswer answer = answerRepository.findById(answerId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.ANSWER_NOT_FOUND));
     answer.updateEvaluationResult(percentage, starScore, llmScoresJson);
   }
 }
