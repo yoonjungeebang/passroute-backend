@@ -22,6 +22,7 @@ import passroutebackend.interview.dto.report.ReportGenerationRequest;
 import passroutebackend.interview.dto.report.ReportGenerationResponse;
 import passroutebackend.interview.dto.report.StarEvalForReport;
 import passroutebackend.interview.dto.report.SessionResult;
+import passroutebackend.interview.dto.report.QuestionFeedback;
 import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.dto.report.SessionScore;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -389,7 +391,7 @@ public class ReportService {
         .strengths(report.getStrengths())
         .weaknesses(parseJsonToWeaknessItemList(report.getWeaknesses()))
         .improvements(report.getImprovements())
-        .questionFeedback(parseJsonToListOfMaps(report.getQuestionFeedback()))
+        .questionFeedback(parseJsonToQuestionFeedbackList(report.getQuestionFeedback()))
         .recommendedQuestions(parseJsonToList(report.getRecommendedQuestions()))
         .finalAdvice(report.getFinalAdvice())
         .readinessComment(report.getReadinessComment())
@@ -437,7 +439,7 @@ public class ReportService {
     }
   }
 
-  private List<Map<String, Object>> parseJsonToListOfMaps(String json) {
+  private List<QuestionFeedback> parseJsonToQuestionFeedbackList(String json) {
     if (json == null) return null;
     try {
       return objectMapper.readValue(json, new TypeReference<>() {});

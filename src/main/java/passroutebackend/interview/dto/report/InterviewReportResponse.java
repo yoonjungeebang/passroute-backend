@@ -20,7 +20,7 @@ public class InterviewReportResponse {
   private String strengths;
   private List<WeaknessItem> weaknesses;
   private String improvements;
-  private List<Map<String, Object>> questionFeedback;
+  private List<QuestionFeedback> questionFeedback;
   private List<String> recommendedQuestions;
   private String finalAdvice;
   private String readinessComment;

@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @NoArgsConstructor
@@ -17,7 +16,7 @@ public class ReportGenerationResponse {
   private String improvements;
 
   @JsonProperty("question_feedback")
-  private List<Map<String, Object>> questionFeedback;
+  private List<QuestionFeedback> questionFeedback;
 
   @JsonProperty("recommended_questions")
   private List<String> recommendedQuestions;
