@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.interview.client.AiServerClient;
+import passroutebackend.interview.dto.EvaluationContext;
 import passroutebackend.interview.dto.VoiceData;
 import passroutebackend.interview.dto.evaluation.LlmScoreItem;
 import passroutebackend.interview.dto.evaluation.LlmScores;

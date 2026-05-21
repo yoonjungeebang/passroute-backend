@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.interview.dto.EvaluationContext;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
