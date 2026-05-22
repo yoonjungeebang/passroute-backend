@@ -9,6 +9,7 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: false
+
 jwt:
   secret: cGFzc3JvdXRlLWJhY2tlbmQtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=
   access-token-expiration: 1800000
@@ -22,3 +23,13 @@ swagger:
   server-url:
     local: http://localhost:8080/api
     prod: https://pass-route.com/api
+
+cloud:
+  aws:
+    credentials:
+      access-key: dummy
+      secret-key: dummy
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: dummy
