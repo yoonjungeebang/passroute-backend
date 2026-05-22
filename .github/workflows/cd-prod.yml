@@ -29,6 +29,8 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build with Gradle
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: ./gradlew clean bootJar
 
       - name: Set up Docker Buildx
@@ -83,4 +85,5 @@ jobs:
             PROD_MYSQL_USER='${{ secrets.PROD_MYSQL_USER }}' \
             PROD_MYSQL_PASSWORD='${{ secrets.PROD_MYSQL_PASSWORD }}' \
             FRONT_ORIGIN='${{ secrets.FRONT_ORIGIN }}' \
+            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
             bash /home/ubuntu/deploy/deploy-prod.sh

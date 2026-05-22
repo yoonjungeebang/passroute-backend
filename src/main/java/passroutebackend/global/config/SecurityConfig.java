@@ -15,6 +15,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import passroutebackend.global.jwt.JwtAccessDeniedHandler;
+import passroutebackend.global.jwt.JwtAuthenticationEntryPoint;
+import passroutebackend.global.jwt.JwtAuthenticationFilter;
 import passroutebackend.auth.handler.OAuth2FailureHandler;
 import passroutebackend.auth.handler.OAuth2SuccessHandler;
 import passroutebackend.auth.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
@@ -26,6 +29,7 @@ import passroutebackend.global.property.CorsProperties;
 import passroutebackend.global.property.JwtProperties;
 import passroutebackend.global.property.OAuth2Properties;
 import passroutebackend.global.property.FollowUpProperties;
+import passroutebackend.global.property.JwtProperties;
 import passroutebackend.global.property.SwaggerProperties;
 
 import java.util.List;
@@ -35,6 +39,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, JwtProperties.class, OAuth2Properties.class})
 @EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, FollowUpProperties.class})
+@EnableConfigurationProperties({CorsProperties.class, SwaggerProperties.class, JwtProperties.class, FollowUpProperties.class})
 public class SecurityConfig {
 
     private static final String[] PUBLIC_POST = {
@@ -47,6 +52,11 @@ public class SecurityConfig {
             "/auth/find-email/confirm",
             "/auth/find-password/send",
             "/auth/find-password/reset"
+    };
+    private static final String[] PUBLIC_POST = {
+            "/auth/login",
+            "/auth/signup",
+            "/auth/reissue"
     };
 
     private static final String[] PUBLIC_GET = {
@@ -67,6 +77,10 @@ public class SecurityConfig {
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository;
+    private final CorsProperties corsProperties;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -103,6 +117,19 @@ public class SecurityConfig {
                         )
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)
+                )
+
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler)
+                )
+
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
+                        .anyRequest().authenticated()
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

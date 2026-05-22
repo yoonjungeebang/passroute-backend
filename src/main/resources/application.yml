@@ -28,7 +28,7 @@ spring:
             user-name-attribute: id
 
   datasource:
-    url: jdbc:mysql://passroute-rds.cdycuqciemah.ap-northeast-2.rds.amazonaws.com:3306/passroute?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: ${DB_URL}
     username: admin
     password: ${RDS_PASSWD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -53,7 +53,7 @@ server:
     context-path: /api
 
 jwt:
-  secret: ${JWT_SECRET:cGFzc3JvdXRlLWJhY2tlbmQtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=}
+  secret: ${JWT_SECRET}
   access-token-expiration: 1800000    # 30분
   refresh-token-expiration: 604800000 # 7일
 
