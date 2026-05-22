@@ -38,3 +38,9 @@ out/
 
 ## 환경 변수
 .env
+
+## 로컬 환경설정
+src/main/resources/application-local.yml
+
+/docs/
+.claude/CLAUDE.md

@@ -26,4 +26,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run build
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DB_URL: ${{ secrets.DB_URL }}
         run: ./gradlew build
