@@ -26,6 +26,15 @@ public enum ErrorCode {
   USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 유저입니다."),
   USER_DELETED(HttpStatus.NOT_FOUND, "U002", "탈퇴 처리된 유저입니다."),
   DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U003", "이미 사용중인 이메일입니다."),
+  DUPLICATE_PHONE(HttpStatus.CONFLICT, "U004", "이미 가입된 휴대폰번호입니다."),
+  PHONE_NOT_REGISTERED(HttpStatus.NOT_FOUND, "U005", "가입되지 않은 휴대폰번호입니다."),
+  SOCIAL_USER_NO_PASSWORD(HttpStatus.BAD_REQUEST, "U006", "소셜 로그인 계정은 비밀번호를 변경할 수 없습니다."),
+
+  // Phone Verification
+  PHONE_VERIFICATION_NOT_FOUND(HttpStatus.BAD_REQUEST, "P001", "인증 요청 내역이 없습니다. 인증번호를 먼저 발송해주세요."),
+  PHONE_VERIFICATION_EXPIRED(HttpStatus.BAD_REQUEST, "P002", "인증번호가 만료되었습니다. 다시 발송해주세요."),
+  PHONE_VERIFICATION_INVALID_CODE(HttpStatus.BAD_REQUEST, "P003", "인증번호가 올바르지 않습니다."),
+  PHONE_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "P004", "휴대폰 인증이 완료되지 않았습니다."),
 
   // Interview
   SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "면접 세션을 찾을 수 없습니다."),
