@@ -1,5 +1,4 @@
 spring:
-
   security:
     oauth2:
       client:
@@ -54,8 +53,8 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration: 1800000    # 30분
-  refresh-token-expiration: 604800000 # 7일
+  access-token-expiration: 1800000
+  refresh-token-expiration: 604800000
 
 cors:
   allowed-origins:
@@ -66,7 +65,6 @@ swagger:
     local: http://localhost:8080/api
     prod: https://pass-route.com/api
 
-
 oauth2:
   redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/callback}
 
@@ -75,3 +73,12 @@ follow-up:
   max-turn: 1
   timeout-seconds: 10
 
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${AWS_S3_BUCKET}
