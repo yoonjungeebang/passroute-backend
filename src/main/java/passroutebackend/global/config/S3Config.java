@@ -4,12 +4,14 @@ package passroutebackend.global.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
+@Profile("!test")  // 이거 추가
 //application.yml에 넣은 aws 키값들을 읽어서 s3 연결 객체를 만들어줌
 @Configuration
 public class S3Config {
