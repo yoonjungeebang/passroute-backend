@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -27,23 +26,11 @@ public class UserController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "사용자 없음")
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류", content = @Content(schema = @Schema(hidden = true))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 존재하는 이메일", content = @Content(schema = @Schema(hidden = true)))
     })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> getMyInfo(
             @AuthenticationPrincipal Long userId) {
         return ResponseEntity.ok(ApiResponse.success("내 정보 조회 성공", userService.getMyInfo(userId)));
-    @SecurityRequirements
-    @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Long>> signUp(@Valid @RequestBody SignUpRequest request) {
-        Long userId = userService.signUp(
-                request.getEmail(),
-                request.getPassword(),
-                request.getName()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("회원가입 성공!", userId));
     }
 
     @Operation(summary = "내 정보 수정", description = "경력 연수, 희망 직무, 희망 기업을 수정합니다. null로 보낸 필드는 변경되지 않습니다.")
@@ -71,6 +58,4 @@ public class UserController {
         userService.withdraw(userId, accessToken, request != null ? request.password() : null);
         return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다.", null));
     }
-
-
 }
