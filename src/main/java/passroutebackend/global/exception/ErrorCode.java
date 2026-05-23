@@ -52,7 +52,7 @@ public enum ErrorCode {
 
   // Schedule
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),
-  SCHEDULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S002", "해당 일정에 접근 권한이 없습니다.");
+  SCHEDULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S002", "해당 일정에 접근 권한이 없습니다."),
   
   AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다.");
 
