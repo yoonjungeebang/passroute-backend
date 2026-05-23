@@ -48,7 +48,8 @@ public enum ErrorCode {
   SESSION_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "I003", "이미 종료된 면접 세션입니다."),
   ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "I004", "면접 답변을 찾을 수 없습니다."),
   ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "I005", "면접 방을 찾을 수 없습니다."),
-  INVALID_INTERVIEW_FORMAT(HttpStatus.BAD_REQUEST, "I006", "MULTI 면접 시 aiCompetitors와 debateTopic은 필수입니다.");
+  INVALID_INTERVIEW_FORMAT(HttpStatus.BAD_REQUEST, "I006", "MULTI 면접 시 aiCompetitors와 debateTopic은 필수입니다."),
+  AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다.");
 
   private final HttpStatus status;
   private final String code;
