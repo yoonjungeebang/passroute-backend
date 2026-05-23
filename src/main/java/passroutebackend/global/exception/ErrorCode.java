@@ -49,6 +49,8 @@ public enum ErrorCode {
   ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "I004", "면접 답변을 찾을 수 없습니다."),
   ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "I005", "면접 방을 찾을 수 없습니다."),
   INVALID_INTERVIEW_FORMAT(HttpStatus.BAD_REQUEST, "I006", "MULTI 면접 시 aiCompetitors와 debateTopic은 필수입니다."),
+  ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "I007", "해당 면접 방에 접근 권한이 없습니다."),
+  ROOM_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "I008", "완료되지 않은 면접은 이력으로 조회할 수 없습니다."),
 
   // Schedule
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),

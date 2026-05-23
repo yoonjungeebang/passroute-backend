@@ -8,8 +8,9 @@ import java.util.List;
 
 public interface InterviewQuestionRepository extends JpaRepository<InterviewQuestion, Long> {
 
-  int countBySessionAndSetNumberAndFollowUpTrue(InterviewSession session, int setNumber);
-
   List<InterviewQuestion> findBySessionAndSetNumberOrderByQuestionOrderAsc(
       InterviewSession session, int setNumber);
+
+  List<InterviewQuestion> findBySessionInOrderBySessionIdAscQuestionOrderAsc(
+      List<InterviewSession> sessions);
 }
