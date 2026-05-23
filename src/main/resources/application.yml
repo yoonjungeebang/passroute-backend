@@ -26,21 +26,6 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
-  datasource:
-    url: ${DB_URL}
-    username: admin
-    password: ${RDS_PASSWD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
   application:
     name: passroute-backend
 
