@@ -82,6 +82,10 @@ public class InterviewRoom {
   @UpdateTimestamp
   private LocalDateTime updatedAt;
 
+  public void updateStatus(RoomStatus status) {
+    this.status = status;
+  }
+
   @Builder
   public InterviewRoom(Long userId, Long siId, String companyName, String jobPosition,
                        InterviewType interviewType, InterviewFormat interviewFormat, String interviewMode,
