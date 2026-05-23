@@ -7,6 +7,7 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.request.InterviewRoomRequestDto;
 import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
+import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.RoomStatus;
 import passroutebackend.interview.repository.InterviewRoomRepository;
@@ -44,12 +45,11 @@ public class InterviewRoomService {
     }
 
     private void validateFormatConstraints(InterviewRoomRequestDto request) {
-        if ("MULTI".equals(request.getInterviewFormat())) {
+        if (InterviewFormat.DEBATE == request.getInterviewFormat()) {
             if (request.getAiCompetitors() == null || request.getDebateTopic() == null) {
                 throw CustomException.of(ErrorCode.INVALID_INTERVIEW_FORMAT);
             }
         } else {
-            // ONE_ON_ONE: aiCompetitors, debateTopic must be null
             if (request.getAiCompetitors() != null || request.getDebateTopic() != null) {
                 throw CustomException.of(ErrorCode.INVALID_INTERVIEW_FORMAT);
             }

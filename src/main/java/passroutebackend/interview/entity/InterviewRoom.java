@@ -43,8 +43,9 @@ public class InterviewRoom {
   @Column(nullable = false, length = 20)
   private InterviewType interviewType;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
-  private String interviewFormat;  // ONE_ON_ONE | MULTI
+  private InterviewFormat interviewFormat;
 
   @Column(nullable = false, length = 20)
   private String interviewMode;    // PRACTICE | REAL
@@ -83,7 +84,7 @@ public class InterviewRoom {
 
   @Builder
   public InterviewRoom(Long userId, Long siId, String companyName, String jobPosition,
-                       InterviewType interviewType, String interviewFormat, String interviewMode,
+                       InterviewType interviewType, InterviewFormat interviewFormat, String interviewMode,
                        String aiInterviewer, String aiCompetitors, String debateTopic,
                        int interviewCount, Difficulty difficulty, int pressureLevel,
                        int followupCount, RoomStatus status) {
