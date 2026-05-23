@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -18,7 +19,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "interview_schedules")
+@Table(name = "interview_schedules", indexes = {
+        @Index(name = "idx_schedule_user_date", columnList = "userId, interviewDate")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class InterviewSchedule {
