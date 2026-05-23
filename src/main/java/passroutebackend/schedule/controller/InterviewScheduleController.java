@@ -74,7 +74,7 @@ public class InterviewScheduleController {
     @GetMapping("/calendar")
     public ResponseEntity<ApiResponse<ScheduleCalendarResponse>> getCalendar(
             @AuthenticationPrincipal Long userId,
-            @RequestParam int year,
+            @RequestParam @Min(1) int year,
             @RequestParam @Min(1) @Max(12) int month) {
         ScheduleCalendarResponse response = interviewScheduleService.getCalendar(userId, year, month);
         return ResponseEntity.ok(ApiResponse.success(response));
