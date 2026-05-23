@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewType;
 
 @Getter
@@ -25,8 +26,8 @@ public class InterviewRoomRequestDto {
     @NotBlank
     private String interviewMode;
 
-    @NotBlank
-    private String interviewFormat;
+    @NotNull
+    private InterviewFormat interviewFormat;
 
     @NotBlank
     private String aiInterviewer;
