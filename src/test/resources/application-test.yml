@@ -18,6 +18,26 @@ spring:
       credentials:
         access-key: dummy
         secret-key: dummy
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: dummy
+            client-secret: dummy
+          google:
+            client-id: dummy
+            client-secret: dummy
+
+cloud:
+  aws:
+    credentials:
+      access-key: dummy
+      secret-key: dummy
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: dummy
 
 jwt:
   secret: cGFzc3JvdXRlLWJhY2tlbmQtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=
