@@ -18,6 +18,11 @@ import passroutebackend.interview.repository.InterviewRoomRepository;
 @RequiredArgsConstructor
 public class InterviewRoomService {
 
+    private static final String PRACTICE_MODE = "PRACTICE";
+    private static final int DEFAULT_INTERVIEW_COUNT = 5;
+    private static final int DEFAULT_PRESSURE_LEVEL = 5;
+    private static final int DEFAULT_FOLLOWUP_COUNT = 3;
+
     private final InterviewRoomRepository interviewRoomRepository;
 
     @Transactional
@@ -54,11 +59,11 @@ public class InterviewRoomService {
                 .jobPosition(jobPosition)
                 .interviewType(InterviewType.TECHNICAL)
                 .interviewFormat(InterviewFormat.ONE_ON_ONE)
-                .interviewMode("PRACTICE")
-                .interviewCount(5)
+                .interviewMode(PRACTICE_MODE)
+                .interviewCount(DEFAULT_INTERVIEW_COUNT)
                 .difficulty(Difficulty.NORMAL)
-                .pressureLevel(5)
-                .followupCount(3)
+                .pressureLevel(DEFAULT_PRESSURE_LEVEL)
+                .followupCount(DEFAULT_FOLLOWUP_COUNT)
                 .status(RoomStatus.DRAFT)
                 .build();
 

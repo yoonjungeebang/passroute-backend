@@ -53,7 +53,7 @@ public class InterviewScheduleService {
     @Transactional(readOnly = true)
     public ScheduleCalendarResponse getCalendar(Long userId, int year, int month) {
         LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime end = start.plusMonths(1);
+        LocalDateTime end = start.plusMonths(1).minusNanos(1);
 
         List<ScheduleResponse> schedules = interviewScheduleRepository
                 .findByUserIdAndInterviewDateBetweenOrderByInterviewDateAsc(userId, start, end)
