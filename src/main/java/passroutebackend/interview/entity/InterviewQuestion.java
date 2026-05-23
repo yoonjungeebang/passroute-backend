@@ -28,7 +28,11 @@ public class InterviewQuestion {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "session_id", nullable = false)
+  @JoinColumn(name = "room_id", nullable = false)
+  private InterviewRoom room;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "session_id", nullable = true)
   private InterviewSession session;
 
   @Column(nullable = false)
@@ -47,8 +51,9 @@ public class InterviewQuestion {
   private LocalDateTime createdAt;
 
   @Builder
-  public InterviewQuestion(InterviewSession session, int setNumber,
+  public InterviewQuestion(InterviewRoom room, InterviewSession session, int setNumber,
       String questionText, int questionOrder, boolean followUp) {
+    this.room = room;
     this.session = session;
     this.setNumber = setNumber;
     this.questionText = questionText;
