@@ -1,5 +1,6 @@
 package passroutebackend.global.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -34,6 +35,21 @@ public class GlobalExceptionHandler {
     log.warn("Validation failed", ex);
 
     Map<String, String> errors = extractValidationErrors(ex.getBindingResult());
+
+    return ResponseEntity
+      .status(ErrorCode.INVALID_INPUT.getStatus())
+      .body(ApiResponse.error(ErrorCode.INVALID_INPUT, errors));
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ApiResponse<?>> handleConstraintViolationException(ConstraintViolationException ex) {
+    log.warn("Constraint violation", ex);
+
+    Map<String, String> errors = new HashMap<>();
+    ex.getConstraintViolations().forEach(violation -> {
+      String field = violation.getPropertyPath().toString();
+      errors.put(field, violation.getMessage());
+    });
 
     return ResponseEntity
       .status(ErrorCode.INVALID_INPUT.getStatus())
