@@ -30,25 +30,46 @@ public class InterviewRoom {
   @Column(nullable = false)
   private Long userId;
 
-  @Column(length = 100)
-  private String jobPosition;
+  @Column
+  private Long siId;
 
   @Column(length = 100)
   private String companyName;
 
-  @Column(nullable = false)
-  private int interviewCount;
+  @Column(length = 100)
+  private String jobPosition;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   private InterviewType interviewType;
 
-  @Column(length = 50)
-  private String aiInterviewer;
+  @Column(nullable = false, length = 20)
+  private String interviewFormat;  // ONE_ON_ONE | MULTI
+
+  @Column(nullable = false, length = 20)
+  private String interviewMode;    // PRACTICE | REAL
+
+  @Column(length = 30)
+  private String aiInterviewer;    // HR_MANAGER | TEAM_LEAD | EXECUTIVE | TECH_INTERVIEWER
+
+  @Column(length = 20)
+  private String aiCompetitors;    // EASY | MEDIUM | HARD
+
+  @Column(columnDefinition = "TEXT")
+  private String debateTopic;
+
+  @Column(nullable = false)
+  private int interviewCount;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 10)
   private Difficulty difficulty;
+
+  @Column(nullable = false)
+  private int pressureLevel;
+
+  @Column(nullable = false)
+  private int followupCount;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -61,16 +82,25 @@ public class InterviewRoom {
   private LocalDateTime updatedAt;
 
   @Builder
-  public InterviewRoom(Long userId, String jobPosition, String companyName,
-      int interviewCount, InterviewType interviewType, String aiInterviewer,
-      Difficulty difficulty, RoomStatus status) {
+  public InterviewRoom(Long userId, Long siId, String companyName, String jobPosition,
+                       InterviewType interviewType, String interviewFormat, String interviewMode,
+                       String aiInterviewer, String aiCompetitors, String debateTopic,
+                       int interviewCount, Difficulty difficulty, int pressureLevel,
+                       int followupCount, RoomStatus status) {
     this.userId = userId;
-    this.jobPosition = jobPosition;
+    this.siId = siId;
     this.companyName = companyName;
-    this.interviewCount = interviewCount;
+    this.jobPosition = jobPosition;
     this.interviewType = interviewType;
+    this.interviewFormat = interviewFormat;
+    this.interviewMode = interviewMode;
     this.aiInterviewer = aiInterviewer;
+    this.aiCompetitors = aiCompetitors;
+    this.debateTopic = debateTopic;
+    this.interviewCount = interviewCount;
     this.difficulty = difficulty;
+    this.pressureLevel = pressureLevel;
+    this.followupCount = followupCount;
     this.status = status;
   }
 }
