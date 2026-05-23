@@ -49,6 +49,11 @@ public enum ErrorCode {
   ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "I004", "면접 답변을 찾을 수 없습니다."),
   ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "I005", "면접 방을 찾을 수 없습니다."),
   INVALID_INTERVIEW_FORMAT(HttpStatus.BAD_REQUEST, "I006", "MULTI 면접 시 aiCompetitors와 debateTopic은 필수입니다."),
+
+  // Schedule
+  SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),
+  SCHEDULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S002", "해당 일정에 접근 권한이 없습니다."),
+  
   AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다.");
 
   private final HttpStatus status;
