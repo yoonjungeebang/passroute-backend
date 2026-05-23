@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -16,6 +17,7 @@ import passroutebackend.auth.entity.PhoneVerification;
 import passroutebackend.auth.repository.PhoneVerificationRepository;
 import passroutebackend.auth.dto.request.LoginRequest;
 import passroutebackend.auth.dto.request.SignUpRequest;
+import passroutebackend.global.config.S3TestConfig;
 import passroutebackend.global.sms.SmsService;
 
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Import(S3TestConfig.class)
 class AuthIntegrationTest {
 
     @Autowired

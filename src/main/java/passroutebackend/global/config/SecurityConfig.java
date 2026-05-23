@@ -22,7 +22,16 @@ import passroutebackend.auth.service.CustomOAuth2UserService;
 import passroutebackend.global.jwt.JwtAccessDeniedHandler;
 import passroutebackend.global.jwt.JwtAuthenticationEntryPoint;
 import passroutebackend.global.jwt.JwtAuthenticationFilter;
+import passroutebackend.auth.handler.OAuth2FailureHandler;
+import passroutebackend.auth.handler.OAuth2SuccessHandler;
+import passroutebackend.auth.oauth2.HttpCookieOAuth2AuthorizationRequestRepository;
+import passroutebackend.auth.service.CustomOAuth2UserService;
+import passroutebackend.global.jwt.JwtAccessDeniedHandler;
+import passroutebackend.global.jwt.JwtAuthenticationEntryPoint;
+import passroutebackend.global.jwt.JwtAuthenticationFilter;
 import passroutebackend.global.property.CorsProperties;
+import passroutebackend.global.property.JwtProperties;
+import passroutebackend.global.property.OAuth2Properties;
 import passroutebackend.global.property.FollowUpProperties;
 import passroutebackend.global.property.JwtProperties;
 import passroutebackend.global.property.OAuth2Properties;
@@ -90,17 +99,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
                         .anyRequest().authenticated()
-                )
-
-                .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endpoint -> endpoint
-                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)
-                        )
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(oAuth2SuccessHandler)
-                        .failureHandler(oAuth2FailureHandler)
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
