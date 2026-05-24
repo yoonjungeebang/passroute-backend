@@ -58,6 +58,10 @@ follow-up:
   max-turn: 1
   timeout-seconds: 120
 
+ai:
+  debate:
+    timeout: 180s
+
 cloud:
   aws:
     credentials:
