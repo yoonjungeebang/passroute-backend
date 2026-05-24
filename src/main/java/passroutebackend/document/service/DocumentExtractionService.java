@@ -7,17 +7,17 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.document.entity.Document;
 import passroutebackend.document.entity.Document.EmbedStatus;
 import passroutebackend.document.entity.DocumentAnalysis;
 import passroutebackend.document.repository.DocumentAnalysisRepository;
 import passroutebackend.document.repository.DocumentRepository;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -33,6 +33,7 @@ public class DocumentExtractionService {
     private String bucket;
 
     @Async("documentExtractorExecutor")
+    @Transactional
     public void extractAsync(Long documentId, String s3Key) {
         log.info("PDF 텍스트 추출 시작 documentId={}", documentId);
 
@@ -42,9 +43,16 @@ public class DocumentExtractionService {
             return;
         }
 
-        try {
-            byte[] pdfBytes = downloadFromS3(s3Key);
-            String extractedText = extractText(pdfBytes);
+        GetObjectRequest request = GetObjectRequest.builder()
+            .bucket(bucket)
+            .key(s3Key)
+            .build();
+
+        try (ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(request);
+             PDDocument pdDocument = PDDocument.load(s3Object)) {
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            String extractedText = stripper.getText(pdDocument);
 
             documentAnalysisRepository.save(
                 DocumentAnalysis.builder()
@@ -54,33 +62,13 @@ public class DocumentExtractionService {
                     .build()
             );
 
+            // @Transactional 더티체킹으로 자동 반영 (명시적 save 불필요)
             document.updateEmbedStatus(EmbedStatus.DONE);
-            documentRepository.save(document);
-
             log.info("PDF 텍스트 추출 완료 documentId={}, 길이={}", documentId, extractedText.length());
 
         } catch (Exception e) {
-            log.warn("PDF 텍스트 추출 실패 documentId={}", documentId, e);
+            log.error("PDF 텍스트 추출 실패 documentId={}", documentId, e);
             document.updateEmbedStatus(EmbedStatus.FAILED);
-            documentRepository.save(document);
-        }
-    }
-
-    private byte[] downloadFromS3(String s3Key) throws IOException {
-        GetObjectRequest request = GetObjectRequest.builder()
-            .bucket(bucket)
-            .key(s3Key)
-            .build();
-
-        try (ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(request)) {
-            return s3Object.readAllBytes();
-        }
-    }
-
-    private String extractText(byte[] pdfBytes) throws IOException {
-        try (PDDocument pdDocument = PDDocument.load(pdfBytes)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            return stripper.getText(pdDocument);
         }
     }
 }
