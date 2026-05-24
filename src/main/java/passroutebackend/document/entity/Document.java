@@ -73,6 +73,11 @@ public class Document {
         this.originalFilename = originalFilename;
     }
 
+    // 텍스트 추출 상태 업데이트
+    public void updateEmbedStatus(EmbedStatus embedStatus) {
+        this.embedStatus = embedStatus;
+    }
+
     public enum DocumentType {
         RESUME, PORTFOLIO
     }

@@ -52,6 +52,9 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.1'
+
+    // PDF 텍스트 추출
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
 }
 
 tasks.named('test') {

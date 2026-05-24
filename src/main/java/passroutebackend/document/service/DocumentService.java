@@ -35,6 +35,7 @@ public class DocumentService {
     private final UserRepository userRepository;
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
+    private final DocumentExtractionService documentExtractionService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -86,6 +87,11 @@ public class DocumentService {
                 .build();
 
         documentRepository.save(document);
+
+        // PDF인 경우 비동기로 텍스트 추출
+        if ("pdf".equalsIgnoreCase(ext)) {
+            documentExtractionService.extractAsync(document.getId(), request.getS3Key());
+        }
     }
 
     // 3. 파일 목록 조회
