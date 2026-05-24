@@ -1,17 +1,20 @@
 package passroutebackend.interview.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.report.InterviewReportResponse;
+import passroutebackend.interview.dto.evaluation.LlmScores;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
+import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewAnswerRepository;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
@@ -24,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReportTransactionService {
@@ -32,6 +36,7 @@ public class ReportTransactionService {
   private final InterviewQuestionRepository questionRepository;
   private final InterviewAnswerRepository answerRepository;
   private final InterviewReportRepository reportRepository;
+  private final ObjectMapper objectMapper;
 
   @Transactional
   public void endSession(Long sessionId) {
@@ -57,13 +62,16 @@ public class ReportTransactionService {
     for (InterviewQuestion q : questions) {
       InterviewAnswer answer = answerByQuestionId.get(q.getId());
       if (answer == null || answer.getPercentage() == null) continue;
+      String llmScoresJson = answer.getLlmScores();
+      LlmScores llmScores = parseLlmScores(llmScoresJson);
       questionAnswers.add(new QuestionAnswerData(
           index++,
           q.getQuestionText(),
           answer.getAnswerText(),
           answer.getPercentage(),
           answer.getStarScore(),
-          answer.getLlmScores(),
+          llmScoresJson,
+          llmScores,
           answer.getConcisenessFinal()
       ));
     }
@@ -105,7 +113,32 @@ public class ReportTransactionService {
         .readinessComment(readinessComment)
         .keyWeakness(keyWeaknessJson)
         .itemAverages(itemAveragesJson)
+        .reportStatus(ReportStatus.COMPLETED)
         .build();
     reportRepository.save(report);
+  }
+
+  @Transactional
+  public void saveFailedReport(Long sessionId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+    if (reportRepository.findBySession(session).isPresent()) {
+      return;
+    }
+    InterviewReport report = InterviewReport.builder()
+        .session(session)
+        .reportStatus(ReportStatus.FAILED)
+        .build();
+    reportRepository.save(report);
+  }
+
+  private LlmScores parseLlmScores(String json) {
+    if (json == null) return null;
+    try {
+      return objectMapper.readValue(json, LlmScores.class);
+    } catch (Exception e) {
+      log.warn("LlmScores 역직렬화 실패: {}", e.getMessage());
+      return null;
+    }
   }
 }

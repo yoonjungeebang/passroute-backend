@@ -9,7 +9,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.global.ApiResponse;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.report.InterviewReportResponse;
+import passroutebackend.interview.entity.InterviewReport;
+import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.service.ReportService;
 import passroutebackend.interview.service.ReportTransactionService;
 
@@ -33,11 +37,15 @@ public class InterviewController {
 
   @GetMapping("/{sessionId}/report")
   public ResponseEntity<ApiResponse<InterviewReportResponse>> getReport(@PathVariable Long sessionId) {
-    Optional<InterviewReportResponse> report = reportService.getReport(sessionId);
-    if (report.isEmpty()) {
+    Optional<InterviewReport> reportOpt = reportService.findReport(sessionId);
+    if (reportOpt.isEmpty()) {
       return ResponseEntity.status(HttpStatus.ACCEPTED)
           .body(ApiResponse.accepted("리포트 생성 중입니다."));
     }
-    return ResponseEntity.ok(ApiResponse.success(report.get()));
+    InterviewReport report = reportOpt.get();
+    if (report.getReportStatus() == ReportStatus.FAILED) {
+      throw CustomException.of(ErrorCode.REPORT_GENERATION_FAILED);
+    }
+    return ResponseEntity.ok(ApiResponse.success(reportService.toResponseDto(report)));
   }
 }

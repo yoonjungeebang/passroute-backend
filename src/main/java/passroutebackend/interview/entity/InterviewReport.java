@@ -70,6 +70,10 @@ public class InterviewReport {
   @Column(columnDefinition = "TEXT")
   private String itemAverages;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private ReportStatus reportStatus;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 
@@ -78,7 +82,7 @@ public class InterviewReport {
       String weaknesses, String improvements, String questionFeedback,
       String recommendedQuestions, String finalAdvice, String readinessComment,
       Double sessionScore, InterviewReadiness interviewReadiness,
-      String keyWeakness, String itemAverages) {
+      String keyWeakness, String itemAverages, ReportStatus reportStatus) {
     this.session = session;
     this.overall = overall;
     this.strengths = strengths;
@@ -92,5 +96,6 @@ public class InterviewReport {
     this.interviewReadiness = interviewReadiness;
     this.keyWeakness = keyWeakness;
     this.itemAverages = itemAverages;
+    this.reportStatus = reportStatus;
   }
 }

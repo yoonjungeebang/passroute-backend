@@ -135,6 +135,7 @@ public class ReportService {
 
       if (reportResponse == null) {
         log.warn("AI 리포트 응답이 null, sessionId={}", sessionId);
+        reportTransactionService.saveFailedReport(sessionId);
         return;
       }
 
@@ -154,11 +155,20 @@ public class ReportService {
 
     } catch (Exception e) {
       log.warn("리포트 생성 실패, sessionId={}", sessionId, e);
+      try {
+        reportTransactionService.saveFailedReport(sessionId);
+      } catch (Exception ex) {
+        log.warn("FAILED 상태 저장도 실패, sessionId={}", sessionId, ex);
+      }
     }
   }
 
-  public Optional<InterviewReportResponse> getReport(Long sessionId) {
-    return reportTransactionService.findReport(sessionId).map(this::toResponse);
+  public Optional<InterviewReport> findReport(Long sessionId) {
+    return reportTransactionService.findReport(sessionId);
+  }
+
+  public InterviewReportResponse toResponseDto(InterviewReport report) {
+    return toResponse(report);
   }
 
   // ── 집계 계산 ──────────────────────────────────────────────────────────────
@@ -172,8 +182,7 @@ public class ReportService {
     ITEM_LABELS.keySet().forEach(key -> stats.put(key, new ItemStat(0.0, 0)));
 
     for (QuestionAnswerData qa : questionAnswers) {
-      if (qa.llmScoresJson() == null) continue;
-      LlmScores scores = parseJson(qa.llmScoresJson(), LlmScores.class);
+      LlmScores scores = qa.llmScores();
       if (scores == null) continue;
 
       addStat(stats, "relevance", scores.getRelevance());
@@ -302,7 +311,7 @@ public class ReportService {
     return questionAnswers.stream()
         .filter(qa -> qa.percentage() != null)
         .max(Comparator.comparingDouble(QuestionAnswerData::percentage))
-        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScoresJson())))
+        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScores())))
         .orElse(null);
   }
 
@@ -310,7 +319,7 @@ public class ReportService {
     return questionAnswers.stream()
         .filter(qa -> qa.percentage() != null)
         .min(Comparator.comparingDouble(QuestionAnswerData::percentage))
-        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScoresJson())))
+        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScores())))
         .orElse(null);
   }
 
@@ -323,14 +332,12 @@ public class ReportService {
             interviewType,
             qa.questionText(),
             qa.percentage(),
-            buildQuestionSummary(qa.llmScoresJson())
+            buildQuestionSummary(qa.llmScores())
         ))
         .collect(Collectors.toList());
   }
 
-  private QuestionSummary buildQuestionSummary(String llmScoresJson) {
-    if (llmScoresJson == null) return new QuestionSummary("", "");
-    LlmScores scores = parseJson(llmScoresJson, LlmScores.class);
+  private QuestionSummary buildQuestionSummary(LlmScores scores) {
     if (scores == null) return new QuestionSummary("", "");
 
     List<String> strengths = new ArrayList<>();
@@ -365,7 +372,7 @@ public class ReportService {
             interviewType,
             qa.questionText(),
             qa.percentage(),
-            buildQuestionSummary(qa.llmScoresJson()),
+            buildQuestionSummary(qa.llmScores()),
             new StarEvalForReport(qa.starScore() != null, qa.starScore()),
             null
         ))
@@ -391,13 +398,13 @@ public class ReportService {
         .sessionScore(report.getSessionScore())
         .interviewReadiness(report.getInterviewReadiness() != null ? report.getInterviewReadiness().name() : null)
         .itemAverages(parseJsonToItemAveragesMap(report.getItemAverages()))
-        .keyWeakness(parseJsonToList(report.getKeyWeakness()))
+        .keyWeakness(parseJsonAsType(report.getKeyWeakness(), new TypeReference<List<String>>() {}))
         .overall(report.getOverall())
         .strengths(report.getStrengths())
-        .weaknesses(parseJsonToWeaknessItemList(report.getWeaknesses()))
+        .weaknesses(parseJsonAsType(report.getWeaknesses(), new TypeReference<List<WeaknessItem>>() {}))
         .improvements(report.getImprovements())
-        .questionFeedback(parseJsonToQuestionFeedbackList(report.getQuestionFeedback()))
-        .recommendedQuestions(parseJsonToList(report.getRecommendedQuestions()))
+        .questionFeedback(parseJsonAsType(report.getQuestionFeedback(), new TypeReference<List<QuestionFeedback>>() {}))
+        .recommendedQuestions(parseJsonAsType(report.getRecommendedQuestions(), new TypeReference<List<String>>() {}))
         .finalAdvice(report.getFinalAdvice())
         .readinessComment(report.getReadinessComment())
         .createdAt(report.getCreatedAt())
@@ -416,39 +423,12 @@ public class ReportService {
     }
   }
 
-  private <T> T parseJson(String json, Class<T> clazz) {
+  private <T> T parseJsonAsType(String json, TypeReference<T> typeReference) {
     if (json == null) return null;
     try {
-      return objectMapper.readValue(json, clazz);
+      return objectMapper.readValue(json, typeReference);
     } catch (Exception e) {
       log.warn("역직렬화 실패: {}", e.getMessage());
-      return null;
-    }
-  }
-
-  private List<String> parseJsonToList(String json) {
-    if (json == null) return null;
-    try {
-      return objectMapper.readValue(json, new TypeReference<>() {});
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private List<WeaknessItem> parseJsonToWeaknessItemList(String json) {
-    if (json == null) return null;
-    try {
-      return objectMapper.readValue(json, new TypeReference<>() {});
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  private List<QuestionFeedback> parseJsonToQuestionFeedbackList(String json) {
-    if (json == null) return null;
-    try {
-      return objectMapper.readValue(json, new TypeReference<>() {});
-    } catch (Exception e) {
       return null;
     }
   }
