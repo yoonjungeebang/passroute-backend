@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import passroutebackend.document.dto.request.DocumentUploadCompleteRequest;
 import passroutebackend.document.dto.response.DocumentListResponse;
 import passroutebackend.document.dto.response.PresignedUrlResponse;
@@ -35,6 +37,7 @@ public class DocumentService {
     private final UserRepository userRepository;
     private final S3Presigner s3Presigner;
     private final S3Client s3Client;
+    private final DocumentExtractionService documentExtractionService;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -86,6 +89,19 @@ public class DocumentService {
                 .build();
 
         documentRepository.save(document);
+
+        // PDF인 경우 트랜잭션 커밋 완료 후 비동기로 텍스트 추출
+        // (커밋 전 호출 시 비동기 스레드가 document를 조회하지 못하는 레이스 컨디션 방지)
+        if ("pdf".equalsIgnoreCase(ext)) {
+            final Long documentId = document.getId();
+            final String s3Key = request.getS3Key();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    documentExtractionService.extractAsync(documentId, s3Key);
+                }
+            });
+        }
     }
 
     // 3. 파일 목록 조회
