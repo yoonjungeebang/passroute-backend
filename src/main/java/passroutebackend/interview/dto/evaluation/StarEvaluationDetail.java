@@ -6,8 +6,11 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class StarEvaluationResponse {
+public class StarEvaluationDetail {
 
-  @JsonProperty("star_evaluation")
-  private StarEvaluationDetail starEvaluation;
+  private boolean applicable;
+  private String reason;
+
+  @JsonProperty("star_score")
+  private Integer starScore;
 }

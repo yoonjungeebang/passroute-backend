@@ -51,11 +51,13 @@ public enum ErrorCode {
   INVALID_INTERVIEW_FORMAT(HttpStatus.BAD_REQUEST, "I006", "MULTI 면접 시 aiCompetitors와 debateTopic은 필수입니다."),
   ROOM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "I007", "해당 면접 방에 접근 권한이 없습니다."),
   ROOM_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "I008", "완료되지 않은 면접은 이력으로 조회할 수 없습니다."),
+  REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "I009", "리포트를 찾을 수 없습니다."),
+  REPORT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "I010", "리포트 생성에 실패했습니다."),
 
   // Schedule
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),
   SCHEDULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S002", "해당 일정에 접근 권한이 없습니다."),
-  
+
   AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다.");
 
   private final HttpStatus status;

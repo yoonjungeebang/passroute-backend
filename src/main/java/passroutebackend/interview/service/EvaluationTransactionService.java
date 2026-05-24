@@ -40,9 +40,9 @@ public class EvaluationTransactionService {
   }
 
   @Transactional
-  public void saveResult(Long answerId, Double percentage, Integer starScore, String llmScoresJson) {
+  public void saveResult(Long answerId, Double percentage, Integer starScore, String llmScoresJson, Double concisenessFinal) {
     InterviewAnswer answer = answerRepository.findById(answerId)
         .orElseThrow(() -> CustomException.of(ErrorCode.ANSWER_NOT_FOUND));
-    answer.updateEvaluationResult(percentage, starScore, llmScoresJson);
+    answer.updateEvaluationResult(percentage, starScore, llmScoresJson, concisenessFinal);
   }
 }

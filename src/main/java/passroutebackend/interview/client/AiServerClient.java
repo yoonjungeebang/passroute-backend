@@ -15,6 +15,10 @@ import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.StarEvaluationResponse;
 import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
+import passroutebackend.interview.dto.report.ReportGenerationRequest;
+import passroutebackend.interview.dto.report.ReportGenerationResponse;
+import passroutebackend.interview.dto.report.SessionSummaryRequest;
+import passroutebackend.interview.dto.report.SessionSummaryResponse;
 
 @Slf4j
 @Component
@@ -76,5 +80,23 @@ public class AiServerClient {
         .body(request)
         .retrieve()
         .body(StarEvaluationResponse.class);
+  }
+
+  public SessionSummaryResponse sessionSummary(SessionSummaryRequest request) {
+    return aiServerRestClient.post()
+        .uri("/evaluate/session-summary")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(request)
+        .retrieve()
+        .body(SessionSummaryResponse.class);
+  }
+
+  public ReportGenerationResponse generateReport(ReportGenerationRequest request) {
+    return aiServerRestClient.post()
+        .uri("/report/generate")
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(request)
+        .retrieve()
+        .body(ReportGenerationResponse.class);
   }
 }
