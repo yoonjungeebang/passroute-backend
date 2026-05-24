@@ -43,4 +43,4 @@ out/
 src/main/resources/application-local.yml
 
 /docs/
-.claude/CLAUDE.md
+.claude/
