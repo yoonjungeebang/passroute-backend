@@ -26,7 +26,7 @@ public class AiServerClient {
   public QuestionGenerateResponse generateQuestions(QuestionGenerateRequest request) {
     try {
       QuestionGenerateResponse response = aiServerRestClient.post()
-          .uri("/api/generate")
+          .uri("/api/questions/generate")
           .contentType(MediaType.APPLICATION_JSON)
           .body(request)
           .retrieve()
