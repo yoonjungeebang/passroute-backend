@@ -32,7 +32,7 @@ public enum ErrorCode {
   QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "I002", "면접 질문을 찾을 수 없습니다."),
   SESSION_ALREADY_ENDED(HttpStatus.BAD_REQUEST, "I003", "이미 종료된 면접 세션입니다."),
   ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "I004", "면접 답변을 찾을 수 없습니다."),
-  REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "I005", "리포트를 찾을 수 없습니다.");
+  REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "I009", "리포트를 찾을 수 없습니다.");
 
   private final HttpStatus status;
   private final String code;
