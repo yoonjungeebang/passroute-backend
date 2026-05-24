@@ -1,5 +1,6 @@
 package passroutebackend.interview.dto.generate;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class QuestionGenerateRequest {
 
   @JsonProperty("interview_type")
@@ -27,4 +29,10 @@ public class QuestionGenerateRequest {
 
   @JsonProperty("self_intro_items")
   private final List<SelfIntroItemDto> selfIntroItems;
+
+  @JsonProperty("resume_text")
+  private final String resumeText;
+
+  @JsonProperty("portfolio_text")
+  private final String portfolioText;
 }

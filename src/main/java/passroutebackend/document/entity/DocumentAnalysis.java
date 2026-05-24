@@ -27,10 +27,10 @@ public class DocumentAnalysis {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id", nullable = false, unique = true)
+    @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 
-    @Column(name = "extracted_text", columnDefinition = "LONGTEXT")
+    @Column(name = "extracted_text", columnDefinition = "TEXT")
     private String extractedText;
 
     @Column(name = "analyzed_at")

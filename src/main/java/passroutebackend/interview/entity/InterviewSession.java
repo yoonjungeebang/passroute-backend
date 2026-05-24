@@ -29,7 +29,7 @@ public class InterviewSession {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "interview_room_id", nullable = false)
+  @JoinColumn(name = "room_id", nullable = false)
   private InterviewRoom interviewRoom;
 
   @Column(nullable = false)

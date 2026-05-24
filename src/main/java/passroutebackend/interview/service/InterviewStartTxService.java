@@ -3,6 +3,11 @@ package passroutebackend.interview.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import passroutebackend.document.entity.Document;
+import passroutebackend.document.entity.Document.DocumentType;
+import passroutebackend.document.entity.DocumentAnalysis;
+import passroutebackend.document.repository.DocumentAnalysisRepository;
+import passroutebackend.document.repository.DocumentRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
@@ -21,6 +26,7 @@ import passroutebackend.selfintro.repository.SelfIntroRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +36,8 @@ public class InterviewStartTxService {
   private final InterviewSessionRepository interviewSessionRepository;
   private final InterviewQuestionRepository interviewQuestionRepository;
   private final SelfIntroRepository selfIntroRepository;
+  private final DocumentRepository documentRepository;
+  private final DocumentAnalysisRepository documentAnalysisRepository;
 
   @Transactional
   public SessionPreparation prepareSession(Long roomId, Long userId) {
@@ -41,6 +49,9 @@ public class InterviewStartTxService {
     }
 
     List<SelfIntroItemDto> selfIntroItems = loadSelfIntroItems(room.getSiId());
+
+    String resumeText = extractedText(userId, DocumentType.RESUME);
+    String portfolioText = extractedText(userId, DocumentType.PORTFOLIO);
 
     int sessionNumber = interviewSessionRepository.countByInterviewRoom(room) + 1;
     InterviewSession session = InterviewSession.builder()
@@ -58,7 +69,9 @@ public class InterviewStartTxService {
         room.getCompanyName(),
         room.getJobPosition(),
         room.getInterviewCount(),
-        selfIntroItems
+        selfIntroItems,
+        resumeText,
+        portfolioText
     );
 
     return new SessionPreparation(session.getId(), aiRequest);
@@ -94,5 +107,13 @@ public class InterviewStartTxService {
             .map(item -> new SelfIntroItemDto(item.getQuestionText(), item.getAnswerText()))
             .toList())
         .orElse(List.of());
+  }
+
+  private String extractedText(Long userId, DocumentType type) {
+    return documentRepository
+        .findByUserIdAndTypeAndIsRepresentativeTrueAndDeletedAtIsNull(userId, type)
+        .flatMap(documentAnalysisRepository::findByDocument)
+        .map(DocumentAnalysis::getExtractedText)
+        .orElse(null);
   }
 }

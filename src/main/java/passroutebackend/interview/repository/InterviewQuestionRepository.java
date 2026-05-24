@@ -8,9 +8,14 @@ import java.util.List;
 
 public interface InterviewQuestionRepository extends JpaRepository<InterviewQuestion, Long> {
 
+  // FollowUpTransactionService: 세트 단위 질문 조회
   List<InterviewQuestion> findBySessionAndSetNumberOrderByQuestionOrderAsc(
       InterviewSession session, int setNumber);
 
+  // InterviewHistoryService: 여러 세션의 질문 일괄 조회
   List<InterviewQuestion> findBySessionInOrderBySessionIdAscQuestionOrderAsc(
       List<InterviewSession> sessions);
+
+  // InterviewProgressTxService: 세션 전체 질문 조회
+  List<InterviewQuestion> findBySessionOrderByQuestionOrderAsc(InterviewSession session);
 }
