@@ -5,12 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.FollowUpRequest;
 import passroutebackend.interview.dto.FollowUpResponse;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationResponse;
 import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.StarEvaluationResponse;
+import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
+import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
 import passroutebackend.interview.dto.report.ReportGenerationRequest;
 import passroutebackend.interview.dto.report.ReportGenerationResponse;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
@@ -22,6 +26,27 @@ import passroutebackend.interview.dto.report.SessionSummaryResponse;
 public class AiServerClient {
 
   private final RestClient aiServerRestClient;
+
+  public QuestionGenerateResponse generateQuestions(QuestionGenerateRequest request) {
+    try {
+      QuestionGenerateResponse response = aiServerRestClient.post()
+          .uri("/api/generate")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(request)
+          .retrieve()
+          .body(QuestionGenerateResponse.class);
+
+      if (response == null || response.getQuestions() == null || response.getQuestions().isEmpty()) {
+        throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+      }
+      return response;
+    } catch (CustomException e) {
+      throw e;
+    } catch (Exception e) {
+      log.error("AI 서버 질문 생성 실패: {}", e.getMessage());
+      throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+    }
+  }
 
   public FollowUpResponse requestFollowUp(FollowUpRequest request) {
     try {

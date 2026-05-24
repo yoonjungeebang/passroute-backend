@@ -1,19 +1,30 @@
 spring:
-
-  datasource:
-    url: ${DB_URL}
-    username: admin
-    password: ${RDS_PASSWD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-    hibernate:
-      ddl-auto: validate
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - profile_nickname
+              - account_email
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - email
+              - profile
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
   application:
     name: passroute-backend
@@ -27,8 +38,8 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration: 1800000    # 30분
-  refresh-token-expiration: 604800000 # 7일
+  access-token-expiration: 1800000
+  refresh-token-expiration: 604800000
 
 cors:
   allowed-origins:
@@ -39,7 +50,20 @@ swagger:
     local: http://localhost:8080/api
     prod: https://pass-route.com/api
 
+oauth2:
+  redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/callback}
+
 follow-up:
   ai-server-url: ${AI_SERVER_URL:http://localhost:8000}
   max-turn: 1
   timeout-seconds: 120
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${AWS_S3_BUCKET}

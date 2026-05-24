@@ -1,4 +1,4 @@
-package passroutebackend.user.dto;
+package passroutebackend.auth.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
