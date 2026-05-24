@@ -1,0 +1,578 @@
+topics:
+
+  # ═══════════════════════════════════════════════════════════════
+  # AI 윤리 (AI_ETHICS) — 10개
+  # ═══════════════════════════════════════════════════════════════
+
+  - id: topic_001_ai_replaces_junior
+    title: 생성형 AI가 주니어 개발자 일자리를 위협하는가
+    description: ChatGPT·Copilot 등 코드 생성 AI의 보편화가 주니어 채용·성장에 미치는 영향
+    category: AI_ETHICS
+    proKeyPoints:
+      - 단순 반복 코딩 자동화로 주니어 수요 축소
+      - 신입이 실무 학습할 기회 자체가 줄어듦
+      - 시니어 위주 채용 트렌드가 데이터로 확인됨
+      - 부트캠프·신입 입사자 증가율 둔화
+    conKeyPoints:
+      - AI는 도구이며 판단·설계·검증은 인간 몫
+      - AI 활용 능력이 새로운 주니어 역량으로 부상
+      - 생산성 향상이 더 많은 프로젝트와 채용을 만듦
+      - 멘토링·코드 리뷰는 여전히 사람의 영역
+
+  - id: topic_002_ai_in_interview
+    title: 기술 면접에서 AI 코딩 도구 사용을 허용해야 하는가
+    description: 실무에선 AI를 쓰면서 면접에선 금지하는 관행의 적절성
+    category: AI_ETHICS
+    proKeyPoints:
+      - 실무 환경 그대로 평가하는 것이 합리적
+      - AI 활용 능력도 중요한 채용 변별 요소
+      - 단순 암기보다 문제 해결 능력 측정 가능
+    conKeyPoints:
+      - 지원자의 순수 사고력·기초 이해 평가 불가
+      - AI 의존도가 후보 간 편차를 왜곡
+      - 알고리즘·시스템 설계 같은 본질 역량 검증 어려움
+      - AI 답을 비판적으로 평가하는 능력은 기초가 있어야 가능
+
+  - id: topic_003_ai_code_copyright
+    title: AI가 생성한 코드의 저작권은 사용자에게 있는가
+    description: AI 어시스턴트가 작성한 코드의 라이선스·저작권 귀속 문제
+    category: AI_ETHICS
+    proKeyPoints:
+      - 프롬프트 설계와 검수는 사용자의 창작 행위
+      - 도구 사용 결과물은 사용자 소유가 일반 원칙
+      - 책임도 사용자가 지므로 권리도 사용자에 귀속
+    conKeyPoints:
+      - 학습 데이터의 원저작자 권리 침해 가능
+      - 단순 프롬프트 입력은 창작으로 보기 어려움
+      - GPL 등 오픈소스 라이선스 오염 리스크
+      - 법·판례가 아직 명확하지 않은 영역
+
+  - id: topic_004_ai_monitoring
+    title: 회사가 직원의 AI 사용 내역을 모니터링해도 되는가
+    description: 보안·생산성 측정을 위한 AI 사용 로깅의 정당성
+    category: AI_ETHICS
+    proKeyPoints:
+      - 기밀 코드·고객 데이터 유출 방지 목적
+      - 라이선스 위반 코드 유입 차단
+      - 생산성 측정과 베스트 프랙티스 공유에 활용
+    conKeyPoints:
+      - 개발자 프라이버시 침해
+      - 감시 분위기가 창의성·시도를 위축
+      - 데이터 자체보다 결과물 검수가 더 효과적
+      - 노동조합·근로기준법과 충돌 가능
+
+  - id: topic_005_ai_interviewer
+    title: AI 면접관이 1차 통과 결정을 내려도 되는가
+    description: AI 자동 평가가 합격 여부를 결정하는 방식의 적절성
+    category: AI_ETHICS
+    proKeyPoints:
+      - 사람보다 편향(성별·출신 등) 적게 평가 가능
+      - 대량 지원자 빠르게 스크리닝
+      - 평가 기준 일관성 유지
+    conKeyPoints:
+      - AI 학습 데이터 자체에 편향 내재
+      - 비언어적 신호·잠재력 평가 불가
+      - 부적격 판정의 책임 소재 모호
+      - 지원자가 결과를 납득·이의제기하기 어려움
+
+  - id: topic_006_ai_training_data
+    title: AI 학습용 코드 크롤링에 원저작자 동의가 필수인가
+    description: 공개된 오픈소스 코드를 AI 학습에 사용하는 행위의 정당성
+    category: AI_ETHICS
+    proKeyPoints:
+      - 라이선스(GPL 등)는 학습 사용까지 허용하지 않음
+      - 원저작자 의도와 다른 상업적 활용
+      - 동의 없는 사용은 디지털 강탈
+    conKeyPoints:
+      - 공개된 코드는 학습 목적 사용 묵시적 허용
+      - 학습 결과물이 원본과 다르면 변형 저작물
+      - 동의 절차 비용이 기술 발전을 지연시킴
+      - 인간도 같은 방식으로 코드를 보며 학습
+
+  - id: topic_007_ai_weakens_problem_solving
+    title: AI 어시스턴트 의존이 개발자의 문제 해결력을 약화시키는가
+    description: 코드 생성 도구가 개발자 본연의 사고 능력에 미치는 영향
+    category: AI_ETHICS
+    proKeyPoints:
+      - 디버깅·트레이싱 같은 기초 역량 저하
+      - "왜 이 코드인지" 모르고 복붙하는 사례 증가
+      - 시스템 설계·아키텍처 사고 기회 감소
+    conKeyPoints:
+      - 단순 반복 작업 시간 절약 → 고차원 문제에 집중
+      - 새로운 패턴·라이브러리 학습 가속
+      - 도구 활용 능력도 핵심 역량의 일부
+      - 잘 쓰는 개발자가 더 빠르게 성장
+
+  - id: topic_008_ai_in_secure_code
+    title: 보안이 중요한 코드에 AI 어시스턴트 사용을 금지해야 하는가
+    description: 금융·의료·국방 등 민감 영역에서 AI 코드 생성의 위험성
+    category: AI_ETHICS
+    proKeyPoints:
+      - 학습 데이터에 알려진 취약 패턴 포함
+      - 미묘한 보안 결함 검수 어려움
+      - 책임 추적·감사(audit) 흐름 복잡
+    conKeyPoints:
+      - 보안 검수 도구와 병행하면 오히려 더 안전
+      - 보일러플레이트 생성 시간 단축으로 검토에 집중 가능
+      - 금지는 개발 속도와 인재 유치에 불이익
+      - AI 자체보다 검수 프로세스가 더 중요
+
+  - id: topic_009_ai_output_responsibility
+    title: AI 결과물의 모든 책임은 사용한 개발자가 져야 하는가
+    description: AI 생성 코드로 발생한 장애·보안 사고의 책임 소재
+    category: AI_ETHICS
+    proKeyPoints:
+      - 최종 코드를 머지한 사람이 책임지는 게 원칙
+      - AI 결과를 검수할 의무는 사용자에게 있음
+      - 책임 분산은 안전망을 약화시킴
+    conKeyPoints:
+      - 도구 제공자도 일정 책임 분담 필요 (제조물 책임)
+      - 모든 결과를 100% 검수하는 것은 비현실적
+      - 학습 데이터 편향·결함은 사용자 통제 밖
+      - 회사 차원의 정책·가드레일이 함께 작동해야 공정
+
+  - id: topic_010_ai_skill_in_evaluation
+    title: 회사가 직원의 AI 활용 능력으로 인사 평가를 해도 되는가
+    description: AI 사용 숙련도를 핵심 역량으로 인정해 평가 지표로 활용하는 것
+    category: AI_ETHICS
+    proKeyPoints:
+      - 시대 변화에 맞는 새로운 핵심 역량
+      - 정량 측정 가능 (생산성·코드 품질 향상치)
+      - 회사 경쟁력에 직결되는 능력
+    conKeyPoints:
+      - 도구 숙련도와 본질적 개발 역량 혼동
+      - AI를 안 쓰고도 좋은 결과 내는 개발자 평가절하
+      - 직무 특성에 따라 AI 활용 빈도가 다름
+      - 단기 트렌드를 영구 평가 기준으로 굳히는 위험
+
+  # ═══════════════════════════════════════════════════════════════
+  # 채용 (RECRUITMENT) — 10개
+  # ═══════════════════════════════════════════════════════════════
+
+  - id: topic_011_opensource_contribution
+    title: 오픈소스 기여를 채용 평가에 반영해야 하는가
+    description: GitHub·오픈소스 활동을 정량 지표로 활용하는 것의 타당성
+    category: RECRUITMENT
+    proKeyPoints:
+      - 실제 코드 품질과 협업 능력 검증 가능
+      - 자기주도 학습 의지 확인
+      - 정량적이고 위·변조 어려운 평가 자료
+    conKeyPoints:
+      - 시간 여유 있는 지원자에게만 유리해 불평등 심화
+      - 회사 업무와 다른 분야에서의 기여는 변별력 낮음
+      - 활동량이 곧 실력을 보장하지 않음
+      - 회사 내부 비공개 프로젝트 종사자에 불리
+
+  - id: topic_012_nondev_preference
+    title: 비전공자 부트캠프 출신을 신입 개발자로 우대해야 하는가
+    description: 다양한 배경 vs 전공자 기초 깊이 사이의 채용 전략
+    category: RECRUITMENT
+    proKeyPoints:
+      - 다양한 도메인 지식이 팀 시너지 창출
+      - 사용자·비즈니스 이해도 우위
+      - 학습 적응력을 이미 증명한 인재
+    conKeyPoints:
+      - CS 기초(자료구조·OS·네트워크) 깊이 부족
+      - 장기적 성장 한계와 천장 우려
+      - 회사가 추가 교육 비용 부담
+      - 짧은 부트캠프로 4년 학위 대체 어려움
+
+  - id: topic_013_degree_in_hiring
+    title: 학력은 개발자 채용에서 의미 있는 지표인가
+    description: 출신 대학·학위가 신입 개발자 채용에 미치는 영향의 적절성
+    category: RECRUITMENT
+    proKeyPoints:
+      - CS 학위는 기초 이론 학습의 객관적 증명
+      - 장기 학습 능력의 신호로 작용
+      - 대량 지원자 1차 스크리닝에 효율적
+    conKeyPoints:
+      - 실무 능력과 학력의 상관관계 약함
+      - 비전공자·독학 인재 진입 장벽
+      - 변화 빠른 IT 산업에 4년 전 지식은 의미 제한적
+      - 차별 요소로 작용해 다양성 저해
+
+  - id: topic_014_coding_test_validity
+    title: 코딩 테스트 점수는 실무 능력을 잘 반영하는가
+    description: 알고리즘 PS 위주 코딩 테스트가 채용 변별에 적합한지
+    category: RECRUITMENT
+    proKeyPoints:
+      - 기초 사고력과 알고리즘 이해도 측정 가능
+      - 대량 지원자 빠르게 스크리닝
+      - 객관적·정량적 비교 가능
+    conKeyPoints:
+      - 실무 코드는 협업·설계·디버깅 비중이 더 큼
+      - 단기 트레이닝으로 점수 끌어올리기 가능
+      - 백엔드·프론트·DevOps 직무별 필요 역량이 다름
+      - 시간 제약 푸는 능력이 실무 생산성과 무관
+
+  - id: topic_015_side_project_credit
+    title: 야간·주말 사이드 프로젝트가 채용 가산점이어야 하는가
+    description: 개인 시간 활용한 추가 활동을 평가에 반영하는 것의 적절성
+    category: RECRUITMENT
+    proKeyPoints:
+      - 열정과 자기주도성의 강력한 증거
+      - 실무 외 다양한 기술 스택 경험 확인
+      - 결과물(서비스·앱)을 직접 검증 가능
+    conKeyPoints:
+      - 가정·건강 등 개인 사정 있는 지원자에 불리
+      - 워라밸 문화와 정면 충돌
+      - 본업 외 시간을 강요하는 분위기 조성
+      - 회사 시간에 성과를 내는 능력이 더 중요
+
+  - id: topic_016_culture_fit
+    title: 면접에서 컬처핏(culture fit) 평가는 정당한가
+    description: 기술 역량 외에 조직 적합성을 별도 평가 기준으로 두는 것
+    category: RECRUITMENT
+    proKeyPoints:
+      - 협업 중심 개발에서 팀 케미가 성과에 직결
+      - 입사 후 조기 이탈률 감소
+      - 조직 문화·미션 이해도가 장기 기여로 이어짐
+    conKeyPoints:
+      - "비슷한 사람"만 뽑아 다양성 저해
+      - 무의식적 편향(성별·나이·출신)이 개입
+      - 평가 기준이 모호해 면접관 주관에 좌우
+      - 컬처핏 명목으로 부당한 탈락 사유 정당화
+
+  - id: topic_017_algo_for_backend
+    title: 알고리즘 PS 능력이 백엔드 개발자에게 필수인가
+    description: 실무 백엔드 직무에서 알고리즘 문제 풀이 능력의 중요성
+    category: RECRUITMENT
+    proKeyPoints:
+      - 복잡도 분석은 쿼리·API 설계에 직접 영향
+      - 자료구조 이해가 데이터 모델링의 기초
+      - 사고력의 객관적 측정 수단
+    conKeyPoints:
+      - 실제 백엔드 업무는 설계·운영·협업 비중이 큼
+      - 라이브러리·프레임워크가 알고리즘 대부분 처리
+      - PS 잘하는 사람이 시스템 설계도 잘한다는 보장 없음
+      - 트래픽 대응은 알고리즘보다 인프라 지식이 더 결정적
+
+  - id: topic_018_skill_over_personality
+    title: 신입 채용에서 실력이 인성보다 우선이어야 하는가
+    description: 기술 역량과 협업 태도 사이의 우선순위
+    category: RECRUITMENT
+    proKeyPoints:
+      - 인성은 입사 후 교육·환경으로 변화 가능
+      - 실력은 짧은 면접에서 검증해야 하는 핵심
+      - 결국 회사는 결과물로 평가받음
+    conKeyPoints:
+      - 한 명의 부적절한 태도가 팀 전체 생산성 저하
+      - 실력은 입사 후에도 성장 가능하지만 인성은 어려움
+      - 협업 비중이 높은 개발에서 태도가 결과를 좌우
+      - 기술 평가만 보다가 큰 사고 일으킨 사례 다수
+
+  - id: topic_019_reference_check
+    title: 평판 조회(reference check)는 채용 과정에 포함되어야 하는가
+    description: 전 직장 동료·상사를 통한 평판 검증의 적절성
+    category: RECRUITMENT
+    proKeyPoints:
+      - 짧은 면접으로 알 수 없는 실제 협업 모습 확인
+      - 이력서·자기소개서의 검증 수단
+      - 부적격자 채용으로 인한 비용 절감
+    conKeyPoints:
+      - 동의 없는 평판 조회는 사생활 침해
+      - 전 직장과의 인간 관계·갈등에 좌우
+      - 지원자의 이직 사실을 회사에 노출시킴
+      - 평판이 좋아도 새 환경에서 다를 수 있음
+
+  - id: topic_020_salary_transparency
+    title: 개발자 연봉 정보 공개는 채용 시장에 긍정적인가
+    description: 회사·직급별 연봉 공개가 채용·이직에 미치는 영향
+    category: RECRUITMENT
+    proKeyPoints:
+      - 정보 비대칭 해소로 협상력 균형
+      - 부당한 임금 격차(성별·연차) 가시화
+      - 시장 평균과 비교한 자기 가치 측정 가능
+    conKeyPoints:
+      - 사내 갈등(누가 더 받는지) 유발
+      - 회사 입장에서 인재 유출 우려
+      - 단순 연봉 숫자는 복지·환경 등 맥락 누락
+      - 협상 동기 약화로 적극적 어필 감소
+
+  # ═══════════════════════════════════════════════════════════════
+  # 개발문화 (DEV_CULTURE) — 10개
+  # ═══════════════════════════════════════════════════════════════
+
+  - id: topic_021_four_day_week
+    title: 주 4일제는 개발 생산성에 긍정적인가
+    description: 노동 시간 단축이 개발팀 성과에 미치는 영향
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 집중력·창의성 향상
+      - 번아웃 감소로 장기 유지율 상승
+      - 일부 국내·해외 사례에서 생산성 유지·향상 확인
+    conKeyPoints:
+      - 협업·조율 시간 부족으로 커뮤니케이션 비용 증가
+      - 짧은 시간에 같은 양 압박으로 오히려 스트레스↑
+      - 24/7 서비스 운영에 부적합한 직무 존재
+      - 글로벌 협업 시 시차 문제 악화
+
+  - id: topic_022_ai_code_review
+    title: 코드 리뷰는 반드시 사람이 해야 하는가
+    description: AI 자동 코드 리뷰 대비 사람 리뷰의 가치
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 맥락·의도·팀 컨벤션은 사람이 더 잘 판단
+      - 주니어 성장의 핵심 학습 채널
+      - 책임 소재가 명확
+    conKeyPoints:
+      - 일관성·속도는 AI가 우위
+      - 사람 리뷰는 감정·편향·시간대 영향
+      - 대규모 PR에서 사람 한계 명확
+      - 단순 규약 위반은 자동화가 효율적
+
+  - id: topic_023_pair_programming
+    title: 페어 프로그래밍은 솔로 개발보다 효율적인가
+    description: 두 명이 한 컴퓨터로 작업하는 방식의 생산성
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 실시간 리뷰로 버그·설계 결함 조기 발견
+      - 지식 전파와 주니어 성장 효과
+      - 깊은 집중과 책임 공유
+    conKeyPoints:
+      - 인력 2명이 1명 분량 산출하는 비용 부담
+      - 성격·스타일 안 맞으면 효율 급락
+      - 모든 작업이 페어에 적합하지 않음
+      - 비대면 환경에서 효과 감소
+
+  - id: topic_024_slack_instant_reply
+    title: 슬랙 즉답 문화는 생산성에 도움이 되는가
+    description: 메신저 빠른 응답을 기대하는 분위기의 영향
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 블로커 해소가 빨라져 전체 흐름 개선
+      - 팀워크와 즉시 협업에 유리
+      - 원격 환경에서 존재감과 신뢰 형성
+    conKeyPoints:
+      - 깊은 집중(deep work) 불가능
+      - 컨텍스트 스위칭 비용으로 코딩 시간 감소
+      - 즉답 못 하면 비협조적으로 보이는 압박
+      - 비동기 문서 문화가 더 확장성 높음
+
+  - id: topic_025_tdd_everywhere
+    title: TDD(테스트 주도 개발)는 모든 프로젝트에 적합한가
+    description: 테스트 먼저 작성하는 방법론의 보편성
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 설계 품질 향상과 회귀 버그 방지
+      - 리팩토링 안전망 제공
+      - 요구사항을 명확히 사고하게 만듦
+    conKeyPoints:
+      - 프로토타입·실험 단계에서 속도 저하
+      - UI·외부 API 의존 코드에 적용 어려움
+      - 잘못된 테스트는 오히려 부담
+      - 모든 팀원이 숙련될 때까지 시간 비용
+
+  - id: topic_026_remote_work
+    title: 재택근무는 개발팀에 적합한 근무 형태인가
+    description: 풀 재택이 개발 생산성과 팀 문화에 미치는 영향
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 통근 시간 절약 → 코딩·휴식 시간 증가
+      - 지역 제약 없이 인재 확보 가능
+      - 개인별 최적 환경에서 집중력 향상
+    conKeyPoints:
+      - 신입 온보딩과 멘토링 어려움
+      - 비공식 소통·아이디어 교류 감소
+      - 사내 문화·소속감 형성 한계
+      - 보안·접근 통제 비용 증가
+
+  - id: topic_027_convention_enforcement
+    title: 코드 컨벤션은 자유보다 강제가 우선되어야 하는가
+    description: 린터·포매터 강제 적용의 적절성
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 일관된 스타일로 가독성·유지보수성 향상
+      - PR 리뷰가 본질에 집중 가능
+      - 신입도 빠르게 적응 가능
+    conKeyPoints:
+      - 과도한 강제는 개발자 자율성 침해
+      - 모든 상황에 맞는 단일 규칙은 없음
+      - 강제보다 합의·논의로 도달하는 게 지속 가능
+      - 규칙 자체가 부적절할 때 변경 어려움
+
+  - id: topic_028_kpi_by_metrics
+    title: 개발자 평가에 코드 라인 수·PR 개수 같은 정량 지표를 써도 되는가
+    description: 정량 지표 기반 개발자 KPI의 적절성
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 객관적이고 비교 가능한 평가 기준
+      - 평가자의 편향·주관 감소
+      - 추적·관리가 용이
+    conKeyPoints:
+      - 본질(품질·설계)을 놓치고 양만 추구
+      - 어려운 문제 해결한 작업이 저평가
+      - 리팩토링·삭제로 코드 줄이는 행위가 페널티
+      - 협업·멘토링 같은 비코딩 기여 무시
+
+  - id: topic_029_oncall_culture
+    title: 긴급 장애 대응을 위한 야간·주말 온콜은 필수적인가
+    description: 24/7 서비스 운영에서 개발자 온콜의 정당성
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 서비스 가용성을 위해 불가피
+      - 시스템 만든 사람이 가장 빠르게 복구
+      - 적절한 보상·휴식 보장 시 합리적
+    conKeyPoints:
+      - 개인 삶 침해와 만성 스트레스
+      - 장애 예방 투자가 더 본질적 해결책
+      - 충분한 보상·로테이션 없는 운영이 다반사
+      - SRE·전담 운영팀이 더 효과적
+
+  - id: topic_030_doc_responsibility
+    title: 사내 문서화는 개인이 아닌 팀 차원의 의무여야 하는가
+    description: 위키·README 작성을 팀 책임으로 제도화하는 것
+    category: DEV_CULTURE
+    proKeyPoints:
+      - 개인 책임으로 두면 우선순위에서 밀림
+      - 팀 차원의 지식 자산화로 이탈 리스크 감소
+      - 신입 온보딩 비용 절감
+    conKeyPoints:
+      - 강제 문서화는 형식적 결과물만 양산
+      - 책임 분산으로 아무도 안 쓰는 역효과
+      - 코드 자체가 좋은 문서면 별도 비용 불필요
+      - 변경 잦은 영역은 문서가 더 빨리 낡음
+
+  # ═══════════════════════════════════════════════════════════════
+  # 기술 트렌드 (TECH_TREND) — 10개
+  # ═══════════════════════════════════════════════════════════════
+
+  - id: topic_031_microservices
+    title: 마이크로서비스가 모놀리식보다 무조건 우월한가
+    description: 아키텍처 선택 시 MSA 만능론에 대한 검토
+    category: TECH_TREND
+    proKeyPoints:
+      - 독립 배포·확장이 트래픽 대응에 유리
+      - 팀 단위 책임 분리로 개발 속도 향상
+      - 기술 스택 유연성과 장애 격리
+    conKeyPoints:
+      - 운영 복잡도(모니터링·트레이싱) 폭증
+      - 분산 트랜잭션과 데이터 일관성 어려움
+      - 소규모 팀엔 명백한 오버엔지니어링
+      - 네트워크 호출 비용으로 전체 지연 증가
+
+  - id: topic_032_fullstack_vs_specialist
+    title: 풀스택 개발자가 전문화된 개발자보다 가치 있는가
+    description: 제너럴리스트 vs 스페셜리스트 커리어 패스 우열
+    category: TECH_TREND
+    proKeyPoints:
+      - 전체 시스템 이해로 더 나은 설계 가능
+      - 작은 팀에서 즉시 기여 가능
+      - 시장 변화 적응력과 직무 전환 유연성
+    conKeyPoints:
+      - 깊이 부족으로 어려운 문제 해결 한계
+      - 전문가 대비 임팩트 낮음
+      - 너무 많은 스택 학습으로 부담 가중
+      - 트래픽 큰 서비스에선 전문성이 결정적
+
+  - id: topic_033_serverless
+    title: 서버리스(Serverless)는 전통적 서버를 대체할 것인가
+    description: AWS Lambda 등 FaaS의 보편화 가능성
+    category: TECH_TREND
+    proKeyPoints:
+      - 인프라 관리 부담 제거
+      - 사용량 기반 과금으로 비용 효율
+      - 자동 확장과 무중단 배포 간편
+    conKeyPoints:
+      - 콜드 스타트로 인한 지연
+      - 벤더 종속과 마이그레이션 어려움
+      - 장시간 작업·상태 유지에 부적합
+      - 디버깅·로컬 개발 환경 복잡
+
+  - id: topic_034_rust_replaces_go
+    title: Rust는 Go를 대체할 수 있는가
+    description: 시스템·백엔드 영역에서 두 언어의 미래
+    category: TECH_TREND
+    proKeyPoints:
+      - 메모리 안전성으로 보안 결함 원천 차단
+      - 더 높은 성능과 시스템 레벨 제어
+      - 강타입과 풍부한 표현력으로 대규모 시스템에 강점
+    conKeyPoints:
+      - 학습 곡선이 가파름
+      - Go는 동시성 모델이 단순하고 빠른 개발에 강점
+      - 생태계·라이브러리 성숙도는 Go가 우위
+      - 백엔드 API 서버 영역에선 Rust 이점이 제한적
+
+  - id: topic_035_nosql_vs_rdbms
+    title: NoSQL이 RDBMS를 대체할 수 있는가
+    description: 관계형 vs 비관계형 데이터베이스의 미래
+    category: TECH_TREND
+    proKeyPoints:
+      - 수평 확장과 비정형 데이터 처리에 강점
+      - 빠른 읽기·쓰기 성능
+      - 스키마 유연성으로 빠른 기능 변경 대응
+    conKeyPoints:
+      - 강한 일관성(ACID)이 필요한 도메인에 부적합
+      - 복잡한 조인·집계는 RDBMS가 훨씬 우위
+      - 트랜잭션 보장 미흡
+      - 30년 이상 검증된 RDBMS 노하우 활용 불가
+
+  - id: topic_036_vendor_lockin
+    title: 클라우드 벤더 종속(vendor lock-in)은 감수할 만한 비용인가
+    description: AWS·GCP 등 특정 클라우드에 깊이 종속되는 전략의 적절성
+    category: TECH_TREND
+    proKeyPoints:
+      - 매니지드 서비스로 개발 속도 극대화
+      - 운영·인프라 인력 절감
+      - 벤더 멀티 클라우드 비용이 훨씬 큼
+    conKeyPoints:
+      - 단가 인상·정책 변경 시 협상력 없음
+      - 다른 환경으로 이전 비용 폭증
+      - 벤더 장애가 전체 서비스 마비로
+      - 멀티 클라우드·온프레미스 옵션 잃음
+
+  - id: topic_037_single_language
+    title: 회사 내 모든 서비스를 같은 언어로 통일해야 하는가
+    description: 언어 통일 vs 폴리글랏(polyglot) 전략의 트레이드오프
+    category: TECH_TREND
+    proKeyPoints:
+      - 개발자 이동·코드 리뷰가 쉬워짐
+      - 공통 라이브러리·도구 공유
+      - 채용·온보딩 비용 절감
+    conKeyPoints:
+      - 도메인별 최적 언어를 활용하지 못함
+      - 단일 언어의 한계가 회사 전체 한계
+      - 직무·특성에 맞는 다양성이 혁신을 만듦
+      - 강제 통일은 인재 이탈 유발
+
+  - id: topic_038_typescript_replaces_js
+    title: TypeScript는 JavaScript를 완전히 대체해야 하는가
+    description: 정적 타입 도입의 보편화 vs JavaScript 자체의 가치
+    category: TECH_TREND
+    proKeyPoints:
+      - 컴파일 타임에 버그 조기 발견
+      - IDE 자동완성·리팩토링 도구 강력
+      - 대규모 코드베이스에 필수적
+    conKeyPoints:
+      - 학습·설정 비용으로 작은 프로젝트엔 과함
+      - 빌드 단계 추가로 빠른 프로토타이핑 저해
+      - 타입 시스템 한계로 결국 any 남용
+      - JS의 동적 특성을 살리는 사례 존재
+
+  - id: topic_039_kubernetes_everywhere
+    title: Kubernetes는 모든 규모의 회사에 필요한가
+    description: K8s 도입의 보편화 vs 과한 복잡도
+    category: TECH_TREND
+    proKeyPoints:
+      - 표준화된 컨테이너 오케스트레이션
+      - 무중단 배포·자동 복구·확장 자동화
+      - 멀티 클라우드·하이브리드 환경에 강점
+    conKeyPoints:
+      - 소규모 팀엔 명백한 오버스펙
+      - 운영 복잡도와 학습 비용 폭증
+      - PaaS(Heroku 등)나 ECS로 충분한 경우 많음
+      - 잘못 설정한 K8s는 단순 VM보다 불안정
+
+  - id: topic_040_stability_vs_learning
+    title: 신기술 도입은 안정성보다 학습 기회를 우선해야 하는가
+    description: 검증 안 된 기술 채택과 안정성 사이의 균형
+    category: TECH_TREND
+    proKeyPoints:
+      - 기술 부채 누적을 막고 미래 경쟁력 확보
+      - 개발자 성장과 채용 매력도 향상
+      - 신기술이 결국 표준이 되는 경우 다수
+    conKeyPoints:
+      - 검증 안 된 기술의 장애 리스크
+      - 운영·유지보수 비용 폭증
+      - 사용자 가치가 아닌 개발자 만족에 치우침
+      - 안정된 기술 깊이 파는 게 더 큰 가치를 만들 때 많음
