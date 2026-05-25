@@ -1,14 +1,31 @@
 package passroutebackend.interview.client;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.FollowUpRequest;
 import passroutebackend.interview.dto.FollowUpResponse;
+import passroutebackend.interview.dto.debate.DebateClosingRequest;
+import passroutebackend.interview.dto.debate.DebateClosingResponse;
+import passroutebackend.interview.dto.debate.DebateOpeningRequest;
+import passroutebackend.interview.dto.debate.DebateOpeningResponse;
+import passroutebackend.interview.dto.debate.DebateRebuttalRequest;
+import passroutebackend.interview.dto.debate.DebateRebuttalResponse;
+import passroutebackend.interview.dto.debate.DebateReportRequest;
+import passroutebackend.interview.dto.debate.DebateReportResponse;
+import passroutebackend.interview.dto.debate.DebateSessionSummaryRequest;
+import passroutebackend.interview.dto.debate.DebateSessionSummaryResponse;
+import passroutebackend.interview.dto.debate.DebateTurnEvalRequest;
+import passroutebackend.interview.dto.debate.DebateTurnEvalResponse;
+import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
+import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
+import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
+import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationResponse;
 import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
@@ -22,10 +39,17 @@ import passroutebackend.interview.dto.report.SessionSummaryResponse;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class AiServerClient {
 
   private final RestClient aiServerRestClient;
+  private final RestClient debateAiServerRestClient;
+
+  public AiServerClient(
+      RestClient aiServerRestClient,
+      @Qualifier("debateAiServerRestClient") RestClient debateAiServerRestClient) {
+    this.aiServerRestClient = aiServerRestClient;
+    this.debateAiServerRestClient = debateAiServerRestClient;
+  }
 
   public QuestionGenerateResponse generateQuestions(QuestionGenerateRequest request) {
     try {
@@ -98,5 +122,72 @@ public class AiServerClient {
         .body(request)
         .retrieve()
         .body(ReportGenerationResponse.class);
+  }
+
+  // ── 토론 면접 (debateAiServerRestClient 사용, timeout 180s) ─────────────────
+
+  public InterviewerOpeningResponse generateInterviewerOpening(InterviewerOpeningRequest request) {
+    return callDebateApi("/debate/interviewer-opening", request, InterviewerOpeningResponse.class,
+        "면접관 오프닝 생성");
+  }
+
+  public DebateOpeningResponse generateDebateOpening(DebateOpeningRequest request) {
+    return callDebateApi("/debate/opening", request, DebateOpeningResponse.class,
+        "AI 경쟁자 입론 생성");
+  }
+
+  public DebateRebuttalResponse generateDebateRebuttal(DebateRebuttalRequest request) {
+    return callDebateApi("/debate/rebuttal", request, DebateRebuttalResponse.class,
+        "AI 경쟁자 반박 생성");
+  }
+
+  public DebateClosingResponse generateDebateClosing(DebateClosingRequest request) {
+    return callDebateApi("/debate/closing", request, DebateClosingResponse.class,
+        "AI 경쟁자 마무리 생성");
+  }
+
+  public InterviewerClosingResponse generateInterviewerClosing(InterviewerClosingRequest request) {
+    return callDebateApi("/debate/interviewer-closing", request, InterviewerClosingResponse.class,
+        "면접관 마무리 생성");
+  }
+
+  public DebateTurnEvalResponse evaluateDebateTurn(DebateTurnEvalRequest request) {
+    return callDebateApi("/evaluate/debate-turn", request, DebateTurnEvalResponse.class,
+        "토론 사용자 턴 평가");
+  }
+
+  public DebateSessionSummaryResponse generateDebateSessionSummary(DebateSessionSummaryRequest request) {
+    return callDebateApi("/debate/session-summary", request, DebateSessionSummaryResponse.class,
+        "토론 세션 요약");
+  }
+
+  public DebateReportResponse generateDebateReport(DebateReportRequest request) {
+    return callDebateApi("/report/debate/generate", request, DebateReportResponse.class,
+        "토론 리포트 생성");
+  }
+
+  private <T, R> R callDebateApi(String uri, T request, Class<R> responseType, String actionName) {
+    try {
+      R response = debateAiServerRestClient.post()
+          .uri(uri)
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(request)
+          .retrieve()
+          .body(responseType);
+      if (response == null) {
+        log.error("AI 서버 {} 응답이 null, uri={}", actionName, uri);
+        throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+      }
+      return response;
+    } catch (CustomException e) {
+      throw e;
+    } catch (RestClientResponseException e) {
+      log.error("AI 서버 {} 실패, uri={}, status={}, body={}",
+          actionName, uri, e.getStatusCode(), e.getResponseBodyAsString());
+      throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+    } catch (Exception e) {
+      log.error("AI 서버 {} 실패, uri={}, error={}", actionName, uri, e.getMessage());
+      throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+    }
   }
 }
