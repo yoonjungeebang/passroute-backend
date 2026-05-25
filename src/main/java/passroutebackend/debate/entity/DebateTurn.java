@@ -71,6 +71,9 @@ public class DebateTurn {
   @Builder
   public DebateTurn(DebateSession session, SpeakerType speakerType, AiCompetitor competitor,
       TurnStance stance, DebateRound round, String content) {
+    if (speakerType == SpeakerType.AI_COMPETITOR && competitor == null) {
+      throw new IllegalArgumentException("AI_COMPETITOR speaker must have a competitor.");
+    }
     this.session = session;
     this.speakerType = speakerType;
     this.competitor = competitor;
