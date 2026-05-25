@@ -35,4 +35,19 @@ public class QuestionGenerateRequest {
 
   @JsonProperty("portfolio_text")
   private final String portfolioText;
+
+  @JsonProperty("persona")
+  private final String persona;
+
+  @JsonProperty("pressure_level")
+  private final int pressureLevel;
+
+  @JsonProperty("followup_count")
+  private final int followupCount;
+
+  @JsonProperty("interview_format")
+  private final String interviewFormat;
+
+  @JsonProperty("cover_letter")
+  private final String coverLetter;
 }

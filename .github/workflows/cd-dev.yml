@@ -83,6 +83,9 @@ jobs:
               -e "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" \
               -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
               -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+              -e "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
+              -e "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
+              -e "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" \
               "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"
 
             # 사용하지 않는 이미지 정리
