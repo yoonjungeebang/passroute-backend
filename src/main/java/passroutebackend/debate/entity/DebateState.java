@@ -1,0 +1,16 @@
+package passroutebackend.debate.entity;
+
+public enum DebateState {
+  CREATED,
+  INTERVIEWER_OPENING,
+  OPENING_USER,
+  OPENING_AI,
+  REBUTTAL_1_USER,
+  REBUTTAL_1_AI,
+  REBUTTAL_2_USER,
+  REBUTTAL_2_AI,
+  CLOSING_USER,
+  CLOSING_AI,
+  INTERVIEWER_CLOSING,
+  FINISHED
+}
