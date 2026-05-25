@@ -33,6 +33,7 @@ public class DebateStateMachine {
    * 사용자 턴 발화 제출 후 호출. *_USER → *_AI 전이.
    */
   public void onUserTurnSubmitted(DebateSession session) {
+    requireSession(session);
     DebateState next = USER_TO_AI.get(session.getCurrentState());
     if (next == null) {
       throw CustomException.of(ErrorCode.INVALID_DEBATE_STATE);
@@ -47,6 +48,7 @@ public class DebateStateMachine {
    * INTERVIEWER_CLOSING → FINISHED.
    */
   public void onAiTurnCompleted(DebateSession session) {
+    requireSession(session);
     DebateState current = session.getCurrentState();
     DebateState next = switch (current) {
       case INTERVIEWER_OPENING -> DebateState.OPENING_USER;
@@ -66,6 +68,7 @@ public class DebateStateMachine {
    * 세션 생성 직후 호출. CREATED → INTERVIEWER_OPENING.
    */
   public void onSessionStarted(DebateSession session) {
+    requireSession(session);
     if (session.getCurrentState() != DebateState.CREATED) {
       throw CustomException.of(ErrorCode.INVALID_DEBATE_STATE);
     }
@@ -75,9 +78,19 @@ public class DebateStateMachine {
   /**
    * 현재 사용자 턴 대기 여부.
    * 컨트롤러의 POST /turn 가드, GET /state 응답 계산용.
+   *
+   * USER_TO_AI 맵 키셋을 활용하여 새 *_USER 상태 추가 시에도 일관성 자동 유지.
    */
   public boolean isWaitingForUser(DebateSession session) {
-    return session.getCurrentState().name().endsWith("_USER");
+    return session != null && USER_TO_AI.containsKey(session.getCurrentState());
+  }
+
+  // ── 가드 ──────────────────────────────────────────────────────────────────
+
+  private void requireSession(DebateSession session) {
+    if (session == null) {
+      throw CustomException.of(ErrorCode.INVALID_INPUT);
+    }
   }
 
   // ── 내부 헬퍼 ──────────────────────────────────────────────────────────────
