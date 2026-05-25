@@ -18,4 +18,7 @@ public class FollowUpRequest {
 
   @JsonProperty("conversation")
   private final List<QATurn> conversation;
+
+  @JsonProperty("user_id")
+  private final String userId;
 }
