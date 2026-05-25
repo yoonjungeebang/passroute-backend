@@ -57,6 +57,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEV_EC2_HOST }}
+          username: ${{ secrets.DEV_EC2_USERNAME }}
+          key: ${{ secrets.DEV_EC2_KEY }}
+          source: "docker-compose.yml"
+          target: "~/"
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -67,26 +79,24 @@ jobs:
             # 최신 이미지 pull
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop
 
-            # 기존 컨테이너 중지 및 삭제
-            docker stop passroute-dev || true
-            docker rm passroute-dev || true
+            # .env 파일 생성
+            printf '%s\n' \
+              "DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop" \
+              "SPRING_PROFILES_ACTIVE=dev" \
+              "SPRING_DATA_REDIS_HOST=redis" \
+              "DEV_MYSQL_URL=${{ secrets.DEV_MYSQL_URL }}" \
+              "DEV_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
+              "DEV_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
+              "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" \
+              "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
+              "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+              "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
+              "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
+              "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" > ~/.env
 
-            # 새 컨테이너 실행
-            docker run -d \
-              --name passroute-dev \
-              --restart always \
-              -p 8080:8080 \
-              -e "SPRING_PROFILES_ACTIVE=dev" \
-              -e "DEV_MYSQL_URL=${{ secrets.DEV_MYSQL_URL }}" \
-              -e "DEV_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
-              -e "DEV_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
-              -e "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" \
-              -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
-              -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
-              -e "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
-              -e "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
-              -e "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" \
-              "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"
+            # docker compose로 배포
+            cd ~ && docker compose down || true
+            docker compose up -d
 
             # 사용하지 않는 이미지 정리
             docker image prune -f
