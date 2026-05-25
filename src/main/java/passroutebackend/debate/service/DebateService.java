@@ -179,6 +179,10 @@ public class DebateService {
     DebateRound round = resolveRound(currentState);
     TurnStance userStance = toTurnStance(session.getUserStance());
 
+    // ⚠️ 사용자 발화 저장 전에 상대 직전 발화 조회 (저장 후 호출하면 자기 발화를 반환함)
+    String topicTitle = session.getTopic().getTitle();
+    String opponentPreviousTurn = findOpponentPreviousTurn(session);
+
     // 사용자 턴 저장
     DebateTurn turn = transactionService.saveTurn(
         session, SpeakerType.USER, null, userStance, round, req.getContent());
@@ -188,8 +192,6 @@ public class DebateService {
     transactionService.saveSession(session);
 
     // 비동기 1: 사용자 턴 평가
-    String topicTitle = session.getTopic().getTitle();
-    String opponentPreviousTurn = findOpponentPreviousTurn(session, round);
     evaluationService.evaluateAsync(
         sessionId, userId, turn.getId(),
         req.getContent(), round, session.getUserStance(),
@@ -226,7 +228,7 @@ public class DebateService {
                 .difficulty(session.getDifficulty().name())
                 .persona(personaPayload)
                 .rebuttalRound(round)
-                .opponentLatestTurn(findOpponentPreviousTurn(session, round))
+                .opponentLatestTurn(findOpponentPreviousTurn(session))
                 .history(buildHistoryForAi(session))
                 .build()
         ).getContent();
@@ -307,13 +309,12 @@ public class DebateService {
   }
 
   /** 직전 USER 또는 AI_COMPETITOR 발화 (반박 대상). */
-  private String findOpponentPreviousTurn(DebateSession session, DebateRound round) {
+  private String findOpponentPreviousTurn(DebateSession session) {
     List<DebateTurn> turns = transactionService.findTurnsBySession(session);
-    return turns.stream()
+    List<DebateTurn> filtered = turns.stream()
         .filter(t -> t.getSpeakerType() != SpeakerType.AI_INTERVIEWER)
-        .reduce((first, second) -> second)
-        .map(DebateTurn::getContent)
-        .orElse(null);
+        .toList();
+    return filtered.isEmpty() ? null : filtered.get(filtered.size() - 1).getContent();
   }
 
   private List<DebateTurnItem> buildHistoryForAi(DebateSession session) {
