@@ -68,13 +68,11 @@ public class FollowUpTransactionService {
     List<QATurn> conversation = buildConversation(questions);
     InterviewRoom room = session.getInterviewRoom();
 
-    String userId = room.getUserId() != null ? room.getUserId().toString() : null;
-
     return new FollowUpRequest(
         room.getInterviewType().getValue(),
         room.getDifficulty().getValue(),
         conversation,
-        userId
+        room.getUserId()
     );
   }
 

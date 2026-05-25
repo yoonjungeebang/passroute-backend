@@ -20,5 +20,5 @@ public class FollowUpRequest {
   private final List<QATurn> conversation;
 
   @JsonProperty("user_id")
-  private final String userId;
+  private final Long userId;
 }
