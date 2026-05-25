@@ -63,11 +63,10 @@ public class InterviewStartTxService {
 
     room.updateStatus(RoomStatus.IN_PROGRESS);
 
-    String coverLetter = selfIntroItems.isEmpty() ? null :
-        selfIntroItems.stream()
-            .map(item -> item.getQuestion() + "\n" + item.getAnswer())
-            .reduce((a, b) -> a + "\n\n" + b)
-            .orElse(null);
+    String coverLetter = selfIntroItems.stream()
+        .map(item -> item.getQuestion() + "\n" + item.getAnswer())
+        .reduce((a, b) -> a + "\n\n" + b)
+        .orElse("");
 
     QuestionGenerateRequest aiRequest = new QuestionGenerateRequest(
         room.getInterviewType().name(),
@@ -75,7 +74,6 @@ public class InterviewStartTxService {
         room.getCompanyName(),
         room.getJobPosition(),
         room.getInterviewCount(),
-        selfIntroItems,
         resumeText,
         portfolioText,
         room.getAiInterviewer(),

@@ -1,0 +1,15 @@
+services:
+  app:
+    image: ${DOCKER_IMAGE}
+    container_name: passroute-dev
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file: .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: passroute-redis
+    restart: always

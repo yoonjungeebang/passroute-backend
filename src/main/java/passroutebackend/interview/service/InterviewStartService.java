@@ -23,7 +23,7 @@ public class InterviewStartService {
 
     QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.aiRequest());
 
-    List<QuestionDto> questions = txService.saveQuestions(prep.sessionId(), aiResponse.getQuestions());
+    List<QuestionDto> questions = txService.saveQuestions(prep.sessionId(), aiResponse.getQuestionTexts());
 
     return new InterviewStartResponse(prep.sessionId(), questions);
   }
