@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -27,13 +25,10 @@ public class QuestionGenerateRequest {
   @JsonProperty("question_count")
   private final int questionCount;
 
-  @JsonProperty("self_intro_items")
-  private final List<SelfIntroItemDto> selfIntroItems;
-
-  @JsonProperty("resume_text")
+  @JsonProperty("resume")
   private final String resumeText;
 
-  @JsonProperty("portfolio_text")
+  @JsonProperty("portfolio")
   private final String portfolioText;
 
   @JsonProperty("persona")
