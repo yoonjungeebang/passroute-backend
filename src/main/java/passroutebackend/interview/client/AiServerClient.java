@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.FollowUpRequest;
@@ -180,6 +181,10 @@ public class AiServerClient {
       return response;
     } catch (CustomException e) {
       throw e;
+    } catch (RestClientResponseException e) {
+      log.error("AI 서버 {} 실패, uri={}, status={}, body={}",
+          actionName, uri, e.getStatusCode(), e.getResponseBodyAsString());
+      throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
     } catch (Exception e) {
       log.error("AI 서버 {} 실패, uri={}, error={}", actionName, uri, e.getMessage());
       throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
