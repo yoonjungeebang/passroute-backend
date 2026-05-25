@@ -58,7 +58,14 @@ public enum ErrorCode {
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),
   SCHEDULE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S002", "해당 일정에 접근 권한이 없습니다."),
 
-  AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다.");
+  AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다."),
+
+  // Debate
+  DEBATE_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "DB001", "토론 세션을 찾을 수 없습니다."),
+  DEBATE_TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "DB002", "토론 주제를 찾을 수 없습니다."),
+  PERSONA_NOT_FOUND(HttpStatus.NOT_FOUND, "DB003", "AI 페르소나를 찾을 수 없습니다."),
+  INVALID_DEBATE_STATE(HttpStatus.BAD_REQUEST, "DB004", "잘못된 토론 상태 전이입니다."),
+  DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "DB005", "현재 사용자 턴이 아닙니다.");
 
   private final HttpStatus status;
   private final String code;
