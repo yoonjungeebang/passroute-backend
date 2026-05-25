@@ -61,11 +61,11 @@ public enum ErrorCode {
   AI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "I007", "AI 서버 호출에 실패했습니다."),
 
   // Debate
-  DEBATE_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "D001", "토론 세션을 찾을 수 없습니다."),
-  DEBATE_TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "D002", "토론 주제를 찾을 수 없습니다."),
-  PERSONA_NOT_FOUND(HttpStatus.NOT_FOUND, "D003", "AI 페르소나를 찾을 수 없습니다."),
-  INVALID_DEBATE_STATE(HttpStatus.BAD_REQUEST, "D004", "잘못된 토론 상태 전이입니다."),
-  DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "D005", "현재 사용자 턴이 아닙니다.");
+  DEBATE_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "DB001", "토론 세션을 찾을 수 없습니다."),
+  DEBATE_TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "DB002", "토론 주제를 찾을 수 없습니다."),
+  PERSONA_NOT_FOUND(HttpStatus.NOT_FOUND, "DB003", "AI 페르소나를 찾을 수 없습니다."),
+  INVALID_DEBATE_STATE(HttpStatus.BAD_REQUEST, "DB004", "잘못된 토론 상태 전이입니다."),
+  DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "DB005", "현재 사용자 턴이 아닙니다.");
 
   private final HttpStatus status;
   private final String code;
