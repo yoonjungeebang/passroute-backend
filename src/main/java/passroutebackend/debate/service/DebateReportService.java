@@ -51,7 +51,10 @@ public class DebateReportService {
           .toList();
 
       if (userTurns.isEmpty()) {
-        log.warn("평가 완료된 사용자 턴 없음, 리포트 생성 생략 sessionId={}", sessionId);
+        // 평가가 아직 끝나지 않았거나 모두 실패한 상태.
+        // 여기서 그냥 return하면 클라이언트가 GET /report에서 무한 202를 받게 됨 → FAILED로 마감.
+        log.warn("평가 완료된 사용자 턴 없음, FAILED 리포트 생성 sessionId={}", sessionId);
+        transactionService.saveFailedReport(session);
         return;
       }
 
