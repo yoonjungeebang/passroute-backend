@@ -71,7 +71,8 @@ public class FollowUpTransactionService {
     return new FollowUpRequest(
         room.getInterviewType().getValue(),
         room.getDifficulty().getValue(),
-        conversation
+        conversation,
+        room.getUserId()
     );
   }
 
