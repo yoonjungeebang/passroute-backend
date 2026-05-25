@@ -125,7 +125,39 @@ class DebateStateMachineTest {
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_DEBATE_STATE);
   }
 
-  // ── 5. isWaitingForUser 헬퍼 ─────────────────────────────────────────────────
+  // ── 5. null 입력 거부 ──────────────────────────────────────────────────────
+
+  @Test
+  @DisplayName("onSessionStarted — session이 null이면 INVALID_INPUT")
+  void rejectNullSessionOnStart() {
+    assertThatThrownBy(() -> stateMachine.onSessionStarted(null))
+        .isInstanceOf(CustomException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
+  }
+
+  @Test
+  @DisplayName("onUserTurnSubmitted — session이 null이면 INVALID_INPUT")
+  void rejectNullSessionOnUserTurn() {
+    assertThatThrownBy(() -> stateMachine.onUserTurnSubmitted(null))
+        .isInstanceOf(CustomException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
+  }
+
+  @Test
+  @DisplayName("onAiTurnCompleted — session이 null이면 INVALID_INPUT")
+  void rejectNullSessionOnAiTurn() {
+    assertThatThrownBy(() -> stateMachine.onAiTurnCompleted(null))
+        .isInstanceOf(CustomException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
+  }
+
+  @Test
+  @DisplayName("isWaitingForUser — session이 null이면 false")
+  void isWaitingForUserReturnsFalseForNull() {
+    assertThat(stateMachine.isWaitingForUser(null)).isFalse();
+  }
+
+  // ── 6. isWaitingForUser 헬퍼 ─────────────────────────────────────────────────
 
   @Nested
   @DisplayName("isWaitingForUser 헬퍼")
