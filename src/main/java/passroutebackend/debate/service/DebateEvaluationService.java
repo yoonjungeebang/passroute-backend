@@ -36,7 +36,8 @@ public class DebateEvaluationService {
       String topicTitle, String opponentPreviousTurn) {
     try {
       DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
-      List<DebateTurnItem> history = buildHistory(session);
+      // 현재 평가 대상 턴은 userContent로 이미 전달되므로 history에서 제외
+      List<DebateTurnItem> history = buildHistory(session, turnId);
 
       DebateTurnEvalResponse response = aiServerClient.evaluateDebateTurn(
           DebateTurnEvalRequest.builder()
@@ -66,10 +67,11 @@ public class DebateEvaluationService {
     }
   }
 
-  private List<DebateTurnItem> buildHistory(DebateSession session) {
-    // 사용자/AI 경쟁자 발언만 (면접관 발언 제외)
+  private List<DebateTurnItem> buildHistory(DebateSession session, Long excludeTurnId) {
+    // 사용자/AI 경쟁자 발언만 (면접관 발언 제외, 현재 평가 대상 턴 제외)
     return transactionService.findTurnsBySession(session).stream()
         .filter(t -> t.getSpeakerType() != SpeakerType.AI_INTERVIEWER)
+        .filter(t -> !t.getId().equals(excludeTurnId))
         .map(this::toHistoryItem)
         .toList();
   }
