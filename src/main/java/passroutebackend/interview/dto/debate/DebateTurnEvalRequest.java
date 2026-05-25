@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateRound;
+import passroutebackend.debate.entity.DebateStance;
 
 import java.util.List;
 
@@ -15,8 +17,8 @@ import java.util.List;
 public class DebateTurnEvalRequest {
 
   private String topicTitle;
-  private String userStance;
-  private String roundType;
+  private DebateStance userStance;
+  private DebateRound roundType;
   private String userContent;
   private String opponentPreviousTurn;   // OPENING 라운드에선 null
   private List<DebateTurnItem> history;

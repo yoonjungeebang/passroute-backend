@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateRound;
+import passroutebackend.debate.entity.DebateStance;
 
 import java.util.List;
 
@@ -15,10 +17,10 @@ import java.util.List;
 public class DebateRebuttalRequest {
 
   private String topicTitle;
-  private String stance;
+  private DebateStance stance;
   private String difficulty;
   private PersonaPayload persona;
-  private String rebuttalRound;        // REBUTTAL_1 / REBUTTAL_2
+  private DebateRound rebuttalRound;        // REBUTTAL_1 / REBUTTAL_2 (다른 값은 컨트롤러 레벨에서 검증)
   private String opponentLatestTurn;
   private List<DebateTurnItem> history;
 }

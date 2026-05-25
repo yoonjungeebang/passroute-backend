@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateStance;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
 public class DebateClosingRequest {
 
   private String topicTitle;
-  private String stance;
+  private DebateStance stance;
   private String difficulty;
   private PersonaPayload persona;
   private List<DebateTurnItem> history;

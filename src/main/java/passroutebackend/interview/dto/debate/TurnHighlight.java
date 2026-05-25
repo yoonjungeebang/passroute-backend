@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import passroutebackend.debate.entity.DebateRound;
 
 @Getter
 @Setter
@@ -12,7 +13,7 @@ import lombok.Setter;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TurnHighlight {
 
-  private String roundType;
-  private String highlightType;   // "best" / "worst"
+  private DebateRound roundType;
+  private HighlightType highlightType;
   private String comment;
 }

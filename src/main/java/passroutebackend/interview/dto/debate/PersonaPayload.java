@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateStyle;
 
 import java.util.List;
 
@@ -21,8 +22,8 @@ public class PersonaPayload {
   private String personaId;
   private String name;
   private String background;
-  private String debateStyle;
-  private String difficulty;
+  private DebateStyle debateStyle;
+  private String difficulty;   // AI 서버 호환 "EASY/NORMAL/HARD" — Difficulty enum의 @JsonValue 충돌 회피
   private List<String> strengths;
   private List<String> weaknesses;
   private String systemPromptTemplate;

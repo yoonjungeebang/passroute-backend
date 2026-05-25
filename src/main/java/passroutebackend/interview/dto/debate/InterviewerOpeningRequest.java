@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateStance;
 
 import java.util.List;
 
@@ -16,8 +17,8 @@ public class InterviewerOpeningRequest {
 
   private String topicTitle;
   private String topicDescription;
-  private String userStance;
-  private String aiStance;
+  private DebateStance userStance;
+  private DebateStance aiStance;
   private String difficulty;
   private List<String> proKeyPoints;
   private List<String> conKeyPoints;

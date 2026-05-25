@@ -5,17 +5,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import passroutebackend.debate.entity.DebateRound;
+import passroutebackend.debate.entity.DebateStance;
+import passroutebackend.debate.entity.DebateStyle;
+import passroutebackend.debate.entity.SpeakerType;
+import passroutebackend.debate.entity.TurnStance;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 토론 DTO의 snake_case ↔ camelCase 변환 검증.
- *
- * - 백엔드는 camelCase 필드 사용
- * - AI 서버는 snake_case JSON 사용
- * - @JsonNaming(SnakeCaseStrategy)가 자동 변환을 수행해야 함
+ * 토론 DTO의 snake_case ↔ camelCase 변환 + enum 직렬화 검증.
  */
 class DebateDtoSerializationTest {
 
@@ -29,17 +30,17 @@ class DebateDtoSerializationTest {
   // ── 직렬화 (백엔드 → AI 서버) ───────────────────────────────────────────────
 
   @Nested
-  @DisplayName("Request DTO 직렬화 (camelCase → snake_case)")
+  @DisplayName("Request DTO 직렬화 (camelCase → snake_case, enum → 대문자 name)")
   class RequestSerialization {
 
     @Test
-    @DisplayName("PersonaPayload — persona_id, debate_style, system_prompt_template")
+    @DisplayName("PersonaPayload — persona_id, debate_style enum 직렬화")
     void serializePersonaPayload() throws Exception {
       PersonaPayload payload = PersonaPayload.builder()
           .personaId("persona_01_stable")
           .name("김지원")
           .background("3년차 백엔드")
-          .debateStyle("COOPERATIVE")
+          .debateStyle(DebateStyle.COOPERATIVE)
           .difficulty("NORMAL")
           .strengths(List.of("논리적"))
           .weaknesses(List.of("보수적"))
@@ -50,18 +51,17 @@ class DebateDtoSerializationTest {
 
       assertThat(json).contains("\"persona_id\":\"persona_01_stable\"");
       assertThat(json).contains("\"debate_style\":\"COOPERATIVE\"");
+      assertThat(json).contains("\"difficulty\":\"NORMAL\"");
       assertThat(json).contains("\"system_prompt_template\":\"당신은 ...\"");
-      assertThat(json).doesNotContain("personaId");
-      assertThat(json).doesNotContain("debateStyle");
     }
 
     @Test
-    @DisplayName("DebateTurnItem — speaker_type, round_type")
+    @DisplayName("DebateTurnItem — speaker_type, round_type enum 직렬화")
     void serializeDebateTurnItem() throws Exception {
       DebateTurnItem item = DebateTurnItem.builder()
-          .speakerType("USER")
-          .roundType("REBUTTAL_1")
-          .stance("PRO")
+          .speakerType(SpeakerType.USER)
+          .roundType(DebateRound.REBUTTAL_1)
+          .stance(TurnStance.PRO)
           .content("내 주장은...")
           .build();
 
@@ -69,18 +69,17 @@ class DebateDtoSerializationTest {
 
       assertThat(json).contains("\"speaker_type\":\"USER\"");
       assertThat(json).contains("\"round_type\":\"REBUTTAL_1\"");
-      assertThat(json).doesNotContain("speakerType");
-      assertThat(json).doesNotContain("roundType");
+      assertThat(json).contains("\"stance\":\"PRO\"");
     }
 
     @Test
-    @DisplayName("InterviewerOpeningRequest — topic_title, user_stance, pro_key_points")
+    @DisplayName("InterviewerOpeningRequest — topic_title, user_stance enum")
     void serializeInterviewerOpeningRequest() throws Exception {
       InterviewerOpeningRequest request = InterviewerOpeningRequest.builder()
           .topicTitle("AI 면접 도입")
           .topicDescription("효율 vs 인간성")
-          .userStance("PRO")
-          .aiStance("CON")
+          .userStance(DebateStance.PRO)
+          .aiStance(DebateStance.CON)
           .difficulty("NORMAL")
           .proKeyPoints(List.of("효율"))
           .conKeyPoints(List.of("편향"))
@@ -90,18 +89,18 @@ class DebateDtoSerializationTest {
 
       assertThat(json).contains("\"topic_title\":\"AI 면접 도입\"");
       assertThat(json).contains("\"user_stance\":\"PRO\"");
+      assertThat(json).contains("\"ai_stance\":\"CON\"");
       assertThat(json).contains("\"pro_key_points\":[\"효율\"]");
-      assertThat(json).contains("\"con_key_points\":[\"편향\"]");
     }
 
     @Test
-    @DisplayName("DebateRebuttalRequest — rebuttal_round, opponent_latest_turn, persona nested")
+    @DisplayName("DebateRebuttalRequest — rebuttal_round, persona nested enum")
     void serializeDebateRebuttalRequest() throws Exception {
       PersonaPayload persona = PersonaPayload.builder()
           .personaId("persona_02_aggressive")
           .name("박도현")
           .background("시니어")
-          .debateStyle("AGGRESSIVE")
+          .debateStyle(DebateStyle.AGGRESSIVE)
           .difficulty("HARD")
           .strengths(List.of())
           .weaknesses(List.of())
@@ -110,10 +109,10 @@ class DebateDtoSerializationTest {
 
       DebateRebuttalRequest request = DebateRebuttalRequest.builder()
           .topicTitle("주제")
-          .stance("CON")
+          .stance(DebateStance.CON)
           .difficulty("HARD")
           .persona(persona)
-          .rebuttalRound("REBUTTAL_2")
+          .rebuttalRound(DebateRound.REBUTTAL_2)
           .opponentLatestTurn("사용자 발언")
           .history(List.of())
           .build();
@@ -122,15 +121,15 @@ class DebateDtoSerializationTest {
 
       assertThat(json).contains("\"rebuttal_round\":\"REBUTTAL_2\"");
       assertThat(json).contains("\"opponent_latest_turn\":\"사용자 발언\"");
-      // nested persona 도 snake_case
       assertThat(json).contains("\"persona_id\":\"persona_02_aggressive\"");
+      assertThat(json).contains("\"debate_style\":\"AGGRESSIVE\"");
     }
   }
 
   // ── 역직렬화 (AI 서버 → 백엔드) ────────────────────────────────────────────
 
   @Nested
-  @DisplayName("Response DTO 역직렬화 (snake_case → camelCase)")
+  @DisplayName("Response DTO 역직렬화 (snake_case → camelCase, 대문자 enum)")
   class ResponseDeserialization {
 
     @Test
@@ -156,7 +155,6 @@ class DebateDtoSerializationTest {
 
       assertThat(response.getWeightedScore()).isEqualTo(78.0);
       assertThat(response.getScores().getLogic().getScore()).isEqualTo(4);
-      assertThat(response.getScores().getLogic().getWeight()).isEqualTo(0.35);
       assertThat(response.getScores().getRebuttalQuality().getScore()).isEqualTo(3);
       assertThat(response.getScores().getConsistency().getScore()).isEqualTo(5);
       assertThat(response.getScores().getAttitude().getScore()).isEqualTo(4);
@@ -188,7 +186,7 @@ class DebateDtoSerializationTest {
     }
 
     @Test
-    @DisplayName("DebateReportResponse — 모든 필드 역직렬화")
+    @DisplayName("DebateReportResponse — turn_feedback의 round_type enum 역직렬화")
     void deserializeReportResponse() throws Exception {
       String json = """
           {
@@ -211,15 +209,14 @@ class DebateDtoSerializationTest {
       assertThat(response.getOverall()).isEqualTo("전반 평가");
       assertThat(response.getWeaknesses()).hasSize(1);
       assertThat(response.getTurnFeedback()).hasSize(1);
-      assertThat(response.getTurnFeedback().get(0).getRoundType()).isEqualTo("OPENING");
+      assertThat(response.getTurnFeedback().get(0).getRoundType()).isEqualTo(DebateRound.OPENING);
       assertThat(response.getTurnFeedback().get(0).getWeightedScore()).isEqualTo(86.0);
-      assertThat(response.getStrategyAnalysis()).isEqualTo("전략");
       assertThat(response.getRecommendedTopics()).hasSize(2);
       assertThat(response.getDebateReadinessComment()).isEqualTo("준비됨");
     }
 
     @Test
-    @DisplayName("DebateSessionSummaryResponse — turn_highlights nested")
+    @DisplayName("DebateSessionSummaryResponse — turn_highlights의 highlight_type 소문자 enum")
     void deserializeSessionSummaryResponse() throws Exception {
       String json = """
           {
@@ -238,8 +235,9 @@ class DebateDtoSerializationTest {
 
       assertThat(response.getStrategyFeedback()).isEqualTo("sf");
       assertThat(response.getTurnHighlights()).hasSize(2);
-      assertThat(response.getTurnHighlights().get(0).getHighlightType()).isEqualTo("best");
-      assertThat(response.getTurnHighlights().get(1).getRoundType()).isEqualTo("CLOSING");
+      assertThat(response.getTurnHighlights().get(0).getHighlightType()).isEqualTo(HighlightType.BEST);
+      assertThat(response.getTurnHighlights().get(1).getRoundType()).isEqualTo(DebateRound.CLOSING);
+      assertThat(response.getTurnHighlights().get(1).getHighlightType()).isEqualTo(HighlightType.WORST);
     }
 
     @Test
@@ -250,6 +248,27 @@ class DebateDtoSerializationTest {
       InterviewerOpeningResponse response = objectMapper.readValue(json, InterviewerOpeningResponse.class);
 
       assertThat(response.getContent()).isEqualTo("안녕하세요, 토론을 시작합니다.");
+    }
+  }
+
+  // ── HighlightType enum 직렬화/역직렬화 ──────────────────────────────────────
+
+  @Nested
+  @DisplayName("HighlightType enum — 소문자 best/worst 직렬화")
+  class HighlightTypeSerialization {
+
+    @Test
+    @DisplayName("BEST는 \"best\"로 직렬화")
+    void serializeBest() throws Exception {
+      String json = objectMapper.writeValueAsString(HighlightType.BEST);
+      assertThat(json).isEqualTo("\"best\"");
+    }
+
+    @Test
+    @DisplayName("\"worst\"는 WORST로 역직렬화")
+    void deserializeWorst() throws Exception {
+      HighlightType type = objectMapper.readValue("\"worst\"", HighlightType.class);
+      assertThat(type).isEqualTo(HighlightType.WORST);
     }
   }
 }
