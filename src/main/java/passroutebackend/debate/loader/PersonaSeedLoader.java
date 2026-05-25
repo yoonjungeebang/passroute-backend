@@ -15,6 +15,7 @@ import passroutebackend.debate.repository.AiPersonaRepository;
 import passroutebackend.interview.entity.Difficulty;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,13 +34,17 @@ public class PersonaSeedLoader implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     try (InputStream is = new ClassPathResource(SEED_PATH).getInputStream()) {
       Map<String, Object> root = new Yaml().load(is);
+      if (root == null) {
+        log.warn("persona_seeds.yaml이 비어 있습니다.");
+        return;
+      }
       List<Map<String, Object>> personas = (List<Map<String, Object>>) root.get("personas");
       if (personas == null) {
         log.warn("persona_seeds.yaml에 personas 키가 없음");
         return;
       }
 
-      int inserted = 0;
+      List<AiPersona> toInsert = new ArrayList<>();
       int skipped = 0;
       for (Map<String, Object> p : personas) {
         String personaKey = (String) p.get("personaId");
@@ -47,7 +52,7 @@ public class PersonaSeedLoader implements ApplicationRunner {
           skipped++;
           continue;
         }
-        AiPersona persona = AiPersona.builder()
+        toInsert.add(AiPersona.builder()
             .personaKey(personaKey)
             .name((String) p.get("name"))
             .background((String) p.get("background"))
@@ -56,11 +61,10 @@ public class PersonaSeedLoader implements ApplicationRunner {
             .strengths(toJson(p.get("strengths")))
             .weaknesses(toJson(p.get("weaknesses")))
             .systemPromptTemplate((String) p.get("systemPromptTemplate"))
-            .build();
-        repository.save(persona);
-        inserted++;
+            .build());
       }
-      log.info("페르소나 시드 적재 완료: inserted={}, skipped={}", inserted, skipped);
+      repository.saveAll(toInsert);
+      log.info("페르소나 시드 적재 완료: inserted={}, skipped={}", toInsert.size(), skipped);
     } catch (Exception e) {
       log.error("페르소나 시드 적재 실패", e);
     }
