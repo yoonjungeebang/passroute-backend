@@ -14,6 +14,7 @@ import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.repository.DebateTopicRepository;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,13 +33,17 @@ public class TopicSeedLoader implements ApplicationRunner {
   public void run(ApplicationArguments args) throws Exception {
     try (InputStream is = new ClassPathResource(SEED_PATH).getInputStream()) {
       Map<String, Object> root = new Yaml().load(is);
+      if (root == null) {
+        log.warn("debate_topics.yaml이 비어 있습니다.");
+        return;
+      }
       List<Map<String, Object>> topics = (List<Map<String, Object>>) root.get("topics");
       if (topics == null) {
         log.warn("debate_topics.yaml에 topics 키가 없음");
         return;
       }
 
-      int inserted = 0;
+      List<DebateTopic> toInsert = new ArrayList<>();
       int skipped = 0;
       for (Map<String, Object> t : topics) {
         String topicKey = (String) t.get("id");
@@ -46,18 +51,17 @@ public class TopicSeedLoader implements ApplicationRunner {
           skipped++;
           continue;
         }
-        DebateTopic topic = DebateTopic.builder()
+        toInsert.add(DebateTopic.builder()
             .topicKey(topicKey)
             .title((String) t.get("title"))
             .description((String) t.get("description"))
             .category(TopicCategory.valueOf((String) t.get("category")))
             .proKeyPoints(toJson(t.get("proKeyPoints")))
             .conKeyPoints(toJson(t.get("conKeyPoints")))
-            .build();
-        repository.save(topic);
-        inserted++;
+            .build());
       }
-      log.info("토론 주제 시드 적재 완료: inserted={}, skipped={}", inserted, skipped);
+      repository.saveAll(toInsert);
+      log.info("토론 주제 시드 적재 완료: inserted={}, skipped={}", toInsert.size(), skipped);
     } catch (Exception e) {
       log.error("토론 주제 시드 적재 실패", e);
     }
