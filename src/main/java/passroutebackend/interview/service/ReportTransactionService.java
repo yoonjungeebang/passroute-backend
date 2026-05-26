@@ -15,7 +15,6 @@ import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
 import passroutebackend.interview.entity.ReportStatus;
-import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewAnswerRepository;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewReportRepository;
@@ -37,13 +36,6 @@ public class ReportTransactionService {
   private final InterviewAnswerRepository answerRepository;
   private final InterviewReportRepository reportRepository;
   private final ObjectMapper objectMapper;
-
-  @Transactional
-  public void endSession(Long sessionId) {
-    InterviewSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
-    session.end(SessionStatus.COMPLETED);
-  }
 
   @Transactional(readOnly = true)
   public ReportContext loadContext(Long sessionId) {
@@ -83,6 +75,16 @@ public class ReportTransactionService {
         room.getInterviewType().getValue(),
         questionAnswers
     );
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+    if (!session.getInterviewRoom().getUserId().equals(userId)) {
+      throw CustomException.of(ErrorCode.ACCESS_DENIED);
+    }
+    return reportRepository.findBySession(session);
   }
 
   @Transactional(readOnly = true)

@@ -316,12 +316,13 @@ class InterviewProgressIntegrationTest {
   class EndSession {
 
     @Test
-    @DisplayName("성공 - 세션·룸 상태가 COMPLETED로 변경됨")
+    @DisplayName("성공 - 세션·룸 상태가 COMPLETED로 변경되고 리포트 생성 요청이 수락됨")
     void success() throws Exception {
       mockMvc.perform(post("/interview/sessions/{sessionId}/end", session.getId())
               .header("Authorization", "Bearer " + token))
-          .andExpect(status().isOk())
+          .andExpect(status().isAccepted())
           .andExpect(jsonPath("$.status").value("success"))
+          .andExpect(jsonPath("$.code").value("ACCEPTED"))
           .andExpect(jsonPath("$.data").isEmpty());
 
       // DB 상태 직접 검증
