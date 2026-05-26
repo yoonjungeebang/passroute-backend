@@ -38,13 +38,6 @@ public class ReportTransactionService {
   private final InterviewReportRepository reportRepository;
   private final ObjectMapper objectMapper;
 
-  @Transactional
-  public void endSession(Long sessionId) {
-    InterviewSession session = sessionRepository.findById(sessionId)
-        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
-    session.end(SessionStatus.COMPLETED);
-  }
-
   @Transactional(readOnly = true)
   public ReportContext loadContext(Long sessionId) {
     InterviewSession session = sessionRepository.findById(sessionId)
@@ -83,6 +76,19 @@ public class ReportTransactionService {
         room.getInterviewType().getValue(),
         questionAnswers
     );
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+    if (!session.getInterviewRoom().getUserId().equals(userId)) {
+      throw CustomException.of(ErrorCode.ACCESS_DENIED);
+    }
+    if (session.getStatus() != SessionStatus.COMPLETED) {
+      throw CustomException.of(ErrorCode.SESSION_NOT_ENDED);
+    }
+    return reportRepository.findBySession(session);
   }
 
   @Transactional(readOnly = true)

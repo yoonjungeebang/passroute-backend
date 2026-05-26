@@ -9,10 +9,11 @@ import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 
 @Service
 @RequiredArgsConstructor
-public class InterviewProgressService {
+public class InterviewSessionService {
 
-  private final InterviewProgressTxService txService;
+  private final InterviewSessionTxService txService;
   private final FollowUpService followUpService;
+  private final ReportService reportService;
 
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {
     return txService.getQuestions(sessionId, userId);
@@ -38,5 +39,6 @@ public class InterviewProgressService {
 
   public void endSession(Long sessionId, Long userId) {
     txService.endSession(sessionId, userId);
+    reportService.generateReportAsync(sessionId);
   }
 }

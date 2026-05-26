@@ -165,8 +165,8 @@ public class ReportService {
     }
   }
 
-  public Optional<InterviewReport> findReport(Long sessionId) {
-    return reportTransactionService.findReport(sessionId);
+  public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
+    return reportTransactionService.findReport(sessionId, userId);
   }
 
   public InterviewReportResponse toResponseDto(InterviewReport report) {

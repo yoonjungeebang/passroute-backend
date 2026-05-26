@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.QuestionDto;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.entity.InterviewAnswer;
@@ -21,7 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class InterviewProgressTxService {
+public class InterviewSessionTxService {
 
   private final InterviewSessionRepository sessionRepository;
   private final InterviewQuestionRepository questionRepository;
