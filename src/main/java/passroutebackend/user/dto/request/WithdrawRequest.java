@@ -1,4 +1,9 @@
 package passroutebackend.user.dto.request;
 
-public record WithdrawRequest(String password) {
+import lombok.Getter;
+
+@Getter
+public class WithdrawRequest {
+
+    private String password;
 }

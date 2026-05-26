@@ -56,7 +56,7 @@ public class UserService {
             throw CustomException.of(ErrorCode.USER_DELETED);
         }
 
-        user.updateProfile(request.experienceYears(), request.preferredJobTypes(), request.preferredCompanies());
+        user.updateProfile(request.getExperienceYears(), request.getPreferredJobTypes(), request.getPreferredCompanies());
 
         return new UserInfoResponse(
                 user.getId(),

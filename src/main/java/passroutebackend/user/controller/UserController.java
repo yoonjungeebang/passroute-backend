@@ -55,7 +55,7 @@ public class UserController {
             @AuthenticationPrincipal Long userId,
             @RequestHeader("Authorization") String accessToken,
             @RequestBody(required = false) WithdrawRequest request) {
-        userService.withdraw(userId, accessToken, request != null ? request.password() : null);
+        userService.withdraw(userId, accessToken, request != null ? request.getPassword() : null);
         return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다.", null));
     }
 }

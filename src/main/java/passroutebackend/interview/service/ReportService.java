@@ -3,6 +3,8 @@ package passroutebackend.interview.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -88,24 +90,24 @@ public class ReportService {
 
       ReportContext ctx = reportTransactionService.loadContext(sessionId);
 
-      if (ctx.questionAnswers().isEmpty()) {
+      if (ctx.getQuestionAnswers().isEmpty()) {
         log.warn("평가 완료된 답변 없음, 리포트 생성 생략 sessionId={}", sessionId);
         return;
       }
 
-      Map<String, ItemStat> stats = computeItemStats(ctx.questionAnswers());
+      Map<String, ItemStat> stats = computeItemStats(ctx.getQuestionAnswers());
       ItemAverages itemAverages = buildItemAverages(stats);
-      SessionScore sessionScore = computeSessionScore(ctx.interviewType(), stats, ctx.questionAnswers());
+      SessionScore sessionScore = computeSessionScore(ctx.getInterviewType(), stats, ctx.getQuestionAnswers());
       InterviewReadiness readiness = determineReadiness(sessionScore.getPercentage(), stats);
-      List<String> keyWeakness = computeKeyWeakness(ctx.interviewType(), stats);
-      BestWorstQ bestQ = findBestQuestion(ctx.questionAnswers());
-      BestWorstQ worstQ = findWorstQuestion(ctx.questionAnswers());
+      List<String> keyWeakness = computeKeyWeakness(ctx.getInterviewType(), stats);
+      BestWorstQ bestQ = findBestQuestion(ctx.getQuestionAnswers());
+      BestWorstQ worstQ = findWorstQuestion(ctx.getQuestionAnswers());
 
       aiServerClient.sessionSummary(
           new SessionSummaryRequest(
-              ctx.jobTitle(),
-              ctx.companyName(),
-              buildQuestionSummaryItems(ctx.questionAnswers(), ctx.interviewType()),
+              ctx.getJobTitle(),
+              ctx.getCompanyName(),
+              buildQuestionSummaryItems(ctx.getQuestionAnswers(), ctx.getInterviewType()),
               itemAverages,
               sessionScore,
               bestQ,
@@ -120,9 +122,9 @@ public class ReportService {
 
       ReportGenerationResponse reportResponse = aiServerClient.generateReport(
           new ReportGenerationRequest(
-              ctx.jobTitle(),
-              ctx.companyName(),
-              buildQuestionEvaluations(ctx.questionAnswers(), ctx.interviewType()),
+              ctx.getJobTitle(),
+              ctx.getCompanyName(),
+              buildQuestionEvaluations(ctx.getQuestionAnswers(), ctx.getInterviewType()),
               new SessionResult(
                   sessionScore.getPercentage(),
                   sessionScore.getConsistencyScore(),
@@ -173,7 +175,12 @@ public class ReportService {
 
   // ── 집계 계산 ──────────────────────────────────────────────────────────────
 
-  private record ItemStat(double sum, int count) {
+  @Getter
+  @AllArgsConstructor
+  private static class ItemStat {
+    private final double sum;
+    private final int count;
+
     double average() { return count > 0 ? sum / count : 0.0; }
   }
 
@@ -182,7 +189,7 @@ public class ReportService {
     ITEM_LABELS.keySet().forEach(key -> stats.put(key, new ItemStat(0.0, 0)));
 
     for (QuestionAnswerData qa : questionAnswers) {
-      LlmScores scores = qa.llmScores();
+      LlmScores scores = qa.getLlmScores();
       if (scores == null) continue;
 
       addStat(stats, "relevance", scores.getRelevance());
@@ -195,9 +202,9 @@ public class ReportService {
       addStat(stats, "authenticity", scores.getAuthenticity());
       addStat(stats, "growth", scores.getGrowth());
 
-      if (qa.concisenessFinal() != null) {
+      if (qa.getConcisenessFinal() != null) {
         ItemStat curr = stats.get("conciseness");
-        stats.put("conciseness", new ItemStat(curr.sum() + qa.concisenessFinal(), curr.count() + 1));
+        stats.put("conciseness", new ItemStat(curr.getSum() + qa.getConcisenessFinal(), curr.getCount() + 1));
       } else {
         addStat(stats, "conciseness", scores.getConciseness());
       }
@@ -208,7 +215,7 @@ public class ReportService {
   private void addStat(Map<String, ItemStat> stats, String key, LlmScoreItem item) {
     if (item == null || item.getScore() == null) return;
     ItemStat curr = stats.get(key);
-    stats.put(key, new ItemStat(curr.sum() + item.getScore(), curr.count() + 1));
+    stats.put(key, new ItemStat(curr.getSum() + item.getScore(), curr.getCount() + 1));
   }
 
   private ItemAverages buildItemAverages(Map<String, ItemStat> stats) {
@@ -228,8 +235,8 @@ public class ReportService {
 
   private ItemAvg toItemAvg(Map<String, ItemStat> stats, String key) {
     ItemStat stat = stats.get(key);
-    if (stat == null || stat.count() == 0) return null;
-    return new ItemAvg(stat.average(), stat.count());
+    if (stat == null || stat.getCount() == 0) return null;
+    return new ItemAvg(stat.average(), stat.getCount());
   }
 
   private SessionScore computeSessionScore(String interviewType, Map<String, ItemStat> stats,
@@ -241,7 +248,7 @@ public class ReportService {
     double totalWeight = 0.0;
     for (Map.Entry<String, Double> entry : weights.entrySet()) {
       ItemStat stat = stats.get(entry.getKey());
-      if (stat != null && stat.count() > 0) {
+      if (stat != null && stat.getCount() > 0) {
         weightedSum += stat.average() * entry.getValue();
         totalWeight += entry.getValue();
       }
@@ -255,8 +262,8 @@ public class ReportService {
 
   private double computeConsistencyScore(List<QuestionAnswerData> questionAnswers) {
     List<Double> percentages = questionAnswers.stream()
-        .filter(qa -> qa.percentage() != null)
-        .map(QuestionAnswerData::percentage)
+        .filter(qa -> qa.getPercentage() != null)
+        .map(QuestionAnswerData::getPercentage)
         .collect(Collectors.toList());
 
     if (percentages.size() <= 1) return 1.0;
@@ -268,7 +275,7 @@ public class ReportService {
 
   private InterviewReadiness determineReadiness(double sessionScore, Map<String, ItemStat> stats) {
     OptionalDouble minAvg = stats.values().stream()
-        .filter(s -> s.count() > 0)
+        .filter(s -> s.getCount() > 0)
         .mapToDouble(ItemStat::average)
         .min();
 
@@ -285,7 +292,7 @@ public class ReportService {
     Map<String, Double> weights = isTechnical ? TECHNICAL_WEIGHTS : PERSONALITY_WEIGHTS;
 
     List<Map.Entry<String, ItemStat>> valid = stats.entrySet().stream()
-        .filter(e -> e.getValue().count() > 0)
+        .filter(e -> e.getValue().getCount() > 0)
         .collect(Collectors.toList());
 
     if (valid.isEmpty()) return List.of("뚜렷한 약점 없음");
@@ -297,7 +304,7 @@ public class ReportService {
 
     valid.sort(Comparator
         .comparingDouble((Map.Entry<String, ItemStat> e) -> e.getValue().average())
-        .thenComparingInt(e -> -e.getValue().count())
+        .thenComparingInt(e -> -e.getValue().getCount())
         .thenComparingDouble(e -> -weights.getOrDefault(e.getKey(), 0.0))
     );
 
@@ -309,17 +316,17 @@ public class ReportService {
 
   private BestWorstQ findBestQuestion(List<QuestionAnswerData> questionAnswers) {
     return questionAnswers.stream()
-        .filter(qa -> qa.percentage() != null)
-        .max(Comparator.comparingDouble(QuestionAnswerData::percentage))
-        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScores())))
+        .filter(qa -> qa.getPercentage() != null)
+        .max(Comparator.comparingDouble(QuestionAnswerData::getPercentage))
+        .map(qa -> new BestWorstQ(qa.getQuestionIndex(), qa.getQuestionText(), qa.getPercentage(), buildQuestionSummary(qa.getLlmScores())))
         .orElse(null);
   }
 
   private BestWorstQ findWorstQuestion(List<QuestionAnswerData> questionAnswers) {
     return questionAnswers.stream()
-        .filter(qa -> qa.percentage() != null)
-        .min(Comparator.comparingDouble(QuestionAnswerData::percentage))
-        .map(qa -> new BestWorstQ(qa.questionIndex(), qa.questionText(), qa.percentage(), buildQuestionSummary(qa.llmScores())))
+        .filter(qa -> qa.getPercentage() != null)
+        .min(Comparator.comparingDouble(QuestionAnswerData::getPercentage))
+        .map(qa -> new BestWorstQ(qa.getQuestionIndex(), qa.getQuestionText(), qa.getPercentage(), buildQuestionSummary(qa.getLlmScores())))
         .orElse(null);
   }
 
@@ -328,11 +335,11 @@ public class ReportService {
   private List<QuestionSummaryItem> buildQuestionSummaryItems(List<QuestionAnswerData> questionAnswers, String interviewType) {
     return questionAnswers.stream()
         .map(qa -> new QuestionSummaryItem(
-            qa.questionIndex(),
+            qa.getQuestionIndex(),
             interviewType,
-            qa.questionText(),
-            qa.percentage(),
-            buildQuestionSummary(qa.llmScores())
+            qa.getQuestionText(),
+            qa.getPercentage(),
+            buildQuestionSummary(qa.getLlmScores())
         ))
         .collect(Collectors.toList());
   }
@@ -368,12 +375,12 @@ public class ReportService {
   private List<QuestionEvaluationForReport> buildQuestionEvaluations(List<QuestionAnswerData> questionAnswers, String interviewType) {
     return questionAnswers.stream()
         .map(qa -> new QuestionEvaluationForReport(
-            qa.questionIndex(),
+            qa.getQuestionIndex(),
             interviewType,
-            qa.questionText(),
-            qa.percentage(),
-            buildQuestionSummary(qa.llmScores()),
-            new StarEvalForReport(qa.starScore() != null, qa.starScore()),
+            qa.getQuestionText(),
+            qa.getPercentage(),
+            buildQuestionSummary(qa.getLlmScores()),
+            new StarEvalForReport(qa.getStarScore() != null, qa.getStarScore()),
             null
         ))
         .collect(Collectors.toList());
@@ -382,7 +389,7 @@ public class ReportService {
   private String buildReadinessReason(InterviewReadiness readiness, double percentage, Map<String, ItemStat> stats) {
     return switch (readiness) {
       case READY -> {
-        double minAvg = stats.values().stream().filter(s -> s.count() > 0).mapToDouble(ItemStat::average).min().orElse(0);
+        double minAvg = stats.values().stream().filter(s -> s.getCount() > 0).mapToDouble(ItemStat::average).min().orElse(0);
         yield String.format("세션 점수 %.0f%%, 최저 항목 평균 %.1f 이상으로 기준 충족", percentage, minAvg);
       }
       case NEEDS_REVIEW -> String.format("세션 점수 %.0f%%로 기준 충족하나 일부 항목 보완 필요", percentage);

@@ -1,4 +1,12 @@
 package passroutebackend.interview.dto.generate;
 
-public record SessionPreparation(Long sessionId, QuestionGenerateRequest aiRequest) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public class SessionPreparation {
+
+    private Long sessionId;
+    private QuestionGenerateRequest aiRequest;
 }

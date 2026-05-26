@@ -21,10 +21,10 @@ public class InterviewStartService {
   public InterviewStartResponse start(Long userId, InterviewStartRequest request) {
     SessionPreparation prep = txService.prepareSession(request.getRoomId(), userId);
 
-    QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.aiRequest());
+    QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.getAiRequest());
 
-    List<QuestionDto> questions = txService.saveQuestions(prep.sessionId(), aiResponse.getQuestionTexts());
+    List<QuestionDto> questions = txService.saveQuestions(prep.getSessionId(), aiResponse.getQuestionTexts());
 
-    return new InterviewStartResponse(prep.sessionId(), questions);
+    return new InterviewStartResponse(prep.getSessionId(), questions);
   }
 }
