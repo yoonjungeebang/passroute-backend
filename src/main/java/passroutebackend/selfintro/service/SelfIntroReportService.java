@@ -103,7 +103,7 @@ public class SelfIntroReportService {
       timeline.add(new SessionScorePoint(
           r.getSession().getId(),
           round++,
-          r.getSessionScore(),
+          safeScore(r),
           r.getSession().getEndedAt()
       ));
     }
@@ -112,9 +112,13 @@ public class SelfIntroReportService {
 
   private double computeOverallAverage(List<InterviewReport> reports) {
     return reports.stream()
-        .mapToDouble(InterviewReport::getSessionScore)
+        .mapToDouble(this::safeScore)
         .average()
         .orElse(0.0);
+  }
+
+  private double safeScore(InterviewReport report) {
+    return report.getSessionScore() != null ? report.getSessionScore() : 0.0;
   }
 
   private Map<String, Double> computeItemAverages(List<InterviewReport> reports) {
@@ -208,7 +212,7 @@ public class SelfIntroReportService {
     int bestIdx = 0;
     for (int i = 1; i < reports.size(); i++) {
       // 동점 시 더 최근(인덱스 큰) 세션으로 갱신
-      if (reports.get(i).getSessionScore() >= reports.get(bestIdx).getSessionScore()) {
+      if (safeScore(reports.get(i)) >= safeScore(reports.get(bestIdx))) {
         bestIdx = i;
       }
     }
@@ -218,7 +222,7 @@ public class SelfIntroReportService {
   private SessionSummary findWorstSession(List<InterviewReport> reports) {
     int worstIdx = 0;
     for (int i = 1; i < reports.size(); i++) {
-      if (reports.get(i).getSessionScore() <= reports.get(worstIdx).getSessionScore()) {
+      if (safeScore(reports.get(i)) <= safeScore(reports.get(worstIdx))) {
         worstIdx = i;
       }
     }
@@ -229,7 +233,7 @@ public class SelfIntroReportService {
     return new SessionSummary(
         report.getSession().getId(),
         round,
-        report.getSessionScore(),
+        safeScore(report),
         report.getStrengths(),
         parseWeaknessesJson(report.getWeaknesses()),
         report.getSession().getEndedAt()
@@ -256,7 +260,7 @@ public class SelfIntroReportService {
         if (q == null || q.isBlank()) continue;
         QuestionStat s = stat.computeIfAbsent(q, k -> new QuestionStat());
         s.count++;
-        if (s.latestEndedAt == null || endedAt.isAfter(s.latestEndedAt)) {
+        if (endedAt != null && (s.latestEndedAt == null || endedAt.isAfter(s.latestEndedAt))) {
           s.latestEndedAt = endedAt;
         }
       }
@@ -264,7 +268,7 @@ public class SelfIntroReportService {
     return stat.entrySet().stream()
         .sorted(Comparator
             .comparingInt((Map.Entry<String, QuestionStat> e) -> e.getValue().count).reversed()
-            .thenComparing(e -> e.getValue().latestEndedAt, Comparator.reverseOrder()))
+            .thenComparing(e -> e.getValue().latestEndedAt, Comparator.nullsLast(Comparator.reverseOrder())))
         .map(e -> new RecommendedQuestionCount(e.getKey(), e.getValue().count))
         .collect(Collectors.toList());
   }
@@ -293,8 +297,8 @@ public class SelfIntroReportService {
     if (reports.size() == 1) {
       return GROWTH_SUMMARY_N1;
     }
-    double first = reports.get(0).getSessionScore();
-    double last = reports.get(reports.size() - 1).getSessionScore();
+    double first = safeScore(reports.get(0));
+    double last = safeScore(reports.get(reports.size() - 1));
     double diff = last - first;
     if (diff >= GROWTH_DIFF_THRESHOLD) {
       return String.format(GROWTH_SUMMARY_UP_TEMPLATE, 1, reports.size(), (int) Math.round(diff));
