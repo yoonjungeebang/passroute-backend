@@ -9,9 +9,9 @@ import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 
 @Service
 @RequiredArgsConstructor
-public class InterviewProgressService {
+public class InterviewSessionService {
 
-  private final InterviewProgressTxService txService;
+  private final InterviewSessionTxService txService;
   private final FollowUpService followUpService;
 
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {

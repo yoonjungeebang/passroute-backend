@@ -16,15 +16,15 @@ import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
-import passroutebackend.interview.service.InterviewProgressService;
+import passroutebackend.interview.service.InterviewSessionService;
 
 @Tag(name = "Interview", description = "면접 API")
 @RestController
 @RequestMapping("/interview/sessions")
 @RequiredArgsConstructor
-public class InterviewProgressController {
+public class InterviewSessionController {
 
-  private final InterviewProgressService progressService;
+  private final InterviewSessionService sessionService;
 
   @Operation(summary = "질문 목록 조회", description = "세션의 질문 목록을 questionOrder 오름차순으로 반환합니다.")
   @ApiResponses({
@@ -36,7 +36,7 @@ public class InterviewProgressController {
   public ApiResponse<SessionQuestionListResponse> getQuestions(
       @AuthenticationPrincipal Long userId,
       @PathVariable Long sessionId) {
-    return ApiResponse.success(progressService.getQuestions(sessionId, userId));
+    return ApiResponse.success(sessionService.getQuestions(sessionId, userId));
   }
 
   @Operation(summary = "답변 제출", description = "답변을 저장하고 꼬리질문 생성 여부 및 마지막 질문 여부를 반환합니다.")
@@ -51,7 +51,7 @@ public class InterviewProgressController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long sessionId,
       @Valid @RequestBody AnswerSubmitRequest request) {
-    return ApiResponse.success(progressService.submitAnswer(sessionId, userId, request));
+    return ApiResponse.success(sessionService.submitAnswer(sessionId, userId, request));
   }
 
   @Operation(summary = "면접 종료", description = "면접 세션을 종료하고 세션·방 상태를 COMPLETED로 업데이트합니다.")
@@ -65,7 +65,7 @@ public class InterviewProgressController {
   public ApiResponse<Void> endSession(
       @AuthenticationPrincipal Long userId,
       @PathVariable Long sessionId) {
-    progressService.endSession(sessionId, userId);
+    sessionService.endSession(sessionId, userId);
     return ApiResponse.success();
   }
 }
