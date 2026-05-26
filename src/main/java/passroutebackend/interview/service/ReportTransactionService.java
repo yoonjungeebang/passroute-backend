@@ -15,6 +15,7 @@ import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
 import passroutebackend.interview.entity.ReportStatus;
+import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewAnswerRepository;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewReportRepository;
@@ -83,6 +84,9 @@ public class ReportTransactionService {
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
     if (!session.getInterviewRoom().getUserId().equals(userId)) {
       throw CustomException.of(ErrorCode.ACCESS_DENIED);
+    }
+    if (session.getStatus() != SessionStatus.COMPLETED) {
+      throw CustomException.of(ErrorCode.SESSION_NOT_ENDED);
     }
     return reportRepository.findBySession(session);
   }
