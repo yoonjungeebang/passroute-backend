@@ -11,6 +11,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.debate.entity.DebateReport;
 import passroutebackend.debate.dto.response.DebateReportApiResponse;
@@ -22,6 +23,8 @@ import passroutebackend.interview.dto.report.InterviewReportResponse;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.service.ReportService;
+import passroutebackend.report.dto.response.ReportListResponse;
+import passroutebackend.report.service.ReportListService;
 import passroutebackend.selfintro.dto.response.SelfIntroReportResponse;
 import passroutebackend.selfintro.service.SelfIntroReportService;
 
@@ -34,6 +37,7 @@ public class ReportController {
   private final ReportService reportService;
   private final DebateReportService debateReportService;
   private final SelfIntroReportService selfIntroReportService;
+  private final ReportListService reportListService;
 
   @Operation(summary = "면접 리포트 조회", description = "면접 세션의 단건 리포트. 생성 중 202, 완료 200, FAILED 500.")
   @ApiResponses({
@@ -95,5 +99,22 @@ public class ReportController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long selfIntroId) {
     return ResponseEntity.ok(ApiResponse.success(selfIntroReportService.getReport(selfIntroId, userId)));
+  }
+
+  @Operation(summary = "리포트 통합 목록 조회", description = "면접·토론 리포트를 통합한 페이지네이션 목록. 자소서 리포트는 단건 API로만 제공.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리스트 반환 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 type/page/size")
+  })
+  @GetMapping
+  public ResponseEntity<ApiResponse<ReportListResponse>> getReports(
+      @AuthenticationPrincipal Long userId,
+      @RequestParam(required = false) Long resumeId,
+      @RequestParam(required = false, defaultValue = "all") String type,
+      @RequestParam(required = false) String q,
+      @RequestParam(required = false, defaultValue = "0") int page,
+      @RequestParam(required = false, defaultValue = "20") int size) {
+    return ResponseEntity.ok(ApiResponse.success(
+        reportListService.getReports(userId, resumeId, type, q, page, size)));
   }
 }
