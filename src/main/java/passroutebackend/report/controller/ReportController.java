@@ -24,7 +24,9 @@ import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.service.ReportService;
 import passroutebackend.report.dto.response.ReportListResponse;
+import passroutebackend.report.dto.response.UpcomingReportResponse;
 import passroutebackend.report.service.ReportListService;
+import passroutebackend.report.service.UpcomingReportService;
 import passroutebackend.selfintro.dto.response.SelfIntroReportResponse;
 import passroutebackend.selfintro.service.SelfIntroReportService;
 
@@ -38,6 +40,7 @@ public class ReportController {
   private final DebateReportService debateReportService;
   private final SelfIntroReportService selfIntroReportService;
   private final ReportListService reportListService;
+  private final UpcomingReportService upcomingReportService;
 
   @Operation(summary = "면접 리포트 조회", description = "면접 세션의 단건 리포트. 생성 중 202, 완료 200, FAILED 500.")
   @ApiResponses({
@@ -116,5 +119,15 @@ public class ReportController {
       @RequestParam(required = false, defaultValue = "20") int size) {
     return ResponseEntity.ok(ApiResponse.success(
         reportListService.getReports(userId, resumeId, type, q, page, size)));
+  }
+
+  @Operation(summary = "다가오는 면접 + 이전 회차 분석", description = "사용자의 미래 면접 일정과 같은 기업의 이전 회차 리포트 요약을 반환합니다. AI 종합 피드백은 MVP에서 항상 null.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "다가오는 면접 목록 반환 성공")
+  })
+  @GetMapping("/upcoming")
+  public ResponseEntity<ApiResponse<UpcomingReportResponse>> getUpcoming(
+      @AuthenticationPrincipal Long userId) {
+    return ResponseEntity.ok(ApiResponse.success(upcomingReportService.getUpcoming(userId)));
   }
 }
