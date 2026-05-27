@@ -29,11 +29,11 @@ public interface InterviewReportRepository extends JpaRepository<InterviewReport
         JOIN FETCH r.session s
         JOIN FETCH s.interviewRoom rm
       WHERE rm.userId = :userId
-        AND rm.companyName = :companyName
+        AND rm.companyName IN :companyNames
         AND s.status = passroutebackend.interview.entity.SessionStatus.COMPLETED
         AND r.reportStatus = passroutebackend.interview.entity.ReportStatus.COMPLETED
       ORDER BY s.endedAt DESC
       """)
-  List<InterviewReport> findCompletedByUserIdAndCompanyName(
-      @Param("userId") Long userId, @Param("companyName") String companyName);
+  List<InterviewReport> findCompletedByUserIdAndCompanyNames(
+      @Param("userId") Long userId, @Param("companyNames") List<String> companyNames);
 }

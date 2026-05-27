@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,17 +37,31 @@ public class UpcomingReportService {
     List<InterviewSchedule> schedules = scheduleRepository
         .findByUserIdAndInterviewDateBetweenOrderByInterviewDateAsc(userId, now, farFuture);
 
+    Map<String, List<InterviewReport>> reportsByCompany = loadPreviousReportsByCompany(userId, schedules);
+
     List<UpcomingReportItem> items = new ArrayList<>(schedules.size());
     for (InterviewSchedule schedule : schedules) {
-      items.add(toItem(schedule, userId));
+      List<InterviewReport> reports = reportsByCompany.getOrDefault(schedule.getCompanyName(), List.of());
+      items.add(toItem(schedule, reports));
     }
     return UpcomingReportResponse.builder().items(items).build();
   }
 
-  private UpcomingReportItem toItem(InterviewSchedule schedule, Long userId) {
-    List<PrevReportSummary> previous = findPreviousReports(userId, schedule.getCompanyName());
-    int daysUntil = computeDaysUntil(schedule.getInterviewDate());
+  private Map<String, List<InterviewReport>> loadPreviousReportsByCompany(
+      Long userId, List<InterviewSchedule> schedules) {
+    List<String> companyNames = schedules.stream()
+        .map(InterviewSchedule::getCompanyName)
+        .filter(name -> name != null && !name.isBlank())
+        .distinct()
+        .toList();
+    if (companyNames.isEmpty()) return Map.of();
 
+    return interviewReportRepository.findCompletedByUserIdAndCompanyNames(userId, companyNames).stream()
+        .collect(Collectors.groupingBy(r -> r.getSession().getInterviewRoom().getCompanyName()));
+  }
+
+  private UpcomingReportItem toItem(InterviewSchedule schedule, List<InterviewReport> previousReports) {
+    int daysUntil = computeDaysUntil(schedule.getInterviewDate());
     return new UpcomingReportItem(
         schedule.getId(),
         schedule.getCompanyName(),
@@ -55,17 +71,12 @@ public class UpcomingReportService {
         daysUntil,
         null,                  // selfIntroId: schedule에 자소서 연결 없음
         null,                  // selfIntroFilename: 동일
-        previous,
+        toSummaries(previousReports),
         null                   // aiFeedback: MVP에서 항상 null
     );
   }
 
-  private List<PrevReportSummary> findPreviousReports(Long userId, String companyName) {
-    if (companyName == null || companyName.isBlank()) {
-      return List.of();
-    }
-    List<InterviewReport> reports =
-        interviewReportRepository.findCompletedByUserIdAndCompanyName(userId, companyName);
+  private List<PrevReportSummary> toSummaries(List<InterviewReport> reports) {
     List<PrevReportSummary> summaries = new ArrayList<>(reports.size());
     for (InterviewReport r : reports) {
       InterviewType type = r.getSession().getInterviewRoom().getInterviewType();
