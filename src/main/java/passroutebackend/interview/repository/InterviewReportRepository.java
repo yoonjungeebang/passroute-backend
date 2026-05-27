@@ -23,4 +23,17 @@ public interface InterviewReportRepository extends JpaRepository<InterviewReport
       ORDER BY s.endedAt ASC
       """)
   List<InterviewReport> findAllBySiIdOrderByEndedAtAsc(@Param("siId") Long siId);
+
+  @Query("""
+      SELECT r FROM InterviewReport r
+        JOIN FETCH r.session s
+        JOIN FETCH s.interviewRoom rm
+      WHERE rm.userId = :userId
+        AND rm.companyName IN :companyNames
+        AND s.status = passroutebackend.interview.entity.SessionStatus.COMPLETED
+        AND r.reportStatus = passroutebackend.interview.entity.ReportStatus.COMPLETED
+      ORDER BY s.endedAt DESC
+      """)
+  List<InterviewReport> findCompletedByUserIdAndCompanyNames(
+      @Param("userId") Long userId, @Param("companyNames") List<String> companyNames);
 }

@@ -17,21 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebatePersonaResponse;
-import passroutebackend.debate.dto.response.DebateReportApiResponse;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.dto.response.DebateTopicResponse;
-import passroutebackend.debate.entity.DebateReport;
 import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.service.DebateReportService;
 import passroutebackend.debate.service.DebateService;
 import passroutebackend.global.ApiResponse;
-import passroutebackend.global.exception.CustomException;
-import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.entity.ReportStatus;
 
 import java.util.List;
-import java.util.Optional;
 
 @Tag(name = "Debate", description = "토론 면접 API")
 @RestController
@@ -104,20 +98,4 @@ public class DebateController {
         .body(ApiResponse.accepted("리포트를 생성 중입니다."));
   }
 
-  @Operation(summary = "토론 리포트 조회")
-  @GetMapping("/{sessionId}/report")
-  public ResponseEntity<ApiResponse<DebateReportApiResponse>> getReport(
-      @AuthenticationPrincipal Long userId,
-      @PathVariable Long sessionId) {
-    Optional<DebateReport> reportOpt = reportService.findReport(userId, sessionId);
-    if (reportOpt.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.ACCEPTED)
-          .body(ApiResponse.accepted("리포트 생성 중입니다."));
-    }
-    DebateReport report = reportOpt.get();
-    if (report.getReportStatus() == ReportStatus.FAILED) {
-      throw CustomException.of(ErrorCode.REPORT_GENERATION_FAILED);
-    }
-    return ResponseEntity.ok(ApiResponse.success(reportService.toApiResponse(report)));
-  }
 }
