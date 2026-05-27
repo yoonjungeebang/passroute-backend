@@ -28,7 +28,7 @@ public class ReportListQueryRepository {
         FROM interview_reports ir
         JOIN interview_sessions s ON ir.session_id = s.id
         JOIN interview_rooms room ON s.room_id = room.id
-        WHERE :includeInterview = TRUE
+        WHERE :includeInterview = 1
           AND room.user_id = :userId
           AND s.status = 'COMPLETED'
           AND ir.report_status = 'COMPLETED'
@@ -55,7 +55,7 @@ public class ReportListQueryRepository {
         FROM debate_reports dr
         JOIN debate_sessions ds ON dr.session_id = ds.id
         JOIN debate_topics dt ON ds.topic_id = dt.id
-        WHERE :includeDebate = TRUE
+        WHERE :includeDebate = 1
           AND :resumeId IS NULL
           AND ds.user_id = :userId
           AND dr.report_status = 'COMPLETED'
@@ -73,7 +73,7 @@ public class ReportListQueryRepository {
           FROM interview_reports ir
           JOIN interview_sessions s ON ir.session_id = s.id
           JOIN interview_rooms room ON s.room_id = room.id
-          WHERE :includeInterview = TRUE
+          WHERE :includeInterview = 1
             AND room.user_id = :userId
             AND s.status = 'COMPLETED'
             AND ir.report_status = 'COMPLETED'
@@ -91,7 +91,7 @@ public class ReportListQueryRepository {
           FROM debate_reports dr
           JOIN debate_sessions ds ON dr.session_id = ds.id
           JOIN debate_topics dt ON ds.topic_id = dt.id
-          WHERE :includeDebate = TRUE
+          WHERE :includeDebate = 1
             AND :resumeId IS NULL
             AND ds.user_id = :userId
             AND dr.report_status = 'COMPLETED'
@@ -133,8 +133,8 @@ public class ReportListQueryRepository {
   private MapSqlParameterSource buildParams(ReportListQueryParams p) {
     return new MapSqlParameterSource()
         .addValue("userId", p.getUserId())
-        .addValue("includeInterview", p.isIncludeInterview())
-        .addValue("includeDebate", p.isIncludeDebate())
+        .addValue("includeInterview", p.isIncludeInterview() ? 1 : 0)
+        .addValue("includeDebate", p.isIncludeDebate() ? 1 : 0)
         .addValue("interviewTypeFilter", p.getInterviewTypeFilter())
         .addValue("resumeId", p.getResumeId())
         .addValue("q", p.getQ());

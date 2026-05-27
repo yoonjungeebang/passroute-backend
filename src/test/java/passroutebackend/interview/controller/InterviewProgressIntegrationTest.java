@@ -373,50 +373,7 @@ class InterviewProgressIntegrationTest {
     }
   }
 
-  // =========================================================
-  // GET /interview/sessions/{sessionId}/report
-  // =========================================================
-
-  @Nested
-  @DisplayName("면접 리포트 조회")
-  class GetReport {
-
-    @Test
-    @DisplayName("실패 - 아직 종료되지 않은 세션 → 400")
-    void sessionNotEnded() throws Exception {
-      mockMvc.perform(get("/interview/sessions/{sessionId}/report", session.getId())
-              .header("Authorization", "Bearer " + token))
-          .andExpect(status().isBadRequest())
-          .andExpect(jsonPath("$.code").value("I011"));
-    }
-
-    @Test
-    @DisplayName("실패 - 다른 유저의 세션 접근 → 403")
-    void accessDenied() throws Exception {
-      String otherToken = jwtTokenProvider.generateAccessToken(OTHER_USER_ID);
-
-      mockMvc.perform(get("/interview/sessions/{sessionId}/report", session.getId())
-              .header("Authorization", "Bearer " + otherToken))
-          .andExpect(status().isForbidden())
-          .andExpect(jsonPath("$.code").value("A002"));
-    }
-
-    @Test
-    @DisplayName("실패 - 존재하지 않는 세션 → 404")
-    void sessionNotFound() throws Exception {
-      mockMvc.perform(get("/interview/sessions/{sessionId}/report", 999999L)
-              .header("Authorization", "Bearer " + token))
-          .andExpect(status().isNotFound())
-          .andExpect(jsonPath("$.code").value("I001"));
-    }
-
-    @Test
-    @DisplayName("실패 - 인증 토큰 없음 → 401")
-    void unauthorized() throws Exception {
-      mockMvc.perform(get("/interview/sessions/{sessionId}/report", session.getId()))
-          .andExpect(status().isUnauthorized());
-    }
-  }
+  // GET /api/reports/interview/{sessionId} 테스트는 ReportControllerIntegrationTest로 이전
 
   // =========================================================
   // Helper
