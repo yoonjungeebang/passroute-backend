@@ -36,6 +36,7 @@ import passroutebackend.interview.dto.report.ReportGenerationRequest;
 import passroutebackend.interview.dto.report.ReportGenerationResponse;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
 import passroutebackend.interview.dto.report.SessionSummaryResponse;
+import passroutebackend.interview.dto.voice.VoiceAnalysisResponse;
 
 @Slf4j
 @Component
@@ -113,6 +114,19 @@ public class AiServerClient {
         .body(request)
         .retrieve()
         .body(SessionSummaryResponse.class);
+  }
+
+  // 음성 분석 통계 조회 (실패 시 null 반환 → 리포트 본문 흐름 격리)
+  public VoiceAnalysisResponse getVoiceAnalysis(Long sessionId) {
+    try {
+      return aiServerRestClient.post()
+          .uri("/interview/{sessionId}/end", sessionId)
+          .retrieve()
+          .body(VoiceAnalysisResponse.class);
+    } catch (Exception e) {
+      log.warn("AI 서버 음성 분석 통계 조회 실패, sessionId={}, error={}", sessionId, e.getMessage());
+      return null;
+    }
   }
 
   public ReportGenerationResponse generateReport(ReportGenerationRequest request) {

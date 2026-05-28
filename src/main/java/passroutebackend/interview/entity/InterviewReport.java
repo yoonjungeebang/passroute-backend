@@ -74,6 +74,19 @@ public class InterviewReport {
   @Column(nullable = false, length = 20)
   private ReportStatus reportStatus;
 
+  // ── 음성 분석 통계 (nullable: AI 서버 응답 실패 / 데이터 없음 / 후속 점수화 대기) ─
+  @Column
+  private Double avgWpm;
+
+  @Column
+  private Double avgSilenceDuration;
+
+  @Column
+  private Integer fillerCount;
+
+  @Column
+  private Double voiceScore;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 
@@ -82,7 +95,8 @@ public class InterviewReport {
       String weaknesses, String improvements, String questionFeedback,
       String recommendedQuestions, String finalAdvice, String readinessComment,
       Double sessionScore, InterviewReadiness interviewReadiness,
-      String keyWeakness, String itemAverages, ReportStatus reportStatus) {
+      String keyWeakness, String itemAverages, ReportStatus reportStatus,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount, Double voiceScore) {
     this.session = session;
     this.overall = overall;
     this.strengths = strengths;
@@ -97,5 +111,9 @@ public class InterviewReport {
     this.keyWeakness = keyWeakness;
     this.itemAverages = itemAverages;
     this.reportStatus = reportStatus;
+    this.avgWpm = avgWpm;
+    this.avgSilenceDuration = avgSilenceDuration;
+    this.fillerCount = fillerCount;
+    this.voiceScore = voiceScore;
   }
 }

@@ -102,7 +102,8 @@ public class ReportTransactionService {
   public void saveReport(Long sessionId, double sessionScore, InterviewReadiness interviewReadiness,
       String overall, String strengths, String weaknessesJson, String improvements,
       String questionFeedbackJson, String recommendedQuestionsJson, String finalAdvice,
-      String readinessComment, String keyWeaknessJson, String itemAveragesJson) {
+      String readinessComment, String keyWeaknessJson, String itemAveragesJson,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount, Double voiceScore) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
     InterviewReport report = InterviewReport.builder()
@@ -120,6 +121,10 @@ public class ReportTransactionService {
         .keyWeakness(keyWeaknessJson)
         .itemAverages(itemAveragesJson)
         .reportStatus(ReportStatus.COMPLETED)
+        .avgWpm(avgWpm)
+        .avgSilenceDuration(avgSilenceDuration)
+        .fillerCount(fillerCount)
+        .voiceScore(voiceScore)
         .build();
     reportRepository.save(report);
   }
