@@ -60,6 +60,30 @@ public class InterviewReport {
   @Column
   private Double sessionScore;
 
+  @Column
+  private Double voiceScore;
+
+  @Column
+  private Double faceScore;
+
+  @Column
+  private Double avgWpm;
+
+  @Column
+  private Double avgSilenceDuration;
+
+  @Column
+  private Integer fillerCount;
+
+  @Column
+  private Double avgGazeRatio;
+
+  @Column
+  private Integer gazeOffCount;
+
+  @Column
+  private Double avgBlinkPerMin;
+
   @Enumerated(EnumType.STRING)
   @Column(length = 30)
   private InterviewReadiness interviewReadiness;
@@ -82,7 +106,10 @@ public class InterviewReport {
       String weaknesses, String improvements, String questionFeedback,
       String recommendedQuestions, String finalAdvice, String readinessComment,
       Double sessionScore, InterviewReadiness interviewReadiness,
-      String keyWeakness, String itemAverages, ReportStatus reportStatus) {
+      String keyWeakness, String itemAverages, ReportStatus reportStatus,
+      Double voiceScore, Double faceScore,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount,
+      Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
     this.session = session;
     this.overall = overall;
     this.strengths = strengths;
@@ -97,5 +124,13 @@ public class InterviewReport {
     this.keyWeakness = keyWeakness;
     this.itemAverages = itemAverages;
     this.reportStatus = reportStatus;
+    this.voiceScore = voiceScore;
+    this.faceScore = faceScore;
+    this.avgWpm = avgWpm;
+    this.avgSilenceDuration = avgSilenceDuration;
+    this.fillerCount = fillerCount;
+    this.avgGazeRatio = avgGazeRatio;
+    this.gazeOffCount = gazeOffCount;
+    this.avgBlinkPerMin = avgBlinkPerMin;
   }
 }

@@ -33,6 +33,10 @@ import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewType;
 
+import passroutebackend.interview.entity.FaceAnalysis;
+import passroutebackend.interview.entity.InterviewSession;
+import passroutebackend.interview.entity.VoiceAnalysis;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -51,6 +55,7 @@ public class ReportService {
 
   private final AiServerClient aiServerClient;
   private final ReportTransactionService reportTransactionService;
+  private final InterviewScoreCalculator scoreCalculator;
   private final ObjectMapper objectMapper;
 
   private static final Map<String, Double> TECHNICAL_WEIGHTS = Map.of(
@@ -141,6 +146,27 @@ public class ReportService {
         return;
       }
 
+      List<VoiceAnalysis> voiceList = reportTransactionService.loadVoiceAnalysis(sessionId);
+      List<FaceAnalysis> faceList = reportTransactionService.loadFaceAnalysis(sessionId);
+      InterviewSession session = reportTransactionService.loadSession(sessionId);
+      double totalMinutes = scoreCalculator.calcTotalMinutes(session);
+
+      double voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
+      double faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
+
+      double avgWpm = voiceList.stream().filter(v -> v.getAvgWpm() != null)
+          .mapToDouble(v -> v.getAvgWpm()).average().orElse(0.0);
+      double avgSilence = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
+          .mapToDouble(v -> v.getAvgSilenceDuration()).average().orElse(0.0);
+      int totalFiller = voiceList.stream().filter(v -> v.getFillerCount() != null)
+          .mapToInt(VoiceAnalysis::getFillerCount).sum();
+      double avgGazeRatio = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
+          .mapToDouble(f -> f.getAvgGazeRatio()).average().orElse(0.0);
+      int totalGazeOff = faceList.stream().filter(f -> f.getGazeOffCount() != null)
+          .mapToInt(FaceAnalysis::getGazeOffCount).sum();
+      double avgBlink = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
+          .mapToDouble(f -> f.getAvgBlinkPerMin()).average().orElse(0.0);
+
       reportTransactionService.saveReport(
           sessionId, sessionScore.getPercentage(), readiness,
           reportResponse.getOverall(),
@@ -152,7 +178,10 @@ public class ReportService {
           reportResponse.getFinalAdvice(),
           reportResponse.getReadinessComment(),
           toJson(keyWeakness),
-          toJson(itemAverages)
+          toJson(itemAverages),
+          voiceScore, faceScore,
+          avgWpm, avgSilence, totalFiller,
+          avgGazeRatio, totalGazeOff, avgBlink
       );
 
     } catch (Exception e) {
@@ -403,6 +432,14 @@ public class ReportService {
     return InterviewReportResponse.builder()
         .sessionId(report.getSession().getId())
         .sessionScore(report.getSessionScore())
+        .voiceScore(report.getVoiceScore())
+        .faceScore(report.getFaceScore())
+        .avgWpm(report.getAvgWpm())
+        .avgSilenceDuration(report.getAvgSilenceDuration())
+        .fillerCount(report.getFillerCount())
+        .avgGazeRatio(report.getAvgGazeRatio())
+        .gazeOffCount(report.getGazeOffCount())
+        .avgBlinkPerMin(report.getAvgBlinkPerMin())
         .interviewReadiness(report.getInterviewReadiness() != null ? report.getInterviewReadiness().name() : null)
         .itemAverages(parseJsonToItemAveragesMap(report.getItemAverages()))
         .keyWeakness(parseJsonAsType(report.getKeyWeakness(), new TypeReference<List<String>>() {}))
