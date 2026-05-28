@@ -103,8 +103,6 @@ public class ReportService {
       BestWorstQ bestQ = findBestQuestion(ctx.getQuestionAnswers());
       BestWorstQ worstQ = findWorstQuestion(ctx.getQuestionAnswers());
 
-      aiServerClient.saveStt(sessionId);
-
       aiServerClient.sessionSummary(
           new SessionSummaryRequest(
               ctx.getJobTitle(),
