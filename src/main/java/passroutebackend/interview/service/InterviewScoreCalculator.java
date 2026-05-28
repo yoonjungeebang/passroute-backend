@@ -13,6 +13,9 @@ public class InterviewScoreCalculator {
 
   public double calcVoiceScore(List<VoiceAnalysis> voiceList, double totalMinutes) {
     if (voiceList.isEmpty()) return 0.0;
+    boolean hasData = voiceList.stream().anyMatch(v ->
+        v.getAvgWpm() != null || v.getFillerCount() != null || v.getAvgSilenceDuration() != null);
+    if (!hasData) return 0.0;
 
     double avgWpm = voiceList.stream()
         .filter(v -> v.getAvgWpm() != null)
@@ -39,6 +42,9 @@ public class InterviewScoreCalculator {
 
   public double calcFaceScore(List<FaceAnalysis> faceList, double totalMinutes) {
     if (faceList.isEmpty()) return 0.0;
+    boolean hasData = faceList.stream().anyMatch(f ->
+        f.getAvgGazeRatio() != null || f.getGazeOffCount() != null || f.getAvgBlinkPerMin() != null);
+    if (!hasData) return 0.0;
 
     double avgGazeRatio = faceList.stream()
         .filter(f -> f.getAvgGazeRatio() != null)
