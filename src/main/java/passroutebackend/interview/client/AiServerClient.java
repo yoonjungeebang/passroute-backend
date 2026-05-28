@@ -142,18 +142,6 @@ public class AiServerClient {
         .body(ReportGenerationResponse.class);
   }
 
-  public void saveStt(Long sessionId) {
-    try {
-      aiServerRestClient.post()
-          .uri("/interview/{sessionId}/save-stt", sessionId)
-          .contentType(MediaType.APPLICATION_JSON)
-          .retrieve()
-          .toBodilessEntity();
-    } catch (Exception e) {
-      log.warn("STT 저장 요청 실패, sessionId={}: {}", sessionId, e.getMessage());
-    }
-  }
-
   // ── 토론 면접 (debateAiServerRestClient 사용, timeout 180s) ─────────────────
 
   public InterviewerOpeningResponse generateInterviewerOpening(InterviewerOpeningRequest request) {
