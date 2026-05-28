@@ -185,7 +185,7 @@ public class DebateService {
 
     // 사용자 턴 저장
     DebateTurn turn = transactionService.saveTurn(
-        session, SpeakerType.USER, null, userStance, round, req.getContent());
+        session, SpeakerType.USER, null, userStance, round, session.getPendingStt());
 
     // 상태 전이: *_USER → *_AI
     stateMachine.onUserTurnSubmitted(session);
@@ -194,7 +194,7 @@ public class DebateService {
     // 비동기 1: 사용자 턴 평가
     evaluationService.evaluateAsync(
         sessionId, userId, turn.getId(),
-        req.getContent(), round, session.getUserStance(),
+        session.getPendingStt(), round, session.getUserStance(),
         topicTitle, opponentPreviousTurn);
 
     // 비동기 2: AI 경쟁자 답변 생성
