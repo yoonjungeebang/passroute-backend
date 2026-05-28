@@ -151,21 +151,33 @@ public class ReportService {
       InterviewSession session = reportTransactionService.loadSession(sessionId);
       double totalMinutes = scoreCalculator.calcTotalMinutes(session);
 
-      double voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
-      double faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
+      Double voiceScore = null;
+      Double avgWpm = null;
+      Double avgSilence = null;
+      Integer totalFiller = null;
+      if (!voiceList.isEmpty()) {
+        voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
+        avgWpm = voiceList.stream().filter(v -> v.getAvgWpm() != null)
+            .mapToDouble(v -> v.getAvgWpm()).average().orElse(0.0);
+        avgSilence = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
+            .mapToDouble(v -> v.getAvgSilenceDuration()).average().orElse(0.0);
+        totalFiller = voiceList.stream().filter(v -> v.getFillerCount() != null)
+            .mapToInt(VoiceAnalysis::getFillerCount).sum();
+      }
 
-      double avgWpm = voiceList.stream().filter(v -> v.getAvgWpm() != null)
-          .mapToDouble(v -> v.getAvgWpm()).average().orElse(0.0);
-      double avgSilence = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
-          .mapToDouble(v -> v.getAvgSilenceDuration()).average().orElse(0.0);
-      int totalFiller = voiceList.stream().filter(v -> v.getFillerCount() != null)
-          .mapToInt(VoiceAnalysis::getFillerCount).sum();
-      double avgGazeRatio = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
-          .mapToDouble(f -> f.getAvgGazeRatio()).average().orElse(0.0);
-      int totalGazeOff = faceList.stream().filter(f -> f.getGazeOffCount() != null)
-          .mapToInt(FaceAnalysis::getGazeOffCount).sum();
-      double avgBlink = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
-          .mapToDouble(f -> f.getAvgBlinkPerMin()).average().orElse(0.0);
+      Double faceScore = null;
+      Double avgGazeRatio = null;
+      Integer totalGazeOff = null;
+      Double avgBlink = null;
+      if (!faceList.isEmpty()) {
+        faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
+        avgGazeRatio = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
+            .mapToDouble(f -> f.getAvgGazeRatio()).average().orElse(0.0);
+        totalGazeOff = faceList.stream().filter(f -> f.getGazeOffCount() != null)
+            .mapToInt(FaceAnalysis::getGazeOffCount).sum();
+        avgBlink = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
+            .mapToDouble(f -> f.getAvgBlinkPerMin()).average().orElse(0.0);
+      }
 
       reportTransactionService.saveReport(
           sessionId, sessionScore.getPercentage(), readiness,
