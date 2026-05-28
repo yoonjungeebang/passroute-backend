@@ -29,6 +29,8 @@ import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.dto.report.SessionScore;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
 import passroutebackend.interview.dto.report.SessionSummaryResponse;
+import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
+import passroutebackend.interview.dto.voice.VoiceAnalysisResponse;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewType;
@@ -196,6 +198,16 @@ public class ReportService {
 
   public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
     return reportTransactionService.findReport(sessionId, userId);
+  }
+
+  // 측정 데이터 존재 여부 — 모든 필드 null이면 데이터 없음으로 판정
+  private boolean hasVoiceData(VoiceAnalysisResponse voice) {
+    if (voice == null) {
+      return false;
+    }
+    return voice.getAvgWpm() != null
+        || voice.getAvgSilenceDuration() != null
+        || voice.getTotalFillerCount() != null;
   }
 
   public InterviewReportResponse toResponseDto(InterviewReport report) {
@@ -451,8 +463,25 @@ public class ReportService {
         .recommendedQuestions(parseJsonAsType(report.getRecommendedQuestions(), new TypeReference<List<String>>() {}))
         .finalAdvice(report.getFinalAdvice())
         .readinessComment(report.getReadinessComment())
+        .voiceAnalysis(buildVoiceAnalysis(report))
         .createdAt(report.getCreatedAt())
         .build();
+  }
+
+  private VoiceAnalysisSummary buildVoiceAnalysis(InterviewReport report) {
+    // 4개 voice 필드가 모두 null이면 voiceAnalysis 자체를 null로 (응답에서 섹션 자체 부재)
+    if (report.getAvgWpm() == null
+        && report.getAvgSilenceDuration() == null
+        && report.getFillerCount() == null
+        && report.getVoiceScore() == null) {
+      return null;
+    }
+    return new VoiceAnalysisSummary(
+        report.getAvgWpm(),
+        report.getAvgSilenceDuration(),
+        report.getFillerCount(),
+        report.getVoiceScore()
+    );
   }
 
   // ── JSON 유틸 ──────────────────────────────────────────────────────────────

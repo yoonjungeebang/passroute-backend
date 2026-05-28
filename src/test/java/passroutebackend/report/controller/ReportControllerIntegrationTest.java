@@ -134,6 +134,49 @@ class ReportControllerIntegrationTest {
           .andExpect(status().isForbidden())
           .andExpect(jsonPath("$.code").value("A002"));
     }
+
+    @Test
+    @DisplayName("성공 - voice 통계 모두 채워짐 → voiceAnalysis 객체, score는 null")
+    void voiceFilled() throws Exception {
+      InterviewReport report = saveCompletedInterviewReportWithVoice(
+          selfIntro.getId(), 85.0, 1, 142.5, 0.85, 7, null);
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.voiceAnalysis").exists())
+          .andExpect(jsonPath("$.data.voiceAnalysis.avgWpm").value(142.5))
+          .andExpect(jsonPath("$.data.voiceAnalysis.avgSilenceDuration").value(0.85))
+          .andExpect(jsonPath("$.data.voiceAnalysis.fillerCount").value(7))
+          .andExpect(jsonPath("$.data.voiceAnalysis.score").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("성공 - voice 4개 필드 모두 null → voiceAnalysis 자체가 null")
+    void voiceAllNull() throws Exception {
+      InterviewReport report = saveCompletedInterviewReport(selfIntro.getId(), 80.0, 1, List.of());
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.voiceAnalysis").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("성공 - voice 부분 데이터 (wpm만 있고 나머지 null) → 그대로 노출")
+    void voicePartial() throws Exception {
+      InterviewReport report = saveCompletedInterviewReportWithVoice(
+          selfIntro.getId(), 80.0, 1, 150.0, null, null, null);
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.voiceAnalysis").exists())
+          .andExpect(jsonPath("$.data.voiceAnalysis.avgWpm").value(150.0))
+          .andExpect(jsonPath("$.data.voiceAnalysis.avgSilenceDuration").doesNotExist())
+          .andExpect(jsonPath("$.data.voiceAnalysis.fillerCount").doesNotExist())
+          .andExpect(jsonPath("$.data.voiceAnalysis.score").doesNotExist());
+    }
   }
 
   // =========================================================
@@ -379,6 +422,18 @@ class ReportControllerIntegrationTest {
 
   private InterviewReport saveCompletedInterviewReport(
       Long siId, double score, int sessionNumber, List<String> recommendedQuestions) throws Exception {
+    return saveCompletedInterviewReportFull(siId, score, sessionNumber, recommendedQuestions, null, null, null, null);
+  }
+
+  private InterviewReport saveCompletedInterviewReportWithVoice(
+      Long siId, double score, int sessionNumber,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount, Double voiceScore) throws Exception {
+    return saveCompletedInterviewReportFull(siId, score, sessionNumber, List.of(), avgWpm, avgSilenceDuration, fillerCount, voiceScore);
+  }
+
+  private InterviewReport saveCompletedInterviewReportFull(
+      Long siId, double score, int sessionNumber, List<String> recommendedQuestions,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount, Double voiceScore) throws Exception {
     InterviewRoom room = roomRepository.save(InterviewRoom.builder()
         .userId(user.getId())
         .siId(siId)
@@ -417,6 +472,10 @@ class ReportControllerIntegrationTest {
         .weaknesses(objectMapper.writeValueAsString(List.of()))
         .recommendedQuestions(objectMapper.writeValueAsString(recommendedQuestions))
         .reportStatus(ReportStatus.COMPLETED)
+        .avgWpm(avgWpm)
+        .avgSilenceDuration(avgSilenceDuration)
+        .fillerCount(fillerCount)
+        .voiceScore(voiceScore)
         .build());
     em.flush();  // native JdbcTemplate 쿼리에서 즉시 보이도록 DB에 반영
     return saved;
