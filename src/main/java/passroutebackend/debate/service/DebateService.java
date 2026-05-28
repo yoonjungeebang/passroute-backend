@@ -183,9 +183,15 @@ public class DebateService {
     String topicTitle = session.getTopic().getTitle();
     String opponentPreviousTurn = findOpponentPreviousTurn(session);
 
+    String pendingStt = session.getPendingStt();
+    if (pendingStt == null || pendingStt.isBlank()) {
+      throw CustomException.of(ErrorCode.INVALID_INPUT);
+    }
+
     // 사용자 턴 저장
     DebateTurn turn = transactionService.saveTurn(
-        session, SpeakerType.USER, null, userStance, round, session.getPendingStt());
+        session, SpeakerType.USER, null, userStance, round, pendingStt);
+    session.updatePendingStt(null);
 
     // 상태 전이: *_USER → *_AI
     stateMachine.onUserTurnSubmitted(session);
@@ -194,7 +200,7 @@ public class DebateService {
     // 비동기 1: 사용자 턴 평가
     evaluationService.evaluateAsync(
         sessionId, userId, turn.getId(),
-        session.getPendingStt(), round, session.getUserStance(),
+        pendingStt, round, session.getUserStance(),
         topicTitle, opponentPreviousTurn);
 
     // 비동기 2: AI 경쟁자 답변 생성
