@@ -123,6 +123,10 @@ public class AiServerClient {
           .uri("/interview/{sessionId}/end", sessionId)
           .retrieve()
           .body(VoiceAnalysisResponse.class);
+    } catch (RestClientResponseException e) {
+      log.warn("AI 서버 음성 분석 통계 조회 실패, sessionId={}, status={}, body={}",
+          sessionId, e.getStatusCode(), e.getResponseBodyAsString());
+      return null;
     } catch (Exception e) {
       log.warn("AI 서버 음성 분석 통계 조회 실패, sessionId={}, error={}", sessionId, e.getMessage());
       return null;
