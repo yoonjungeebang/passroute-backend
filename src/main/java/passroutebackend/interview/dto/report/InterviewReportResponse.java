@@ -13,14 +13,8 @@ public class InterviewReportResponse {
 
   private Long sessionId;
   private Double sessionScore;
-  private Double voiceScore;
-  private Double faceScore;
-  private Double avgWpm;
-  private Double avgSilenceDuration;
-  private Integer fillerCount;
-  private Double avgGazeRatio;
-  private Integer gazeOffCount;
-  private Double avgBlinkPerMin;
+  private VoiceAnalysisSummary voiceAnalysis;
+  private FaceAnalysisSummary faceAnalysis;
   private String interviewReadiness;
   private Map<String, Double> itemAverages;
   private List<String> keyWeakness;

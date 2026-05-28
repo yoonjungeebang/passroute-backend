@@ -27,14 +27,14 @@ import passroutebackend.interview.dto.report.SessionResult;
 import passroutebackend.interview.dto.report.QuestionFeedback;
 import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.dto.report.SessionScore;
+import passroutebackend.interview.dto.report.FaceAnalysisSummary;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
-import passroutebackend.interview.dto.report.SessionSummaryResponse;
+import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
+import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
-import passroutebackend.interview.entity.InterviewType;
-
-import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.interview.entity.InterviewSession;
+import passroutebackend.interview.entity.InterviewType;
 import passroutebackend.interview.entity.VoiceAnalysis;
 
 import java.util.ArrayList;
@@ -432,14 +432,8 @@ public class ReportService {
     return InterviewReportResponse.builder()
         .sessionId(report.getSession().getId())
         .sessionScore(report.getSessionScore())
-        .voiceScore(report.getVoiceScore())
-        .faceScore(report.getFaceScore())
-        .avgWpm(report.getAvgWpm())
-        .avgSilenceDuration(report.getAvgSilenceDuration())
-        .fillerCount(report.getFillerCount())
-        .avgGazeRatio(report.getAvgGazeRatio())
-        .gazeOffCount(report.getGazeOffCount())
-        .avgBlinkPerMin(report.getAvgBlinkPerMin())
+        .voiceAnalysis(buildVoiceAnalysis(report))
+        .faceAnalysis(buildFaceAnalysis(report))
         .interviewReadiness(report.getInterviewReadiness() != null ? report.getInterviewReadiness().name() : null)
         .itemAverages(parseJsonToItemAveragesMap(report.getItemAverages()))
         .keyWeakness(parseJsonAsType(report.getKeyWeakness(), new TypeReference<List<String>>() {}))
@@ -453,6 +447,36 @@ public class ReportService {
         .readinessComment(report.getReadinessComment())
         .createdAt(report.getCreatedAt())
         .build();
+  }
+
+  private VoiceAnalysisSummary buildVoiceAnalysis(InterviewReport report) {
+    if (report.getAvgWpm() == null
+        && report.getAvgSilenceDuration() == null
+        && report.getFillerCount() == null
+        && report.getVoiceScore() == null) {
+      return null;
+    }
+    return new VoiceAnalysisSummary(
+        report.getAvgWpm(),
+        report.getAvgSilenceDuration(),
+        report.getFillerCount(),
+        report.getVoiceScore()
+    );
+  }
+
+  private FaceAnalysisSummary buildFaceAnalysis(InterviewReport report) {
+    if (report.getAvgGazeRatio() == null
+        && report.getGazeOffCount() == null
+        && report.getAvgBlinkPerMin() == null
+        && report.getFaceScore() == null) {
+      return null;
+    }
+    return new FaceAnalysisSummary(
+        report.getAvgGazeRatio(),
+        report.getGazeOffCount(),
+        report.getAvgBlinkPerMin(),
+        report.getFaceScore()
+    );
   }
 
   // ── JSON 유틸 ──────────────────────────────────────────────────────────────
