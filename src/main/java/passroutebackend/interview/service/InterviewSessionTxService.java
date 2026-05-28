@@ -75,6 +75,16 @@ public class InterviewSessionTxService {
     session.getInterviewRoom().updateStatus(RoomStatus.COMPLETED);
   }
 
+  @Transactional(readOnly = true)
+  public String getWorstClipVideoUrl(Long sessionId, Long userId) {
+    InterviewSession session = findAndValidateOwnership(sessionId, userId);
+    List<InterviewAnswer> answers = answerRepository.findBySessionOrderByClipScoreAsc(session);
+    if (answers.isEmpty()) {
+      return null;
+    }
+    return answers.get(0).getVideoUrl();
+  }
+
   private InterviewSession findAndValidateOwnership(Long sessionId, Long userId) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));

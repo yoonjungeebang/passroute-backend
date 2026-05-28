@@ -46,6 +46,12 @@ public class InterviewAnswer {
   @Column
   private Double concisenessFinal;
 
+  @Column(length = 500)
+  private String videoUrl;
+
+  @Column
+  private Double clipScore;
+
   @CreationTimestamp
   private LocalDateTime answeredAt;
 
@@ -60,5 +66,10 @@ public class InterviewAnswer {
     this.starScore = starScore;
     this.llmScores = llmScores;
     this.concisenessFinal = concisenessFinal;
+  }
+
+  public void updateVideoClip(String videoUrl, Double clipScore) {
+    this.videoUrl = videoUrl;
+    this.clipScore = clipScore;
   }
 }

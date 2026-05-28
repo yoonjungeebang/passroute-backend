@@ -41,4 +41,8 @@ public class InterviewSessionService {
     txService.endSession(sessionId, userId);
     reportService.generateReportAsync(sessionId);
   }
+
+  public String getWorstClipVideoUrl(Long sessionId, Long userId) {
+    return txService.getWorstClipVideoUrl(sessionId, userId);
+  }
 }

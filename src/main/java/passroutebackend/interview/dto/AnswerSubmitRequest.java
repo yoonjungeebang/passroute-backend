@@ -17,4 +17,8 @@ public class AnswerSubmitRequest {
   private final String answerText;
 
   private final VoiceData voiceData;
+
+  private final String videoUrl;
+
+  private final Double clipScore;
 }

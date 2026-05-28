@@ -71,4 +71,17 @@ public class InterviewSessionController {
     return ResponseEntity.status(HttpStatus.ACCEPTED)
         .body(ApiResponse.accepted("리포트를 생성 중입니다."));
   }
+
+  @Operation(summary = "최저 점수 클립 URL 조회", description = "세션에서 clip_score가 가장 낮은 답변의 S3 영상 URL을 반환합니다.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 반환 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
+  @GetMapping("/{sessionId}/worst-clip")
+  public ApiResponse<String> getWorstClip(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId) {
+    return ApiResponse.success(sessionService.getWorstClipVideoUrl(sessionId, userId));
+  }
 }
