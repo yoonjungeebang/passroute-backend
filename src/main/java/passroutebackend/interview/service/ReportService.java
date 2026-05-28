@@ -149,7 +149,7 @@ public class ReportService {
       Double avgSilenceDuration = null;
       Integer fillerCount = null;
       Double voiceScore = null;
-      if (voice != null && hasVoiceData(voice)) {
+      if (hasVoiceData(voice)) {
         avgWpm = voice.getAvgWpm();
         avgSilenceDuration = voice.getAvgSilenceDuration();
         fillerCount = voice.getTotalFillerCount();
@@ -189,6 +189,9 @@ public class ReportService {
 
   // 측정 데이터 존재 여부 — 모든 필드 null이면 데이터 없음으로 판정
   private boolean hasVoiceData(VoiceAnalysisResponse voice) {
+    if (voice == null) {
+      return false;
+    }
     return voice.getAvgWpm() != null
         || voice.getAvgSilenceDuration() != null
         || voice.getTotalFillerCount() != null;
