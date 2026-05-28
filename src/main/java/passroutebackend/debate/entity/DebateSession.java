@@ -63,6 +63,9 @@ public class DebateSession {
   @Version
   private Long version;
 
+  @Column(columnDefinition = "LONGTEXT")
+  private String pendingStt;
+
   @Builder
   public DebateSession(Long userId, DebateTopic topic, DebateStance userStance,
       Difficulty difficulty) {
@@ -82,5 +85,9 @@ public class DebateSession {
 
   void assignCompetitor(AiCompetitor competitor) {
     this.aiCompetitor = competitor;
+  }
+
+  public void updatePendingStt(String stt) {
+    this.pendingStt = stt;
   }
 }

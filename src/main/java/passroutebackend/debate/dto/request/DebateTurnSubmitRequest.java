@@ -8,6 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DebateTurnSubmitRequest {
 
-  @NotBlank
   private String content;
 }
