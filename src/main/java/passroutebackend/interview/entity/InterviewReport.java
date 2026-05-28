@@ -61,19 +61,7 @@ public class InterviewReport {
   private Double sessionScore;
 
   @Column
-  private Double voiceScore;
-
-  @Column
   private Double faceScore;
-
-  @Column
-  private Double avgWpm;
-
-  @Column
-  private Double avgSilenceDuration;
-
-  @Column
-  private Integer fillerCount;
 
   @Column
   private Double avgGazeRatio;
@@ -97,6 +85,19 @@ public class InterviewReport {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   private ReportStatus reportStatus;
+
+  // ── 음성 분석 통계 (nullable: AI 서버 응답 실패 / 데이터 없음 / 후속 점수화 대기) ─
+  @Column
+  private Double avgWpm;
+
+  @Column
+  private Double avgSilenceDuration;
+
+  @Column
+  private Integer fillerCount;
+
+  @Column
+  private Double voiceScore;
 
   @CreationTimestamp
   private LocalDateTime createdAt;

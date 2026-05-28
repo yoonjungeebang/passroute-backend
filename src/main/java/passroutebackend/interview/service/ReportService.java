@@ -198,6 +198,7 @@ public class ReportService {
     return reportTransactionService.findReport(sessionId, userId);
   }
 
+
   public InterviewReportResponse toResponseDto(InterviewReport report) {
     return toResponse(report);
   }
@@ -478,6 +479,7 @@ public class ReportService {
         report.getFaceScore()
     );
   }
+
 
   // ── JSON 유틸 ──────────────────────────────────────────────────────────────
 
