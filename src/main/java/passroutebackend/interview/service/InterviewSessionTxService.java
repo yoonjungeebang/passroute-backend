@@ -78,11 +78,9 @@ public class InterviewSessionTxService {
   @Transactional(readOnly = true)
   public String getWorstClipVideoUrl(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
-    List<InterviewAnswer> answers = answerRepository.findBySessionOrderByClipScoreAsc(session);
-    if (answers.isEmpty()) {
-      return null;
-    }
-    return answers.get(0).getVideoUrl();
+    return answerRepository.findFirstByQuestionSessionAndClipScoreIsNotNullOrderByClipScoreAsc(session)
+        .map(InterviewAnswer::getVideoUrl)
+        .orElse(null);
   }
 
   private InterviewSession findAndValidateOwnership(Long sessionId, Long userId) {
