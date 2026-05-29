@@ -34,7 +34,7 @@ import java.util.List;
 @Validated
 @Tag(name = "Schedule", description = "면접 일정 관리 API")
 @RestController
-@RequestMapping("/api/schedules")
+@RequestMapping("/schedules")
 @RequiredArgsConstructor
 public class InterviewScheduleController {
 
