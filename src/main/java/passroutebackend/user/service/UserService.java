@@ -49,7 +49,7 @@ public class UserService {
 
     @Transactional
     public UserInfoResponse updateProfile(Long userId, UpdateProfileRequest request) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithCollectionsById(userId)
                 .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
 
         if (user.getDeletedAt() != null) {
@@ -75,7 +75,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserInfoResponse getMyInfo(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithCollectionsById(userId)
                 .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
         return new UserInfoResponse(
                 user.getId(),
