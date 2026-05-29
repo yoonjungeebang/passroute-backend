@@ -92,7 +92,10 @@ jobs:
               "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
               "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
               "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
-              "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" > ~/.env
+              "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" \
+              "COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}" \
+              "COOLSMS_API_SECRET=${{ secrets.COOLSMS_API_SECRET }}" \
+              "COOLSMS_SENDER=${{ secrets.COOLSMS_SENDER }}" > ~/.env
 
             # docker compose로 배포
             cd ~ && docker compose down || true

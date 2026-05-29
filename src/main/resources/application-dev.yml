@@ -34,3 +34,9 @@ swagger:
   server-url:
     local: ${SWAGGER_LOCAL_URL:http://localhost:8080/api}
     prod: ${SWAGGER_PROD_URL:https://pass-route.com/api}
+
+sms:
+  coolsms:
+    api-key: ${COOLSMS_API_KEY}
+    api-secret: ${COOLSMS_API_SECRET}
+    sender: ${COOLSMS_SENDER}
