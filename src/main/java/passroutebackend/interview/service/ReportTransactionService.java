@@ -16,10 +16,14 @@ import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
 import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.entity.SessionStatus;
+import passroutebackend.interview.entity.FaceAnalysis;
+import passroutebackend.interview.entity.VoiceAnalysis;
+import passroutebackend.interview.repository.FaceAnalysisRepository;
 import passroutebackend.interview.repository.InterviewAnswerRepository;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewReportRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
+import passroutebackend.interview.repository.VoiceAnalysisRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +40,8 @@ public class ReportTransactionService {
   private final InterviewQuestionRepository questionRepository;
   private final InterviewAnswerRepository answerRepository;
   private final InterviewReportRepository reportRepository;
+  private final VoiceAnalysisRepository voiceAnalysisRepository;
+  private final FaceAnalysisRepository faceAnalysisRepository;
   private final ObjectMapper objectMapper;
 
   @Transactional(readOnly = true)
@@ -103,7 +109,9 @@ public class ReportTransactionService {
       String overall, String strengths, String weaknessesJson, String improvements,
       String questionFeedbackJson, String recommendedQuestionsJson, String finalAdvice,
       String readinessComment, String keyWeaknessJson, String itemAveragesJson,
-      Double avgWpm, Double avgSilenceDuration, Integer fillerCount, Double voiceScore) {
+      Double voiceScore, Double faceScore,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount,
+      Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
     InterviewReport report = InterviewReport.builder()
@@ -121,10 +129,14 @@ public class ReportTransactionService {
         .keyWeakness(keyWeaknessJson)
         .itemAverages(itemAveragesJson)
         .reportStatus(ReportStatus.COMPLETED)
+        .voiceScore(voiceScore)
+        .faceScore(faceScore)
         .avgWpm(avgWpm)
         .avgSilenceDuration(avgSilenceDuration)
         .fillerCount(fillerCount)
-        .voiceScore(voiceScore)
+        .avgGazeRatio(avgGazeRatio)
+        .gazeOffCount(gazeOffCount)
+        .avgBlinkPerMin(avgBlinkPerMin)
         .build();
     reportRepository.save(report);
   }
@@ -141,6 +153,22 @@ public class ReportTransactionService {
         .reportStatus(ReportStatus.FAILED)
         .build();
     reportRepository.save(report);
+  }
+
+  @Transactional(readOnly = true)
+  public List<VoiceAnalysis> loadVoiceAnalysis(Long sessionId) {
+    return voiceAnalysisRepository.findBySessionId(String.valueOf(sessionId));
+  }
+
+  @Transactional(readOnly = true)
+  public List<FaceAnalysis> loadFaceAnalysis(Long sessionId) {
+    return faceAnalysisRepository.findBySessionId(String.valueOf(sessionId));
+  }
+
+  @Transactional(readOnly = true)
+  public InterviewSession loadSession(Long sessionId) {
+    return sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
   }
 
   private LlmScores parseLlmScores(String json) {

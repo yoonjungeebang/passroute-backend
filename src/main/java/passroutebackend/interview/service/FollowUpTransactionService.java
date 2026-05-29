@@ -47,6 +47,9 @@ public class FollowUpTransactionService {
         .question(question)
         .answerText(request.getAnswerText())
         .build();
+    if (request.getVideoUrl() != null) {
+      answer.updateVideoClip(request.getVideoUrl(), request.getClipScore());
+    }
     answerRepository.save(answer);
 
     InterviewSession session = question.getSession();

@@ -27,13 +27,15 @@ import passroutebackend.interview.dto.report.SessionResult;
 import passroutebackend.interview.dto.report.QuestionFeedback;
 import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.dto.report.SessionScore;
+import passroutebackend.interview.dto.report.FaceAnalysisSummary;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
-import passroutebackend.interview.dto.report.SessionSummaryResponse;
 import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
-import passroutebackend.interview.dto.voice.VoiceAnalysisResponse;
+import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
+import passroutebackend.interview.entity.InterviewSession;
 import passroutebackend.interview.entity.InterviewType;
+import passroutebackend.interview.entity.VoiceAnalysis;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -53,6 +55,7 @@ public class ReportService {
 
   private final AiServerClient aiServerClient;
   private final ReportTransactionService reportTransactionService;
+  private final InterviewScoreCalculator scoreCalculator;
   private final ObjectMapper objectMapper;
 
   private static final Map<String, Double> TECHNICAL_WEIGHTS = Map.of(
@@ -143,19 +146,37 @@ public class ReportService {
         return;
       }
 
-      // 음성 분석 통계 조회 (실패/데이터 없음 → null 저장, 리포트 본문 흐름은 격리)
-      VoiceAnalysisResponse voice = aiServerClient.getVoiceAnalysis(sessionId);
-      Double avgWpm = null;
-      Double avgSilenceDuration = null;
-      Integer fillerCount = null;
+      List<VoiceAnalysis> voiceList = reportTransactionService.loadVoiceAnalysis(sessionId);
+      List<FaceAnalysis> faceList = reportTransactionService.loadFaceAnalysis(sessionId);
+      InterviewSession session = reportTransactionService.loadSession(sessionId);
+      double totalMinutes = scoreCalculator.calcTotalMinutes(session);
+
       Double voiceScore = null;
-      if (hasVoiceData(voice)) {
-        avgWpm = voice.getAvgWpm();
-        avgSilenceDuration = voice.getAvgSilenceDuration();
-        fillerCount = voice.getTotalFillerCount();
-        log.info("음성 분석 통계 수신 sessionId={}, avgWpm={}, fillerCount={}", sessionId, avgWpm, fillerCount);
-      } else if (voice != null) {
-        log.info("음성 분석 데이터 없음 sessionId={}", sessionId);
+      Double avgWpm = null;
+      Double avgSilence = null;
+      Integer totalFiller = null;
+      if (!voiceList.isEmpty()) {
+        voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
+        avgWpm = voiceList.stream().filter(v -> v.getAvgWpm() != null)
+            .mapToDouble(v -> v.getAvgWpm()).average().orElse(0.0);
+        avgSilence = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
+            .mapToDouble(v -> v.getAvgSilenceDuration()).average().orElse(0.0);
+        totalFiller = voiceList.stream().filter(v -> v.getFillerCount() != null)
+            .mapToInt(VoiceAnalysis::getFillerCount).sum();
+      }
+
+      Double faceScore = null;
+      Double avgGazeRatio = null;
+      Integer totalGazeOff = null;
+      Double avgBlink = null;
+      if (!faceList.isEmpty()) {
+        faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
+        avgGazeRatio = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
+            .mapToDouble(f -> f.getAvgGazeRatio()).average().orElse(0.0);
+        totalGazeOff = faceList.stream().filter(f -> f.getGazeOffCount() != null)
+            .mapToInt(FaceAnalysis::getGazeOffCount).sum();
+        avgBlink = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
+            .mapToDouble(f -> f.getAvgBlinkPerMin()).average().orElse(0.0);
       }
 
       reportTransactionService.saveReport(
@@ -170,7 +191,9 @@ public class ReportService {
           reportResponse.getReadinessComment(),
           toJson(keyWeakness),
           toJson(itemAverages),
-          avgWpm, avgSilenceDuration, fillerCount, voiceScore
+          voiceScore, faceScore,
+          avgWpm, avgSilence, totalFiller,
+          avgGazeRatio, totalGazeOff, avgBlink
       );
 
     } catch (Exception e) {
@@ -187,15 +210,6 @@ public class ReportService {
     return reportTransactionService.findReport(sessionId, userId);
   }
 
-  // 측정 데이터 존재 여부 — 모든 필드 null이면 데이터 없음으로 판정
-  private boolean hasVoiceData(VoiceAnalysisResponse voice) {
-    if (voice == null) {
-      return false;
-    }
-    return voice.getAvgWpm() != null
-        || voice.getAvgSilenceDuration() != null
-        || voice.getTotalFillerCount() != null;
-  }
 
   public InterviewReportResponse toResponseDto(InterviewReport report) {
     return toResponse(report);
@@ -431,6 +445,8 @@ public class ReportService {
     return InterviewReportResponse.builder()
         .sessionId(report.getSession().getId())
         .sessionScore(report.getSessionScore())
+        .voiceAnalysis(buildVoiceAnalysis(report))
+        .faceAnalysis(buildFaceAnalysis(report))
         .interviewReadiness(report.getInterviewReadiness() != null ? report.getInterviewReadiness().name() : null)
         .itemAverages(parseJsonToItemAveragesMap(report.getItemAverages()))
         .keyWeakness(parseJsonAsType(report.getKeyWeakness(), new TypeReference<List<String>>() {}))
@@ -442,13 +458,11 @@ public class ReportService {
         .recommendedQuestions(parseJsonAsType(report.getRecommendedQuestions(), new TypeReference<List<String>>() {}))
         .finalAdvice(report.getFinalAdvice())
         .readinessComment(report.getReadinessComment())
-        .voiceAnalysis(buildVoiceAnalysis(report))
         .createdAt(report.getCreatedAt())
         .build();
   }
 
   private VoiceAnalysisSummary buildVoiceAnalysis(InterviewReport report) {
-    // 4개 voice 필드가 모두 null이면 voiceAnalysis 자체를 null로 (응답에서 섹션 자체 부재)
     if (report.getAvgWpm() == null
         && report.getAvgSilenceDuration() == null
         && report.getFillerCount() == null
@@ -462,6 +476,22 @@ public class ReportService {
         report.getVoiceScore()
     );
   }
+
+  private FaceAnalysisSummary buildFaceAnalysis(InterviewReport report) {
+    if (report.getAvgGazeRatio() == null
+        && report.getGazeOffCount() == null
+        && report.getAvgBlinkPerMin() == null
+        && report.getFaceScore() == null) {
+      return null;
+    }
+    return new FaceAnalysisSummary(
+        report.getAvgGazeRatio(),
+        report.getGazeOffCount(),
+        report.getAvgBlinkPerMin(),
+        report.getFaceScore()
+    );
+  }
+
 
   // ── JSON 유틸 ──────────────────────────────────────────────────────────────
 

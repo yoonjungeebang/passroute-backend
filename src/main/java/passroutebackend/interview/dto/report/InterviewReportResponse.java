@@ -13,6 +13,8 @@ public class InterviewReportResponse {
 
   private Long sessionId;
   private Double sessionScore;
+  private VoiceAnalysisSummary voiceAnalysis;
+  private FaceAnalysisSummary faceAnalysis;
   private String interviewReadiness;
   private Map<String, Double> itemAverages;
   private List<String> keyWeakness;
@@ -24,6 +26,5 @@ public class InterviewReportResponse {
   private List<String> recommendedQuestions;
   private String finalAdvice;
   private String readinessComment;
-  private VoiceAnalysisSummary voiceAnalysis;   // nullable: AI 서버 응답 실패 or 데이터 없음
   private LocalDateTime createdAt;
 }
