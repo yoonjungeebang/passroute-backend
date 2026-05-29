@@ -9,6 +9,8 @@ import net.nurigo.sdk.message.service.DefaultMessageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
 
 @Slf4j
 @Component
@@ -43,7 +45,7 @@ public class CoolSmsService implements SmsService {
             log.info("[CoolSMS] 발송 성공: to={}", to);
         } catch (Exception e) {
             log.error("[CoolSMS] 발송 실패: to={}, error={}", to, e.getMessage(), e);
-            throw new RuntimeException("SMS 발송에 실패했습니다.", e);
+            throw CustomException.of(ErrorCode.SMS_SEND_FAILED);
         }
     }
 }
