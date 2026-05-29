@@ -62,7 +62,7 @@ public class InterviewScoreCalculator {
         .mapToDouble(f -> f.getAvgBlinkPerMin())
         .average().orElse(0.0);
 
-    double gazeRatioScore = clamp(avgGazeRatio * 100);
+    double gazeRatioScore = clamp(avgGazeRatio);
     double gazeOffScore = clamp((10 - gazeOffPerMin) / 10.0 * 100);
     double blinkScore = avgBlink <= 25 ? 100.0 : clamp((50 - avgBlink) / 25.0 * 100);
 
