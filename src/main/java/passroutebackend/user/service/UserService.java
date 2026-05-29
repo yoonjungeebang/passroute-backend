@@ -14,6 +14,7 @@ import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
 
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -67,8 +68,8 @@ public class UserService {
                 user.isEmailVerified(),
                 user.isPhoneVerified(),
                 user.getExperienceYears(),
-                user.getPreferredCompanies(),
-                user.getPreferredJobTypes(),
+                new HashSet<>(user.getPreferredCompanies()),
+                new HashSet<>(user.getPreferredJobTypes()),
                 user.getCreatedAt()
         );
     }
@@ -86,8 +87,8 @@ public class UserService {
                 user.isEmailVerified(),
                 user.isPhoneVerified(),
                 user.getExperienceYears(),
-                user.getPreferredCompanies(),
-                user.getPreferredJobTypes(),
+                new HashSet<>(user.getPreferredCompanies()),
+                new HashSet<>(user.getPreferredJobTypes()),
                 user.getCreatedAt()
         );
     }
