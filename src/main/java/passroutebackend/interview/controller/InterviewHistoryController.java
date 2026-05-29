@@ -26,7 +26,7 @@ import passroutebackend.interview.service.InterviewHistoryService;
 
 @Tag(name = "History", description = "면접 이력 API")
 @RestController
-@RequestMapping("/api/histories")
+@RequestMapping("/histories")
 @RequiredArgsConstructor
 public class InterviewHistoryController {
 
