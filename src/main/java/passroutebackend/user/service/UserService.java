@@ -14,7 +14,6 @@ import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
 
-import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -50,7 +49,7 @@ public class UserService {
 
     @Transactional
     public UserInfoResponse updateProfile(Long userId, UpdateProfileRequest request) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithCollectionsById(userId)
                 .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
 
         if (user.getDeletedAt() != null) {
@@ -68,15 +67,15 @@ public class UserService {
                 user.isEmailVerified(),
                 user.isPhoneVerified(),
                 user.getExperienceYears(),
-                new HashSet<>(user.getPreferredCompanies()),
-                new HashSet<>(user.getPreferredJobTypes()),
+                user.getPreferredCompanies(),
+                user.getPreferredJobTypes(),
                 user.getCreatedAt()
         );
     }
 
     @Transactional(readOnly = true)
     public UserInfoResponse getMyInfo(Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findWithCollectionsById(userId)
                 .orElseThrow(() -> CustomException.of(ErrorCode.USER_NOT_FOUND));
         return new UserInfoResponse(
                 user.getId(),
@@ -87,8 +86,8 @@ public class UserService {
                 user.isEmailVerified(),
                 user.isPhoneVerified(),
                 user.getExperienceYears(),
-                new HashSet<>(user.getPreferredCompanies()),
-                new HashSet<>(user.getPreferredJobTypes()),
+                user.getPreferredCompanies(),
+                user.getPreferredJobTypes(),
                 user.getCreatedAt()
         );
     }
