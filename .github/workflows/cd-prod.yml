@@ -86,4 +86,7 @@ jobs:
             PROD_MYSQL_PASSWORD='${{ secrets.PROD_MYSQL_PASSWORD }}' \
             FRONT_ORIGIN='${{ secrets.FRONT_ORIGIN }}' \
             JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            COOLSMS_API_KEY='${{ secrets.COOLSMS_API_KEY }}' \
+            COOLSMS_API_SECRET='${{ secrets.COOLSMS_API_SECRET }}' \
+            COOLSMS_SENDER='${{ secrets.COOLSMS_SENDER }}' \
             bash /home/ubuntu/deploy/deploy-prod.sh
