@@ -76,7 +76,7 @@ class AuthIntegrationTest {
                   "name": "프로필유저",
                   "phone": "01022222222",
                   "experienceYears": 3,
-                  "preferredJobTypes": ["BACKEND_DEVELOPER", "FULLSTACK_DEVELOPER"],
+                  "preferredJobTypes": ["BACKEND_DEVELOPER", "FRONTEND_DEVELOPER"],
                   "preferredCompanies": ["카카오", "토스"]
                 }
                 """;
