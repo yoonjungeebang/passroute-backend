@@ -33,6 +33,12 @@ public class InterviewRoom {
   @Column
   private Long siId;
 
+  @Column
+  private Long resumeId;
+
+  @Column
+  private Long portfolioId;
+
   @Column(length = 100)
   private String companyName;
 
@@ -87,13 +93,16 @@ public class InterviewRoom {
   }
 
   @Builder
-  public InterviewRoom(Long userId, Long siId, String companyName, String jobPosition,
+  public InterviewRoom(Long userId, Long siId, Long resumeId, Long portfolioId,
+                       String companyName, String jobPosition,
                        InterviewType interviewType, InterviewFormat interviewFormat, String interviewMode,
                        String aiInterviewer, String aiCompetitors, String debateTopic,
                        int interviewCount, Difficulty difficulty, int pressureLevel,
                        int followupCount, RoomStatus status) {
     this.userId = userId;
     this.siId = siId;
+    this.resumeId = resumeId;
+    this.portfolioId = portfolioId;
     this.companyName = companyName;
     this.jobPosition = jobPosition;
     this.interviewType = interviewType;

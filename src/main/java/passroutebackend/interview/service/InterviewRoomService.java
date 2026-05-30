@@ -32,6 +32,8 @@ public class InterviewRoomService {
         InterviewRoom room = InterviewRoom.builder()
                 .userId(userId)
                 .siId(request.getSiId())
+                .resumeId(request.getResumeId())
+                .portfolioId(request.getPortfolioId())
                 .companyName(request.getCompanyName())
                 .jobPosition(request.getJobPosition())
                 .interviewType(request.getInterviewType())

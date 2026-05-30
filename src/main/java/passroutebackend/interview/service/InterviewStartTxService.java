@@ -50,8 +50,8 @@ public class InterviewStartTxService {
 
     List<SelfIntroItemDto> selfIntroItems = loadSelfIntroItems(room.getSiId());
 
-    String resumeText = extractedText(userId, DocumentType.RESUME);
-    String portfolioText = extractedText(userId, DocumentType.PORTFOLIO);
+    String resumeText = extractedTextByIdOrRepresentative(room.getResumeId(), userId, DocumentType.RESUME);
+    String portfolioText = extractedTextByIdOrRepresentative(room.getPortfolioId(), userId, DocumentType.PORTFOLIO);
 
     int sessionNumber = interviewSessionRepository.countByInterviewRoom(room) + 1;
     InterviewSession session = InterviewSession.builder()
@@ -118,9 +118,12 @@ public class InterviewStartTxService {
         .orElse(List.of());
   }
 
-  private String extractedText(Long userId, DocumentType type) {
-    return documentRepository
-        .findByUserIdAndTypeAndIsRepresentativeTrueAndDeletedAtIsNull(userId, type)
+  private String extractedTextByIdOrRepresentative(Long documentId, Long userId, DocumentType type) {
+    Optional<Document> document = (documentId != null)
+        ? documentRepository.findById(documentId)
+        : documentRepository.findByUserIdAndTypeAndIsRepresentativeTrueAndDeletedAtIsNull(userId, type);
+
+    return document
         .flatMap(documentAnalysisRepository::findByDocument)
         .map(DocumentAnalysis::getExtractedText)
         .orElse(null);

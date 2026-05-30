@@ -14,6 +14,10 @@ public class InterviewRoomRequestDto {
 
     private Long siId;
 
+    private Long resumeId;
+
+    private Long portfolioId;
+
     @NotBlank
     private String companyName;
 
