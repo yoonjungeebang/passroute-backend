@@ -101,5 +101,30 @@ jobs:
             cd ~ && docker compose down || true
             docker compose up -d
 
+            # 새 컨테이너 실행
+            docker run -d \
+              --name passroute-dev \
+              --restart always \
+              -p 8080:8080 \
+              -e "SPRING_PROFILES_ACTIVE=dev" \
+              -e "DEV_MYSQL_URL=${{ secrets.DEV_MYSQL_URL }}" \
+              -e "DEV_MYSQL_USER=${{ secrets.DEV_MYSQL_USER }}" \
+              -e "DEV_MYSQL_PASSWORD=${{ secrets.DEV_MYSQL_PASSWORD }}" \
+              -e "AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}" \
+              -e "FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}" \
+              -e "JWT_SECRET=${{ secrets.JWT_SECRET }}" \
+              -e "KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}" \
+              -e "KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}" \
+              -e "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" \
+              -e "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+              -e "OAUTH2_REDIRECT_URI=${{ secrets.OAUTH2_REDIRECT_URI }}" \
+              -e "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
+              -e "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
+              -e "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" \
+              -e "COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}" \
+              -e "COOLSMS_API_SECRET=${{ secrets.COOLSMS_API_SECRET }}" \
+              -e "COOLSMS_SENDER=${{ secrets.COOLSMS_SENDER }}" \
+              "${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop"
+            
             # 사용하지 않는 이미지 정리
             docker image prune -f
