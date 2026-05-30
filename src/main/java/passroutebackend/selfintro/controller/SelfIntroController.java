@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import passroutebackend.global.ApiResponse;
 import passroutebackend.selfintro.dto.SelfIntroRequestDto;
 import passroutebackend.selfintro.dto.SelfIntroResponseDto;
 import passroutebackend.selfintro.service.SelfIntroService;
@@ -22,40 +23,40 @@ public class SelfIntroController {
     private final SelfIntroService selfIntroService;
 
     @GetMapping
-    public ResponseEntity<List<SelfIntroResponseDto>> getList(
+    public ResponseEntity<ApiResponse<List<SelfIntroResponseDto>>> getList(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "all") String filter) {
-        return ResponseEntity.ok(selfIntroService.getList(userId, filter));
+        return ResponseEntity.ok(ApiResponse.success(selfIntroService.getList(userId, filter)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SelfIntroResponseDto> getOne(
+    public ResponseEntity<ApiResponse<SelfIntroResponseDto>> getOne(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long id) {
-        return ResponseEntity.ok(selfIntroService.getOne(userId, id));
+        return ResponseEntity.ok(ApiResponse.success(selfIntroService.getOne(userId, id)));
     }
 
     @PostMapping
-    public ResponseEntity<SelfIntroResponseDto> create(
+    public ResponseEntity<ApiResponse<SelfIntroResponseDto>> create(
             @AuthenticationPrincipal Long userId,
             @RequestBody @Valid SelfIntroRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(selfIntroService.create(userId, dto));
+                .body(ApiResponse.created(selfIntroService.create(userId, dto)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<SelfIntroResponseDto> update(
+    public ResponseEntity<ApiResponse<SelfIntroResponseDto>> update(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long id,
             @RequestBody @Valid SelfIntroRequestDto dto) {
-        return ResponseEntity.ok(selfIntroService.update(userId, id, dto));
+        return ResponseEntity.ok(ApiResponse.success(selfIntroService.update(userId, id, dto)));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<ApiResponse<Void>> delete(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long id) {
         selfIntroService.delete(userId, id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }
