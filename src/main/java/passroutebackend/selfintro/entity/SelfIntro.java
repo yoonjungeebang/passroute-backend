@@ -1,5 +1,6 @@
 package passroutebackend.selfintro.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -125,16 +126,40 @@ public class SelfIntro {
     // ── Enum ─────────────────────────────────────────────────
 
     public enum CareerLevel {
-        INTERN,   // 인턴
-        JUNIOR,   // 신입
-        SENIOR    // 경력
+        INTERN("인턴"),
+        JUNIOR("신입"),
+        SENIOR("경력");
+
+        private final String label;
+
+        CareerLevel(String label) { this.label = label; }
+
+        @JsonCreator
+        public static CareerLevel from(String value) {
+            for (CareerLevel cl : values()) {
+                if (cl.name().equalsIgnoreCase(value) || cl.label.equals(value)) return cl;
+            }
+            throw new IllegalArgumentException("Unknown CareerLevel: " + value);
+        }
     }
 
     public enum InterviewStage {
-        PERSONALITY,  // 인성 면접
-        JOB,          // 직무 면접
-        PRACTICAL,    // 실무 면접
-        EXECUTIVE,    // 임원 면접
-        TECHNICAL     // 기술 면접
+        PERSONALITY("인성면접"),
+        JOB("직무면접"),
+        PRACTICAL("실무면접"),
+        EXECUTIVE("임원면접"),
+        TECHNICAL("기술면접");
+
+        private final String label;
+
+        InterviewStage(String label) { this.label = label; }
+
+        @JsonCreator
+        public static InterviewStage from(String value) {
+            for (InterviewStage is : values()) {
+                if (is.name().equalsIgnoreCase(value) || is.label.equals(value)) return is;
+            }
+            throw new IllegalArgumentException("Unknown InterviewStage: " + value);
+        }
     }
 }
