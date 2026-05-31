@@ -52,11 +52,11 @@ public class DebateTurn {
   @Column(nullable = false, columnDefinition = "LONGTEXT")
   private String content;
 
-  // AI 서버 TTS 음성 URL (null 가능)
-  @Column(nullable = true)
+  // AI 서버 TTS 음성 URL
+  @Column(nullable = true, length = 512)
   private String audioUrl;
 
-  // 사용자 턴 평가 결과 (AI 턴은 null)
+  // 사용자 턴 평가 결과
   @Column
   private Double weightedScore;
 
