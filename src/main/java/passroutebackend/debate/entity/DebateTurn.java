@@ -52,6 +52,10 @@ public class DebateTurn {
   @Column(nullable = false, columnDefinition = "LONGTEXT")
   private String content;
 
+  // AI 서버 TTS 음성 URL (null 가능)
+  @Column(nullable = true)
+  private String audioUrl;
+
   // 사용자 턴 평가 결과 (AI 턴은 null)
   @Column
   private Double weightedScore;
@@ -70,7 +74,7 @@ public class DebateTurn {
 
   @Builder
   public DebateTurn(DebateSession session, SpeakerType speakerType, AiCompetitor competitor,
-      TurnStance stance, DebateRound round, String content) {
+      TurnStance stance, DebateRound round, String content, String audioUrl) {
     if (speakerType == SpeakerType.AI_COMPETITOR && competitor == null) {
       throw new IllegalArgumentException("AI_COMPETITOR speaker must have a competitor.");
     }
@@ -80,6 +84,7 @@ public class DebateTurn {
     this.stance = stance;
     this.round = round;
     this.content = content;
+    this.audioUrl = audioUrl;
   }
 
   public void updateEvaluation(Double weightedScore, String llmScoresJson, String evalSummaryJson) {

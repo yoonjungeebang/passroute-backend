@@ -26,11 +26,16 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.debate.DebateClosingRequest;
+import passroutebackend.interview.dto.debate.DebateClosingResponse;
 import passroutebackend.interview.dto.debate.DebateOpeningRequest;
+import passroutebackend.interview.dto.debate.DebateOpeningResponse;
 import passroutebackend.interview.dto.debate.DebateRebuttalRequest;
+import passroutebackend.interview.dto.debate.DebateRebuttalResponse;
 import passroutebackend.interview.dto.debate.DebateTurnItem;
 import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
+import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
 import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
+import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
 import passroutebackend.interview.dto.debate.PersonaPayload;
 
 import java.util.List;
@@ -127,7 +132,7 @@ public class DebateService {
       DebateTopic topic = session.getTopic();
       DebateStance aiStance = session.getAiCompetitor().getStance();
 
-      String content = aiServerClient.generateInterviewerOpening(
+      InterviewerOpeningResponse response = aiServerClient.generateInterviewerOpening(
           InterviewerOpeningRequest.builder()
               .topicTitle(topic.getTitle())
               .topicDescription(topic.getDescription())
@@ -137,10 +142,10 @@ public class DebateService {
               .proKeyPoints(parseStringList(topic.getProKeyPoints()))
               .conKeyPoints(parseStringList(topic.getConKeyPoints()))
               .build()
-      ).getContent();
+      );
 
       transactionService.saveTurn(session, SpeakerType.AI_INTERVIEWER, null,
-          TurnStance.NEUTRAL, DebateRound.MODERATION, content);
+          TurnStance.NEUTRAL, DebateRound.MODERATION, response.getContent(), response.getAudioUrl());
       stateMachine.onAiTurnCompleted(session);
       transactionService.saveSession(session);
 
@@ -190,7 +195,7 @@ public class DebateService {
 
     // 사용자 턴 저장
     DebateTurn turn = transactionService.saveTurn(
-        session, SpeakerType.USER, null, userStance, round, pendingStt);
+        session, SpeakerType.USER, null, userStance, round, pendingStt, null);
     session.updatePendingStt(null);
 
     // 상태 전이: *_USER → *_AI
@@ -215,43 +220,57 @@ public class DebateService {
       AiPersona persona = competitor.getPersona();
       PersonaPayload personaPayload = toPersonaPayload(persona);
 
-      String content = switch (round) {
-        case OPENING -> aiServerClient.generateDebateOpening(
-            DebateOpeningRequest.builder()
-                .topicTitle(session.getTopic().getTitle())
-                .topicDescription(session.getTopic().getDescription())
-                .stance(competitor.getStance())
-                .difficulty(session.getDifficulty().name())
-                .persona(personaPayload)
-                .proKeyPoints(parseStringList(session.getTopic().getProKeyPoints()))
-                .conKeyPoints(parseStringList(session.getTopic().getConKeyPoints()))
-                .build()
-        ).getContent();
-        case REBUTTAL_1, REBUTTAL_2 -> aiServerClient.generateDebateRebuttal(
-            DebateRebuttalRequest.builder()
-                .topicTitle(session.getTopic().getTitle())
-                .stance(competitor.getStance())
-                .difficulty(session.getDifficulty().name())
-                .persona(personaPayload)
-                .rebuttalRound(round)
-                .opponentLatestTurn(findOpponentPreviousTurn(session))
-                .history(buildHistoryForAi(session))
-                .build()
-        ).getContent();
-        case CLOSING -> aiServerClient.generateDebateClosing(
-            DebateClosingRequest.builder()
-                .topicTitle(session.getTopic().getTitle())
-                .stance(competitor.getStance())
-                .difficulty(session.getDifficulty().name())
-                .persona(personaPayload)
-                .history(buildHistoryForAi(session))
-                .build()
-        ).getContent();
+      String content;
+      String audioUrl;
+      switch (round) {
+        case OPENING -> {
+          DebateOpeningResponse response = aiServerClient.generateDebateOpening(
+              DebateOpeningRequest.builder()
+                  .topicTitle(session.getTopic().getTitle())
+                  .topicDescription(session.getTopic().getDescription())
+                  .stance(competitor.getStance())
+                  .difficulty(session.getDifficulty().name())
+                  .persona(personaPayload)
+                  .proKeyPoints(parseStringList(session.getTopic().getProKeyPoints()))
+                  .conKeyPoints(parseStringList(session.getTopic().getConKeyPoints()))
+                  .build()
+          );
+          content = response.getContent();
+          audioUrl = response.getAudioUrl();
+        }
+        case REBUTTAL_1, REBUTTAL_2 -> {
+          DebateRebuttalResponse response = aiServerClient.generateDebateRebuttal(
+              DebateRebuttalRequest.builder()
+                  .topicTitle(session.getTopic().getTitle())
+                  .stance(competitor.getStance())
+                  .difficulty(session.getDifficulty().name())
+                  .persona(personaPayload)
+                  .rebuttalRound(round)
+                  .opponentLatestTurn(findOpponentPreviousTurn(session))
+                  .history(buildHistoryForAi(session))
+                  .build()
+          );
+          content = response.getContent();
+          audioUrl = response.getAudioUrl();
+        }
+        case CLOSING -> {
+          DebateClosingResponse response = aiServerClient.generateDebateClosing(
+              DebateClosingRequest.builder()
+                  .topicTitle(session.getTopic().getTitle())
+                  .stance(competitor.getStance())
+                  .difficulty(session.getDifficulty().name())
+                  .persona(personaPayload)
+                  .history(buildHistoryForAi(session))
+                  .build()
+          );
+          content = response.getContent();
+          audioUrl = response.getAudioUrl();
+        }
         default -> throw CustomException.of(ErrorCode.INVALID_DEBATE_STATE);
-      };
+      }
 
       transactionService.saveTurn(session, SpeakerType.AI_COMPETITOR, competitor,
-          toTurnStance(competitor.getStance()), round, content);
+          toTurnStance(competitor.getStance()), round, content, audioUrl);
       stateMachine.onAiTurnCompleted(session);
       transactionService.saveSession(session);
 
@@ -270,15 +289,15 @@ public class DebateService {
   public void generateInterviewerClosingAsync(Long sessionId, Long userId) {
     try {
       DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
-      String content = aiServerClient.generateInterviewerClosing(
+      InterviewerClosingResponse response = aiServerClient.generateInterviewerClosing(
           InterviewerClosingRequest.builder()
               .topicTitle(session.getTopic().getTitle())
               .history(buildHistoryForAi(session))
               .build()
-      ).getContent();
+      );
 
       transactionService.saveTurn(session, SpeakerType.AI_INTERVIEWER, null,
-          TurnStance.NEUTRAL, DebateRound.MODERATION, content);
+          TurnStance.NEUTRAL, DebateRound.MODERATION, response.getContent(), response.getAudioUrl());
       stateMachine.onAiTurnCompleted(session);
       transactionService.saveSession(session);
 
@@ -310,6 +329,7 @@ public class DebateService {
         .round(turn.getRound())
         .stance(turn.getStance())
         .content(turn.getContent())
+        .audioUrl(turn.getAudioUrl())
         .createdAt(turn.getCreatedAt())
         .build();
   }
