@@ -22,5 +22,6 @@ public class DebateTurnSummary {
   private DebateRound round;
   private TurnStance stance;
   private String content;
+  private String audioUrl;
   private LocalDateTime createdAt;
 }

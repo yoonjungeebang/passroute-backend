@@ -127,7 +127,8 @@ public class DebateTransactionService {
 
   @Transactional
   public DebateTurn saveTurn(DebateSession session, SpeakerType speakerType,
-      AiCompetitor competitor, TurnStance stance, DebateRound round, String content) {
+      AiCompetitor competitor, TurnStance stance, DebateRound round, String content,
+      String audioUrl) {
     DebateTurn turn = DebateTurn.builder()
         .session(session)
         .speakerType(speakerType)
@@ -135,6 +136,7 @@ public class DebateTransactionService {
         .stance(stance)
         .round(round)
         .content(content)
+        .audioUrl(audioUrl)
         .build();
     return turnRepository.save(turn);
   }
