@@ -25,7 +25,7 @@ public enum Difficulty {
   @JsonCreator
   public static Difficulty from(String value) {
     return Arrays.stream(values())
-            .filter(d -> d.value.equalsIgnoreCase(value))
+            .filter(d -> d.value.equalsIgnoreCase(value) || d.name().equalsIgnoreCase(value))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Unknown difficulty: " + value));
   }
