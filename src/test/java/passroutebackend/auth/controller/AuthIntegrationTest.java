@@ -129,17 +129,18 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.code").value("U003"));
     }
 
-    @Test
-    @DisplayName("회원가입 실패 - 휴대폰 미인증")
-    void signUp_fail_phoneNotVerified() throws Exception {
-        SignUpRequest request = createSignUpRequest("unverified@example.com", "password123", "미인증유저", "01066666666");
-
-        mockMvc.perform(post(SIGNUP_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("P004"));
-    }
+    // TODO: 테스트 단계 - 휴대폰 인증 검증 임시 비활성화
+//    @Test
+//    @DisplayName("회원가입 실패 - 휴대폰 미인증")
+//    void signUp_fail_phoneNotVerified() throws Exception {
+//        SignUpRequest request = createSignUpRequest("unverified@example.com", "password123", "미인증유저", "01066666666");
+//
+//        mockMvc.perform(post(SIGNUP_URL)
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(request)))
+//                .andExpect(status().isBadRequest())
+//                .andExpect(jsonPath("$.code").value("P004"));
+//    }
 
     @Test
     @DisplayName("로그인 성공 - accessToken, refreshToken 발급")

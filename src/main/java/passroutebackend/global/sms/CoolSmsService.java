@@ -14,7 +14,7 @@ import passroutebackend.global.exception.ErrorCode;
 
 @Slf4j
 @Component
-@Profile({"dev", "prod"})
+@Profile({"prod"})
 public class CoolSmsService implements SmsService {
 
     @Value("${sms.coolsms.api-key}")
