@@ -34,7 +34,8 @@ public class AuthService {
             throw CustomException.of(ErrorCode.DUPLICATE_EMAIL);
         }
 
-        phoneVerificationService.checkPhoneVerified(request.getPhone());
+        // TODO: 테스트 단계 - 휴대폰 인증 검증 임시 비활성화
+        // phoneVerificationService.checkPhoneVerified(request.getPhone());
 
         User user = User.builder()
                 .email(request.getEmail())
@@ -53,7 +54,8 @@ public class AuthService {
                 .build();
 
         Long userId = userRepository.save(user).getId();
-        phoneVerificationService.deleteVerification(request.getPhone());
+        // TODO: 테스트 단계 - 휴대폰 인증 삭제 임시 비활성화
+        // phoneVerificationService.deleteVerification(request.getPhone());
         return userId;
     }
 
