@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PhoneVerificationService {
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    // private static final SecureRandom SECURE_RANDOM = new SecureRandom(); - 임시로 인증번호 고정
     private static final int CODE_VALIDITY_MINUTES = 3;
     private static final int VERIFIED_VALIDITY_MINUTES = 30;
 
@@ -44,7 +44,8 @@ public class PhoneVerificationService {
 
         phoneVerificationRepository.deleteByPhone(phone);
 
-        String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+        // String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
+        String code = "123456"; // 임시로 인증번호 고정
 
         PhoneVerification verification = PhoneVerification.builder()
                 .phone(phone)
@@ -55,7 +56,7 @@ public class PhoneVerificationService {
                 .build();
 
         phoneVerificationRepository.save(verification);
-        smsService.sendSms(phone, "[패스루트] 인증번호: " + code);
+        smsService.sendSms(phone, "[Passrotue] 인증번호: " + code);
     }
 
     @Transactional
