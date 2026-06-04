@@ -42,14 +42,19 @@ public class DebateTopic {
   @Column(columnDefinition = "TEXT")
   private String conKeyPoints;
 
+  // 정적 시드(40개)와 AI 생성 주제 구분. 정적 목록(GET /debate/topics)에는 false만 노출.
+  @Column(nullable = false, columnDefinition = "boolean default false")
+  private boolean generated;
+
   @Builder
   public DebateTopic(String topicKey, String title, String description,
-      TopicCategory category, String proKeyPoints, String conKeyPoints) {
+      TopicCategory category, String proKeyPoints, String conKeyPoints, boolean generated) {
     this.topicKey = topicKey;
     this.title = title;
     this.description = description;
     this.category = category;
     this.proKeyPoints = proKeyPoints;
     this.conKeyPoints = conKeyPoints;
+    this.generated = generated;
   }
 }
