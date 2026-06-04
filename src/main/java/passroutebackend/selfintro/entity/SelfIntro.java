@@ -97,6 +97,11 @@ public class SelfIntro {
         this.version++;
     }
 
+    public void scheduleInterview(LocalDate date, String time) {
+        this.interviewDate = date;
+        this.interviewTime = time;
+    }
+
     public void updateItems(List<SelfIntroItem> newItems) {
         this.items.clear();
         this.items.addAll(newItems);

@@ -14,7 +14,10 @@ import passroutebackend.schedule.dto.response.ScheduleResponse;
 import passroutebackend.schedule.entity.InterviewSchedule;
 import passroutebackend.schedule.entity.ScheduleStatus;
 import passroutebackend.schedule.repository.InterviewScheduleRepository;
+import passroutebackend.selfintro.entity.SelfIntro;
+import passroutebackend.selfintro.repository.SelfIntroRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,14 +27,44 @@ public class InterviewScheduleService {
 
     private final InterviewScheduleRepository interviewScheduleRepository;
     private final InterviewRoomService interviewRoomService;
+    private final SelfIntroRepository selfIntroRepository;
 
     @Transactional
     public ScheduleResponse create(Long userId, ScheduleCreateRequest request) {
+        String title;
+        String companyName;
+        String jobPosition;
+        Long selfIntroId = request.getSelfIntroId();
+
+        if (selfIntroId != null) {
+            SelfIntro selfIntro = selfIntroRepository
+                    .findByIdAndUser_IdAndIsActiveTrue(selfIntroId, userId)
+                    .orElseThrow(() -> CustomException.of(ErrorCode.SELF_INTRO_NOT_FOUND));
+
+            companyName = selfIntro.getCompanyName();
+            jobPosition = selfIntro.getJobPosition();
+            title = companyName + " " + jobPosition + " 면접";
+
+            LocalDate date = request.getInterviewDate().toLocalDate();
+            String time = String.format("%02d:%02d",
+                    request.getInterviewDate().getHour(),
+                    request.getInterviewDate().getMinute());
+            selfIntro.scheduleInterview(date, time);
+        } else {
+            if (request.getTitle() == null || request.getCompanyName() == null || request.getJobPosition() == null) {
+                throw CustomException.of(ErrorCode.INVALID_INPUT);
+            }
+            title = request.getTitle();
+            companyName = request.getCompanyName();
+            jobPosition = request.getJobPosition();
+        }
+
         InterviewSchedule schedule = InterviewSchedule.builder()
                 .userId(userId)
-                .title(request.getTitle())
-                .companyName(request.getCompanyName())
-                .jobPosition(request.getJobPosition())
+                .selfIntroId(selfIntroId)
+                .title(title)
+                .companyName(companyName)
+                .jobPosition(jobPosition)
                 .interviewDate(request.getInterviewDate())
                 .location(request.getLocation())
                 .memo(request.getMemo())
