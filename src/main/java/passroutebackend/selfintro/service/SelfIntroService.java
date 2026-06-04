@@ -38,6 +38,10 @@ public class SelfIntroService {
             case "2month" -> selfIntroRepository
                     .findByUserAndIsActiveTrueAndUpdatedAtAfterOrderByUpdatedAtDesc(
                             user, LocalDateTime.now().minusMonths(2));
+            case "scheduled" -> selfIntroRepository
+                    .findByUserAndIsActiveTrueAndInterviewDateIsNotNullOrderByUpdatedAtDesc(user);
+            case "unscheduled" -> selfIntroRepository
+                    .findByUserAndIsActiveTrueAndInterviewDateIsNullOrderByUpdatedAtDesc(user);
             default -> selfIntroRepository.findByUserAndIsActiveTrueOrderByUpdatedAtDesc(user);
         };
 
