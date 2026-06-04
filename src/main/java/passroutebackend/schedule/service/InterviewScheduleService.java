@@ -114,6 +114,15 @@ public class InterviewScheduleService {
                 request.getLocation(),
                 request.getMemo()
         );
+        if (schedule.getSelfIntroId() != null) {
+            selfIntroRepository.findByIdAndUser_IdAndIsActiveTrue(schedule.getSelfIntroId(), userId)
+                    .ifPresent(selfIntro -> selfIntro.scheduleInterview(
+                            request.getInterviewDate().toLocalDate(),
+                            String.format("%02d:%02d",
+                                    request.getInterviewDate().getHour(),
+                                    request.getInterviewDate().getMinute())
+                    ));
+        }
         return ScheduleResponse.from(schedule);
     }
 
