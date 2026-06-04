@@ -20,10 +20,10 @@ public class FaceAnalysis {
   private Long id;
 
   @Column(nullable = false)
-  private String sessionId;
+  private Long sessionId;
 
   @Column(nullable = false)
-  private String questionId;
+  private Long questionId;
 
   private Integer gazeOffCount;
 
