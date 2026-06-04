@@ -43,7 +43,8 @@ public class DebateTopic {
   private String conKeyPoints;
 
   // 정적 시드(40개)와 AI 생성 주제 구분. 정적 목록(GET /debate/topics)에는 false만 노출.
-  @Column(nullable = false, columnDefinition = "boolean default false")
+  // 'generated'는 MySQL 예약어라 컬럼명은 is_generated 사용 (속성명은 generated 유지).
+  @Column(name = "is_generated", nullable = false, columnDefinition = "boolean default false")
   private boolean generated;
 
   @Builder
