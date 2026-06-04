@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ScheduleResponse {
 
     private Long id;
+    private Long selfIntroId;
     private String title;
     private String companyName;
     private String jobPosition;
@@ -25,6 +26,7 @@ public class ScheduleResponse {
     public static ScheduleResponse from(InterviewSchedule schedule) {
         return new ScheduleResponse(
                 schedule.getId(),
+                schedule.getSelfIntroId(),
                 schedule.getTitle(),
                 schedule.getCompanyName(),
                 schedule.getJobPosition(),
