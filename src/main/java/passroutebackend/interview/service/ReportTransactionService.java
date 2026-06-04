@@ -157,12 +157,12 @@ public class ReportTransactionService {
 
   @Transactional(readOnly = true)
   public List<VoiceAnalysis> loadVoiceAnalysis(Long sessionId) {
-    return voiceAnalysisRepository.findBySessionId(String.valueOf(sessionId));
+    return voiceAnalysisRepository.findBySessionId(sessionId);
   }
 
   @Transactional(readOnly = true)
   public List<FaceAnalysis> loadFaceAnalysis(Long sessionId) {
-    return faceAnalysisRepository.findBySessionId(String.valueOf(sessionId));
+    return faceAnalysisRepository.findBySessionId(sessionId);
   }
 
   @Transactional(readOnly = true)

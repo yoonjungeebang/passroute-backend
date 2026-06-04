@@ -51,6 +51,9 @@ public class InterviewSchedule {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
+    @Column
+    private Long selfIntroId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ScheduleStatus status;
@@ -62,10 +65,11 @@ public class InterviewSchedule {
     private LocalDateTime updatedAt;
 
     @Builder
-    public InterviewSchedule(Long userId, String title, String companyName, String jobPosition,
-                             LocalDateTime interviewDate, String location, String memo,
-                             ScheduleStatus status) {
+    public InterviewSchedule(Long userId, Long selfIntroId, String title, String companyName,
+                             String jobPosition, LocalDateTime interviewDate, String location,
+                             String memo, ScheduleStatus status) {
         this.userId = userId;
+        this.selfIntroId = selfIntroId;
         this.title = title;
         this.companyName = companyName;
         this.jobPosition = jobPosition;

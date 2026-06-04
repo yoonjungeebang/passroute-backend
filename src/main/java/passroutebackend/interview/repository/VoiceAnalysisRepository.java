@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface VoiceAnalysisRepository extends JpaRepository<VoiceAnalysis, Long> {
 
-  List<VoiceAnalysis> findBySessionId(String sessionId);
+  List<VoiceAnalysis> findBySessionId(Long sessionId);
 }

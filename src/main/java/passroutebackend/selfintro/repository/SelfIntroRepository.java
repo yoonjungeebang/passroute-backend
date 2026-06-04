@@ -25,4 +25,7 @@ public interface SelfIntroRepository extends JpaRepository<SelfIntro, Long> {
 
     // 단건 조회 (삭제 안 된 것만)
     Optional<SelfIntro> findByIdAndUserAndIsActiveTrue(Long id, User user);
+
+    // 단건 조회 - userId 기반 (스케줄 서비스에서 User 엔티티 없이 사용)
+    Optional<SelfIntro> findByIdAndUser_IdAndIsActiveTrue(Long id, Long userId);
 }

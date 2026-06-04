@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface FaceAnalysisRepository extends JpaRepository<FaceAnalysis, Long> {
 
-  List<FaceAnalysis> findBySessionId(String sessionId);
+  List<FaceAnalysis> findBySessionId(Long sessionId);
 }
