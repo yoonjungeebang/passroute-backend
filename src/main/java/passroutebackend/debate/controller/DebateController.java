@@ -15,11 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
+import passroutebackend.debate.dto.request.DebateTopicGenerateRequest;
+import passroutebackend.debate.dto.request.DebateTopicSuggestRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebatePersonaResponse;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.dto.response.DebateTopicResponse;
+import passroutebackend.debate.dto.response.DebateTopicSuggestResponse;
 import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.service.DebateReportService;
 import passroutebackend.debate.service.DebateService;
@@ -41,6 +44,21 @@ public class DebateController {
   public ResponseEntity<ApiResponse<List<DebateTopicResponse>>> listTopics(
       @RequestParam(required = false) TopicCategory category) {
     return ResponseEntity.ok(ApiResponse.success(debateService.listTopics(category)));
+  }
+
+  @Operation(summary = "토론 주제 후보 추천 (크롤링 뉴스 기반)")
+  @PostMapping("/topics/suggest")
+  public ResponseEntity<ApiResponse<DebateTopicSuggestResponse>> suggestTopics(
+      @Valid @RequestBody DebateTopicSuggestRequest request) {
+    return ResponseEntity.ok(ApiResponse.success(debateService.suggestTopics(request)));
+  }
+
+  @Operation(summary = "토론 주제 생성 + 저장 (선택 후보 상세화 → topicId 발급)")
+  @PostMapping("/topics/generate")
+  public ResponseEntity<ApiResponse<DebateTopicResponse>> generateTopic(
+      @Valid @RequestBody DebateTopicGenerateRequest request) {
+    DebateTopicResponse response = debateService.generateTopic(request);
+    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
   }
 
   @Operation(summary = "AI 페르소나 목록 조회")
