@@ -15,6 +15,7 @@ import passroutebackend.debate.entity.DebateStance;
 import passroutebackend.debate.entity.DebateTopic;
 import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
+import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.entity.TurnStance;
 import passroutebackend.debate.repository.AiCompetitorRepository;
 import passroutebackend.debate.repository.AiPersonaRepository;
@@ -51,7 +52,7 @@ public class DebateTransactionService {
   }
 
   @Transactional(readOnly = true)
-  public List<DebateTopic> findTopicsByCategory(passroutebackend.debate.entity.TopicCategory category) {
+  public List<DebateTopic> findTopicsByCategory(TopicCategory category) {
     return topicRepository.findByCategoryAndGeneratedFalse(category);
   }
 
@@ -98,8 +99,7 @@ public class DebateTransactionService {
 
   @Transactional
   public DebateTopic saveGeneratedTopic(String topicKey, String title, String description,
-      passroutebackend.debate.entity.TopicCategory category,
-      String proKeyPoints, String conKeyPoints) {
+      TopicCategory category, String proKeyPoints, String conKeyPoints) {
     DebateTopic topic = DebateTopic.builder()
         .topicKey(topicKey)
         .title(title)

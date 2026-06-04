@@ -107,7 +107,9 @@ public class DebateService {
 
   /** 크롤링 뉴스 기반 주제 후보 N개 추천 (저장하지 않음). */
   public DebateTopicSuggestResponse suggestTopics(DebateTopicSuggestRequest req) {
-    List<String> keywords = (req.getKeywords() == null) ? List.of() : req.getKeywords();
+    List<String> keywords = (req.getKeywords() == null)
+        ? List.of()
+        : req.getKeywords().stream().filter(k -> k != null && !k.isBlank()).toList();
     int count = (req.getCount() == null) ? 3 : req.getCount();
 
     TopicSuggestAiResponse ai = aiServerClient.suggestDebateTopics(
@@ -141,14 +143,23 @@ public class DebateService {
             .category(req.getCategory())
             .build());
 
+    // 찬/반 논거는 토론 진행에 필수 → 누락 시 AI 응답 오류로 처리
+    if (ai.getProKeyPoints() == null || ai.getProKeyPoints().isEmpty()
+        || ai.getConKeyPoints() == null || ai.getConKeyPoints().isEmpty()) {
+      throw CustomException.of(ErrorCode.AI_SERVER_ERROR);
+    }
+
     TopicCategory category = (ai.getCategory() != null) ? ai.getCategory() : req.getCategory();
     String title = (ai.getTopicTitle() != null) ? ai.getTopicTitle() : req.getTitle();
+    String description = (ai.getTopicDescription() != null && !ai.getTopicDescription().isBlank())
+        ? ai.getTopicDescription()
+        : req.getDescription();
     String topicKey = "topic_gen_" + UUID.randomUUID();
 
     DebateTopic saved = transactionService.saveGeneratedTopic(
         topicKey,
         title,
-        ai.getTopicDescription(),
+        description,
         category,
         transactionService.toJson(ai.getProKeyPoints()),
         transactionService.toJson(ai.getConKeyPoints()));
