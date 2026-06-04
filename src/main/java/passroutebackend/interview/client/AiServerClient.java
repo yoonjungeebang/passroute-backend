@@ -26,6 +26,10 @@ import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
 import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
 import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
 import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
+import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
+import passroutebackend.interview.dto.debate.TopicDetailAiResponse;
+import passroutebackend.interview.dto.debate.TopicSuggestAiRequest;
+import passroutebackend.interview.dto.debate.TopicSuggestAiResponse;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationResponse;
 import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
@@ -182,6 +186,17 @@ public class AiServerClient {
   public DebateReportResponse generateDebateReport(DebateReportRequest request) {
     return callDebateApi("/report/debate/generate", request, DebateReportResponse.class,
         "토론 리포트 생성");
+  }
+
+  // 크롤링 뉴스 기반 토론 주제 추천/생성
+  public TopicSuggestAiResponse suggestDebateTopics(TopicSuggestAiRequest request) {
+    return callDebateApi("/debate/topics/suggest", request, TopicSuggestAiResponse.class,
+        "토론 주제 후보 추천");
+  }
+
+  public TopicDetailAiResponse generateDebateTopicDetail(TopicDetailAiRequest request) {
+    return callDebateApi("/debate/topics/detail", request, TopicDetailAiResponse.class,
+        "토론 주제 상세 생성");
   }
 
   private <T, R> R callDebateApi(String uri, T request, Class<R> responseType, String actionName) {
