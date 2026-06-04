@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.schedule.entity.InterviewSchedule;
+import passroutebackend.schedule.entity.ScheduleStatus;
+import passroutebackend.schedule.repository.InterviewScheduleRepository;
 import passroutebackend.selfintro.dto.SelfIntroRequestDto;
 import passroutebackend.selfintro.dto.SelfIntroResponseDto;
 import passroutebackend.selfintro.entity.SelfIntro;
@@ -13,9 +16,11 @@ import passroutebackend.selfintro.repository.SelfIntroRepository;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +30,7 @@ public class SelfIntroService {
 
     private final SelfIntroRepository selfIntroRepository;
     private final UserRepository userRepository;
+    private final InterviewScheduleRepository interviewScheduleRepository;
 
     // ── 목록 조회 ─────────────────────────────────────────────
 
@@ -66,6 +72,9 @@ public class SelfIntroService {
         SelfIntro selfIntro = SelfIntro.create(user, dto);
         selfIntro.updateItems(buildItems(selfIntro, dto.getItems()));
         selfIntroRepository.save(selfIntro);
+        if (dto.getInterviewDate() != null) {
+            createPendingSchedule(userId, selfIntro, dto.getInterviewDate(), dto.getInterviewTime());
+        }
         return SelfIntroResponseDto.from(selfIntro);
     }
 
@@ -77,6 +86,7 @@ public class SelfIntroService {
         SelfIntro selfIntro = getSelfIntro(selfIntroId, user);
         selfIntro.update(dto);
         selfIntro.updateItems(buildItems(selfIntro, dto.getItems()));
+        syncPendingSchedule(userId, selfIntro, dto.getInterviewDate(), dto.getInterviewTime());
         return SelfIntroResponseDto.from(selfIntro);
     }
 
@@ -109,5 +119,50 @@ public class SelfIntroService {
             items.add(SelfIntroItem.create(selfIntro, dto.getQuestionText(), dto.getAnswerText(), i));
         }
         return items;
+    }
+
+    private void syncPendingSchedule(Long userId, SelfIntro selfIntro, LocalDate newDate, String newTime) {
+        Optional<InterviewSchedule> existing = interviewScheduleRepository
+                .findBySelfIntroIdAndStatus(selfIntro.getId(), ScheduleStatus.PENDING);
+
+        if (newDate == null) {
+            existing.ifPresent(interviewScheduleRepository::delete);
+            return;
+        }
+
+        if (interviewScheduleRepository.existsBySelfIntroIdAndStatus(selfIntro.getId(), ScheduleStatus.SCHEDULED)) {
+            return;
+        }
+
+        LocalDateTime dateTime = toLocalDateTime(newDate, newTime);
+        if (existing.isPresent()) {
+            InterviewSchedule schedule = existing.get();
+            schedule.update(schedule.getTitle(), schedule.getCompanyName(), schedule.getJobPosition(),
+                    dateTime, schedule.getLocation(), schedule.getMemo());
+        } else {
+            createPendingSchedule(userId, selfIntro, newDate, newTime);
+        }
+    }
+
+    private void createPendingSchedule(Long userId, SelfIntro selfIntro, LocalDate date, String time) {
+        String title = selfIntro.getCompanyName() + " " + selfIntro.getJobPosition() + " 면접";
+        InterviewSchedule schedule = InterviewSchedule.builder()
+                .userId(userId)
+                .selfIntroId(selfIntro.getId())
+                .title(title)
+                .companyName(selfIntro.getCompanyName())
+                .jobPosition(selfIntro.getJobPosition())
+                .interviewDate(toLocalDateTime(date, time))
+                .status(ScheduleStatus.PENDING)
+                .build();
+        interviewScheduleRepository.save(schedule);
+    }
+
+    private LocalDateTime toLocalDateTime(LocalDate date, String time) {
+        if (time == null || time.isBlank()) {
+            return date.atStartOfDay();
+        }
+        String[] parts = time.split(":");
+        return date.atTime(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
     }
 }
