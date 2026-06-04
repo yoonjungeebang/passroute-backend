@@ -5,9 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
+import passroutebackend.debate.dto.request.DebateTopicGenerateRequest;
+import passroutebackend.debate.dto.request.DebateTopicSuggestRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
+import passroutebackend.debate.dto.response.DebateTopicCandidateResponse;
+import passroutebackend.debate.dto.response.DebateTopicSuggestResponse;
 import passroutebackend.debate.dto.response.DebateTurnSummary;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
@@ -37,8 +41,13 @@ import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
 import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
 import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
 import passroutebackend.interview.dto.debate.PersonaPayload;
+import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
+import passroutebackend.interview.dto.debate.TopicDetailAiResponse;
+import passroutebackend.interview.dto.debate.TopicSuggestAiRequest;
+import passroutebackend.interview.dto.debate.TopicSuggestAiResponse;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 토론 면접 흐름 조율.
@@ -92,6 +101,59 @@ public class DebateService {
         .strengths(parseStringList(persona.getStrengths()))
         .weaknesses(parseStringList(persona.getWeaknesses()))
         .build();
+  }
+
+  // ── AI 주제 추천 / 생성 ───────────────────────────────────────────────────
+
+  /** 크롤링 뉴스 기반 주제 후보 N개 추천 (저장하지 않음). */
+  public DebateTopicSuggestResponse suggestTopics(DebateTopicSuggestRequest req) {
+    List<String> keywords = (req.getKeywords() == null) ? List.of() : req.getKeywords();
+    int count = (req.getCount() == null) ? 3 : req.getCount();
+
+    TopicSuggestAiResponse ai = aiServerClient.suggestDebateTopics(
+        TopicSuggestAiRequest.builder()
+            .keywords(keywords)
+            .count(count)
+            .build());
+
+    List<DebateTopicCandidateResponse> candidates = (ai.getCandidates() == null)
+        ? List.of()
+        : ai.getCandidates().stream()
+            .map(c -> DebateTopicCandidateResponse.builder()
+                .title(c.getTitle())
+                .description(c.getDescription())
+                .category(c.getCategory())
+                .build())
+            .toList();
+
+    return DebateTopicSuggestResponse.builder()
+        .candidates(candidates)
+        .newsCount(ai.getNewsCount())
+        .build();
+  }
+
+  /** 선택한 후보를 상세화(찬/반 논거)하여 DB에 저장 → 발급된 topicId(+주제 전체) 반환. */
+  public DebateTopicResponse generateTopic(DebateTopicGenerateRequest req) {
+    TopicDetailAiResponse ai = aiServerClient.generateDebateTopicDetail(
+        TopicDetailAiRequest.builder()
+            .title(req.getTitle())
+            .summary(req.getDescription())
+            .category(req.getCategory())
+            .build());
+
+    TopicCategory category = (ai.getCategory() != null) ? ai.getCategory() : req.getCategory();
+    String title = (ai.getTopicTitle() != null) ? ai.getTopicTitle() : req.getTitle();
+    String topicKey = "topic_gen_" + UUID.randomUUID();
+
+    DebateTopic saved = transactionService.saveGeneratedTopic(
+        topicKey,
+        title,
+        ai.getTopicDescription(),
+        category,
+        transactionService.toJson(ai.getProKeyPoints()),
+        transactionService.toJson(ai.getConKeyPoints()));
+
+    return toTopicResponse(saved);
   }
 
   // ── 세션 종료 ─────────────────────────────────────────────────────────────
