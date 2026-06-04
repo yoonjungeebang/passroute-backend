@@ -15,6 +15,7 @@ import passroutebackend.debate.entity.DebateStance;
 import passroutebackend.debate.entity.DebateTopic;
 import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
+import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.entity.TurnStance;
 import passroutebackend.debate.repository.AiCompetitorRepository;
 import passroutebackend.debate.repository.AiPersonaRepository;
@@ -47,12 +48,12 @@ public class DebateTransactionService {
 
   @Transactional(readOnly = true)
   public List<DebateTopic> findAllTopics() {
-    return topicRepository.findAll();
+    return topicRepository.findByGeneratedFalse();
   }
 
   @Transactional(readOnly = true)
-  public List<DebateTopic> findTopicsByCategory(passroutebackend.debate.entity.TopicCategory category) {
-    return topicRepository.findByCategory(category);
+  public List<DebateTopic> findTopicsByCategory(TopicCategory category) {
+    return topicRepository.findByCategoryAndGeneratedFalse(category);
   }
 
   @Transactional(readOnly = true)
@@ -92,6 +93,23 @@ public class DebateTransactionService {
   @Transactional(readOnly = true)
   public Optional<DebateReport> findReportBySession(DebateSession session) {
     return reportRepository.findBySession(session);
+  }
+
+  // ── AI 생성 주제 저장 ─────────────────────────────────────────────────────
+
+  @Transactional
+  public DebateTopic saveGeneratedTopic(String topicKey, String title, String description,
+      TopicCategory category, String proKeyPoints, String conKeyPoints) {
+    DebateTopic topic = DebateTopic.builder()
+        .topicKey(topicKey)
+        .title(title)
+        .description(description)
+        .category(category)
+        .proKeyPoints(proKeyPoints)
+        .conKeyPoints(conKeyPoints)
+        .generated(true)
+        .build();
+    return topicRepository.save(topic);
   }
 
   // ── 세션 생성 / 시작 / 종료 ────────────────────────────────────────────────
