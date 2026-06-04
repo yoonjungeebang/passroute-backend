@@ -50,6 +50,9 @@ public class InterviewScheduleService {
                     request.getInterviewDate().getHour(),
                     request.getInterviewDate().getMinute());
             selfIntro.scheduleInterview(date, time);
+
+            interviewScheduleRepository.findBySelfIntroIdAndStatus(selfIntroId, ScheduleStatus.PENDING)
+                    .ifPresent(interviewScheduleRepository::delete);
         } else {
             if (request.getTitle() == null || request.getCompanyName() == null || request.getJobPosition() == null) {
                 throw CustomException.of(ErrorCode.INVALID_INPUT);
