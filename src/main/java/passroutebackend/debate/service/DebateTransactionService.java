@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateReport;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
@@ -116,12 +117,14 @@ public class DebateTransactionService {
 
   @Transactional
   public DebateSession createSession(Long userId, DebateTopic topic, DebateStance userStance,
-      AiPersona persona, Difficulty difficulty) {
+      AiPersona persona, Difficulty difficulty, DebateMode mode, int prepSeconds) {
     DebateSession session = DebateSession.builder()
         .userId(userId)
         .topic(topic)
         .userStance(userStance)
         .difficulty(difficulty)
+        .mode(mode)
+        .prepSeconds(prepSeconds)
         .build();
     sessionRepository.save(session);
 
@@ -157,6 +160,33 @@ public class DebateTransactionService {
         .audioUrl(audioUrl)
         .build();
     return turnRepository.save(turn);
+  }
+
+  @Transactional(readOnly = true)
+  public boolean existsUserTurn(DebateSession session, DebateRound round) {
+    return turnRepository.existsBySessionAndSpeakerTypeAndRound(
+        session, SpeakerType.USER, round);
+  }
+
+  /**
+   * 사용자 발화 교체 저장 (단일 트랜잭션 → 원자성 보장).
+   * 같은 라운드의 직전 시도(PRACTICE 재시도)를 삭제하고 새 발화를 저장한다.
+   * 세션 저장(pendingStt 소비/상태 전이)은 호출부에서 1회로 처리한다.
+   *
+   * @return 저장된 턴 id
+   */
+  @Transactional
+  public Long replaceUserTurn(DebateSession session, DebateRound round,
+      TurnStance stance, String content) {
+    turnRepository.deleteBySessionAndSpeakerTypeAndRound(session, SpeakerType.USER, round);
+    DebateTurn turn = turnRepository.save(DebateTurn.builder()
+        .session(session)
+        .speakerType(SpeakerType.USER)
+        .stance(stance)
+        .round(round)
+        .content(content)
+        .build());
+    return turn.getId();
   }
 
   @Transactional

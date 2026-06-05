@@ -3,6 +3,7 @@ package passroutebackend.debate.dto.request;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateStance;
 import passroutebackend.interview.entity.Difficulty;
 
@@ -21,4 +22,7 @@ public class DebateSessionCreateRequest {
 
   @NotNull
   private Difficulty difficulty;
+
+  @NotNull
+  private DebateMode mode;
 }
