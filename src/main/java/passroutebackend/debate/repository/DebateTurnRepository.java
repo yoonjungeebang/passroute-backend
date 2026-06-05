@@ -1,6 +1,9 @@
 package passroutebackend.debate.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
 import passroutebackend.debate.entity.DebateTurn;
@@ -22,6 +25,12 @@ public interface DebateTurnRepository extends JpaRepository<DebateTurn, Long> {
       DebateSession session, SpeakerType speakerType, DebateRound round);
 
   // 특정 라운드의 발화 삭제 (PRACTICE 재시도 시 이전 시도 교체용)
+  // 라운드당 USER 발화는 최대 1건이지만, SELECT 없이 단일 DELETE로 처리한다.
+  @Modifying
+  @Query("delete from DebateTurn t where t.session = :session "
+      + "and t.speakerType = :speakerType and t.round = :round")
   void deleteBySessionAndSpeakerTypeAndRound(
-      DebateSession session, SpeakerType speakerType, DebateRound round);
+      @Param("session") DebateSession session,
+      @Param("speakerType") SpeakerType speakerType,
+      @Param("round") DebateRound round);
 }

@@ -207,21 +207,23 @@ public class DebateService {
     boolean hasNewSpeech = pendingStt != null && !pendingStt.isBlank();
 
     // 새 발화가 있으면 저장 + 평가.
-    // PRACTICE 재시도는 같은 라운드의 직전 시도를 삭제하고 교체한다 (히스토리/리포트 오염 방지).
+    // PRACTICE 재시도는 같은 라운드의 직전 시도를 교체한다 (히스토리/리포트 오염 방지).
     if (hasNewSpeech) {
-      transactionService.deleteUserTurn(session, round);
-      // ⚠️ 사용자 발화 저장 전에 상대 직전 발화 조회 (저장 후 호출하면 자기 발화를 반환함)
-      String opponentPreviousTurn = findOpponentPreviousTurn(session);
+      // 평가용 상대 직전 발화 = AI 경쟁자의 가장 최근 발화.
+      // (재시도로 남아있던 내 직전 시도와 무관하게 조회되도록 경쟁자 발화만 본다)
+      List<DebateTurn> competitorTurns = transactionService.findCompetitorTurnsBySession(session);
+      String opponentPreviousTurn = competitorTurns.isEmpty()
+          ? null
+          : competitorTurns.get(competitorTurns.size() - 1).getContent();
 
-      DebateTurn turn = transactionService.saveTurn(
-          session, SpeakerType.USER, null, userStance, round, pendingStt, null);
-      session.updatePendingStt(null);
-      transactionService.saveSession(session);
+      // 직전 시도 삭제 + 새 발화 저장을 단일 트랜잭션으로 묶어 원자성 보장.
+      Long turnId = transactionService.replaceUserTurn(session, round, userStance, pendingStt);
+      session.updatePendingStt(null); // 저장은 아래에서 1회로 통합 (낙관적 락 충돌 방지)
 
-      // 사용자 턴 평가: 양 모드 공통으로 호출하고 결과는 turn에 누적 저장.
-      // 노출은 GET /state에서 모드로 분기 (PRACTICE만 즉시 노출, REAL은 종료 리포트로만).
+      // 턴이 커밋된 뒤 평가 호출 → @Async가 새 턴을 확실히 조회한다.
+      // 양 모드 공통 호출·누적 저장, 노출만 GET /state에서 분기 (PRACTICE 즉시 / REAL 종료 리포트).
       evaluationService.evaluateAsync(
-          sessionId, userId, turn.getId(),
+          sessionId, userId, turnId,
           pendingStt, round, session.getUserStance(),
           topicTitle, opponentPreviousTurn);
     }
@@ -232,6 +234,7 @@ public class DebateService {
         // 새 발화도 없고 확정도 아닌 빈 요청.
         throw CustomException.of(ErrorCode.INVALID_INPUT);
       }
+      transactionService.saveSession(session); // pendingStt 소비만 반영 (상태 전이 없음)
       return;
     }
 
@@ -240,7 +243,8 @@ public class DebateService {
       throw CustomException.of(ErrorCode.DEBATE_NO_TURN_TO_COMMIT);
     }
 
-    // 라운드 lock: 상태 전이 *_USER → *_AI
+    // pendingStt 소비 + 라운드 lock(*_USER → *_AI)을 세션 저장 1회로 함께 반영한다.
+    // detached 세션을 두 번 저장하면 @Version 낙관적 락 충돌이 나므로 반드시 1회로 통합.
     stateMachine.onUserTurnSubmitted(session);
     transactionService.saveSession(session);
 

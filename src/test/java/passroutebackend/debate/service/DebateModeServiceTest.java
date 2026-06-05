@@ -81,14 +81,11 @@ class DebateModeServiceTest {
   }
 
   private void stubForSubmit(DebateSession session) {
-    DebateTurn savedTurn = DebateTurn.builder()
-        .session(session).speakerType(SpeakerType.USER)
-        .stance(TurnStance.PRO).round(DebateRound.OPENING).content("내 발화").build();
     when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
     when(stateMachine.isWaitingForUser(session)).thenReturn(true);
-    when(transactionService.findTurnsBySession(session)).thenReturn(List.of());
-    when(transactionService.saveTurn(any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(savedTurn);
+    when(transactionService.findCompetitorTurnsBySession(session)).thenReturn(List.of());
+    when(transactionService.replaceUserTurn(eq(session), eq(DebateRound.OPENING), any(), any()))
+        .thenReturn(5L);
   }
 
   private DebateTurnSubmitRequest submitRequest(boolean commit) {
@@ -181,9 +178,10 @@ class DebateModeServiceTest {
       // 라운드 미확정: lock/AI 진행 없음
       verify(stateMachine, never()).onUserTurnSubmitted(any());
       verify(debateService, never()).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
-      // 직전 시도 교체용 삭제는 호출된다
-      verify(transactionService).deleteUserTurn(session, DebateRound.OPENING);
-      // pendingStt는 소비되어 비워진다
+      // 직전 시도 교체(삭제+저장 원자적)는 호출된다
+      verify(transactionService).replaceUserTurn(eq(session), eq(DebateRound.OPENING), any(), any());
+      // pendingStt 소비는 세션 저장 1회로 반영된다
+      verify(transactionService).saveSession(session);
       assertThat(session.getPendingStt()).isNull();
     }
 
