@@ -67,7 +67,8 @@ public enum ErrorCode {
   DEBATE_TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "DB002", "토론 주제를 찾을 수 없습니다."),
   PERSONA_NOT_FOUND(HttpStatus.NOT_FOUND, "DB003", "AI 페르소나를 찾을 수 없습니다."),
   INVALID_DEBATE_STATE(HttpStatus.BAD_REQUEST, "DB004", "잘못된 토론 상태 전이입니다."),
-  DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "DB005", "현재 사용자 턴이 아닙니다.");
+  DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "DB005", "현재 사용자 턴이 아닙니다."),
+  DEBATE_NO_TURN_TO_COMMIT(HttpStatus.BAD_REQUEST, "DB006", "확정할 발화가 없습니다.");
 
   private final HttpStatus status;
   private final String code;

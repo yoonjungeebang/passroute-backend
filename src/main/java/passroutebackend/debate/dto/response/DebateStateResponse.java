@@ -3,6 +3,7 @@ package passroutebackend.debate.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateState;
 
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.List;
 public class DebateStateResponse {
 
   private Long sessionId;
+  private DebateMode mode;
+  private int prepSeconds;
   private DebateState currentState;
   private boolean isWaitingForUser;
   private Long version;

@@ -52,6 +52,14 @@ public class DebateSession {
   private Difficulty difficulty;
 
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 10)
+  private DebateMode mode;
+
+  /** 실전 모드 준비시간(초). 연습은 0. */
+  @Column(nullable = false)
+  private int prepSeconds;
+
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 30)
   private DebateState currentState;
 
@@ -68,11 +76,13 @@ public class DebateSession {
 
   @Builder
   public DebateSession(Long userId, DebateTopic topic, DebateStance userStance,
-      Difficulty difficulty) {
+      Difficulty difficulty, DebateMode mode, int prepSeconds) {
     this.userId = userId;
     this.topic = topic;
     this.userStance = userStance;
     this.difficulty = difficulty;
+    this.mode = mode;
+    this.prepSeconds = prepSeconds;
     this.currentState = DebateState.CREATED;
   }
 
