@@ -9,8 +9,10 @@ import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.dto.response.DebateTurnSummary;
+import com.fasterxml.jackson.core.type.TypeReference;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
 import passroutebackend.debate.entity.DebateStance;
@@ -31,6 +33,7 @@ import passroutebackend.interview.dto.debate.DebateOpeningRequest;
 import passroutebackend.interview.dto.debate.DebateOpeningResponse;
 import passroutebackend.interview.dto.debate.DebateRebuttalRequest;
 import passroutebackend.interview.dto.debate.DebateRebuttalResponse;
+import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
 import passroutebackend.interview.dto.debate.DebateTurnItem;
 import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
 import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
@@ -106,13 +109,23 @@ public class DebateService {
 
   // ── 세션 생성 ─────────────────────────────────────────────────────────────
 
+  /** 실전 모드 기본 준비시간(초). 연습 모드는 준비시간 없음. */
+  private static final int REAL_PREP_SECONDS = 60;
+  private static final int PRACTICE_PREP_SECONDS = 0;
+
   public DebateSessionCreateResponse createSession(Long userId, DebateSessionCreateRequest req) {
     DebateTopic topic = transactionService.findTopicOrThrow(req.getTopicId());
     AiPersona persona = transactionService.findPersonaOrThrow(req.getPersonaId());
+    int prepSeconds = (req.getMode() == DebateMode.REAL)
+        ? REAL_PREP_SECONDS
+        : PRACTICE_PREP_SECONDS;
     DebateSession session = transactionService.createSession(
-        userId, topic, req.getUserStance(), persona, req.getDifficulty());
+        userId, topic, req.getUserStance(), persona, req.getDifficulty(),
+        req.getMode(), prepSeconds);
     return DebateSessionCreateResponse.builder()
         .sessionId(session.getId())
+        .mode(session.getMode())
+        .prepSeconds(session.getPrepSeconds())
         .build();
   }
 
@@ -158,11 +171,14 @@ public class DebateService {
 
   public DebateStateResponse getState(Long userId, Long sessionId) {
     DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
+    boolean exposeEval = session.getMode() == DebateMode.PRACTICE;
     List<DebateTurnSummary> latestTurns = transactionService.findTurnsBySession(session).stream()
-        .map(this::toTurnSummary)
+        .map(turn -> toTurnSummary(turn, exposeEval))
         .toList();
     return DebateStateResponse.builder()
         .sessionId(session.getId())
+        .mode(session.getMode())
+        .prepSeconds(session.getPrepSeconds())
         .currentState(session.getCurrentState())
         .isWaitingForUser(stateMachine.isWaitingForUser(session))
         .version(session.getVersion())
@@ -180,35 +196,55 @@ public class DebateService {
       throw CustomException.of(ErrorCode.DEBATE_TURN_OUT_OF_ORDER);
     }
 
-    DebateState currentState = session.getCurrentState();
-    DebateRound round = resolveRound(currentState);
-    TurnStance userStance = toTurnStance(session.getUserStance());
+    // REAL은 제출 즉시 확정(lock). PRACTICE만 commit 플래그로 시도/확정을 구분한다.
+    boolean commit = session.getMode() == DebateMode.REAL || req.isCommit();
 
-    // ⚠️ 사용자 발화 저장 전에 상대 직전 발화 조회 (저장 후 호출하면 자기 발화를 반환함)
+    DebateRound round = resolveRound(session.getCurrentState());
+    TurnStance userStance = toTurnStance(session.getUserStance());
     String topicTitle = session.getTopic().getTitle();
-    String opponentPreviousTurn = findOpponentPreviousTurn(session);
 
     String pendingStt = session.getPendingStt();
-    if (pendingStt == null || pendingStt.isBlank()) {
-      throw CustomException.of(ErrorCode.INVALID_INPUT);
+    boolean hasNewSpeech = pendingStt != null && !pendingStt.isBlank();
+
+    // 새 발화가 있으면 저장 + 평가.
+    // PRACTICE 재시도는 같은 라운드의 직전 시도를 삭제하고 교체한다 (히스토리/리포트 오염 방지).
+    if (hasNewSpeech) {
+      transactionService.deleteUserTurn(session, round);
+      // ⚠️ 사용자 발화 저장 전에 상대 직전 발화 조회 (저장 후 호출하면 자기 발화를 반환함)
+      String opponentPreviousTurn = findOpponentPreviousTurn(session);
+
+      DebateTurn turn = transactionService.saveTurn(
+          session, SpeakerType.USER, null, userStance, round, pendingStt, null);
+      session.updatePendingStt(null);
+      transactionService.saveSession(session);
+
+      // 사용자 턴 평가: 양 모드 공통으로 호출하고 결과는 turn에 누적 저장.
+      // 노출은 GET /state에서 모드로 분기 (PRACTICE만 즉시 노출, REAL은 종료 리포트로만).
+      evaluationService.evaluateAsync(
+          sessionId, userId, turn.getId(),
+          pendingStt, round, session.getUserStance(),
+          topicTitle, opponentPreviousTurn);
     }
 
-    // 사용자 턴 저장
-    DebateTurn turn = transactionService.saveTurn(
-        session, SpeakerType.USER, null, userStance, round, pendingStt, null);
-    session.updatePendingStt(null);
+    // 시도(commit=false, PRACTICE 한정): 라운드를 확정하지 않고 재시도 여지를 둔 채 종료.
+    if (!commit) {
+      if (!hasNewSpeech) {
+        // 새 발화도 없고 확정도 아닌 빈 요청.
+        throw CustomException.of(ErrorCode.INVALID_INPUT);
+      }
+      return;
+    }
 
-    // 상태 전이: *_USER → *_AI
+    // 확정(commit=true): 제출된 발화가 반드시 존재해야 한다.
+    if (!hasNewSpeech && !transactionService.existsUserTurn(session, round)) {
+      throw CustomException.of(ErrorCode.DEBATE_NO_TURN_TO_COMMIT);
+    }
+
+    // 라운드 lock: 상태 전이 *_USER → *_AI
     stateMachine.onUserTurnSubmitted(session);
     transactionService.saveSession(session);
 
-    // 비동기 1: 사용자 턴 평가
-    evaluationService.evaluateAsync(
-        sessionId, userId, turn.getId(),
-        pendingStt, round, session.getUserStance(),
-        topicTitle, opponentPreviousTurn);
-
-    // 비동기 2: AI 경쟁자 답변 생성
+    // AI 경쟁자 답변 생성
     generateAiCompetitorTurnAsync(sessionId, userId, round);
   }
 
@@ -322,16 +358,30 @@ public class DebateService {
     return stance == DebateStance.PRO ? TurnStance.PRO : TurnStance.CON;
   }
 
-  private DebateTurnSummary toTurnSummary(DebateTurn turn) {
-    return DebateTurnSummary.builder()
+  /**
+   * @param exposeEval PRACTICE 모드일 때만 true. 사용자 턴 평가 결과/근거를 응답에 노출할지 결정.
+   *                   REAL 모드는 false → 평가 필드를 비워 종료 리포트 전까지 감춘다.
+   */
+  private DebateTurnSummary toTurnSummary(DebateTurn turn, boolean exposeEval) {
+    DebateTurnSummary.DebateTurnSummaryBuilder builder = DebateTurnSummary.builder()
         .id(turn.getId())
         .speakerType(turn.getSpeakerType())
         .round(turn.getRound())
         .stance(turn.getStance())
         .content(turn.getContent())
         .audioUrl(turn.getAudioUrl())
-        .createdAt(turn.getCreatedAt())
-        .build();
+        .createdAt(turn.getCreatedAt());
+
+    if (exposeEval && turn.getWeightedScore() != null) {
+      builder.weightedScore(turn.getWeightedScore());
+      DebateTurnEvalSummary summary = transactionService.parseJson(
+          turn.getEvalSummaryJson(), new TypeReference<DebateTurnEvalSummary>() {});
+      if (summary != null) {
+        builder.evalStrengths(summary.getStrengths());
+        builder.evalImprovements(summary.getImprovements());
+      }
+    }
+    return builder.build();
   }
 
   /** 직전 USER 또는 AI_COMPETITOR 발화 (반박 대상). */

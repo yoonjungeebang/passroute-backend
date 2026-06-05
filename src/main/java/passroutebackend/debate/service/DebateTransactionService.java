@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateReport;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
@@ -98,12 +99,14 @@ public class DebateTransactionService {
 
   @Transactional
   public DebateSession createSession(Long userId, DebateTopic topic, DebateStance userStance,
-      AiPersona persona, Difficulty difficulty) {
+      AiPersona persona, Difficulty difficulty, DebateMode mode, int prepSeconds) {
     DebateSession session = DebateSession.builder()
         .userId(userId)
         .topic(topic)
         .userStance(userStance)
         .difficulty(difficulty)
+        .mode(mode)
+        .prepSeconds(prepSeconds)
         .build();
     sessionRepository.save(session);
 
@@ -139,6 +142,19 @@ public class DebateTransactionService {
         .audioUrl(audioUrl)
         .build();
     return turnRepository.save(turn);
+  }
+
+  @Transactional(readOnly = true)
+  public boolean existsUserTurn(DebateSession session, DebateRound round) {
+    return turnRepository.existsBySessionAndSpeakerTypeAndRound(
+        session, SpeakerType.USER, round);
+  }
+
+  /** PRACTICE 재시도: 현재 라운드의 기존 사용자 시도 발화를 삭제(교체 준비). */
+  @Transactional
+  public void deleteUserTurn(DebateSession session, DebateRound round) {
+    turnRepository.deleteBySessionAndSpeakerTypeAndRound(
+        session, SpeakerType.USER, round);
   }
 
   @Transactional
