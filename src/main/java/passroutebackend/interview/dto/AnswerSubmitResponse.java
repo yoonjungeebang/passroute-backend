@@ -11,11 +11,14 @@ public class AnswerSubmitResponse {
   private final Long followUpQuestionId;
   private final String followUpQuestionText;
 
-  public static AnswerSubmitResponse followUp(Long questionId, String questionText) {
-    return new AnswerSubmitResponse(true, questionId, questionText);
+  // 꼬리질문 TTS 음성 URL (ONE_ON_ONE만 값 존재, 미지원/합성 실패 시 null)
+  private final String audioUrl;
+
+  public static AnswerSubmitResponse followUp(Long questionId, String questionText, String audioUrl) {
+    return new AnswerSubmitResponse(true, questionId, questionText, audioUrl);
   }
 
   public static AnswerSubmitResponse noFollowUp() {
-    return new AnswerSubmitResponse(false, null, null);
+    return new AnswerSubmitResponse(false, null, null, null);
   }
 }

@@ -33,7 +33,8 @@ public class InterviewSessionService {
         followUpResponse.isHasFollowUp(),
         followUpResponse.getFollowUpQuestionId(),
         followUpResponse.getFollowUpQuestionText(),
-        isLastQuestion
+        isLastQuestion,
+        followUpResponse.getAudioUrl()
     );
   }
 

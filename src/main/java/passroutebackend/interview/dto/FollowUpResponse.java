@@ -17,7 +17,11 @@ public class FollowUpResponse {
   @JsonProperty("reason")
   private final String reason;
 
+  // 원질문과 같은 목소리로 합성된 꼬리질문 TTS URL (미지원/합성 실패 시 null)
+  @JsonProperty("audio_url")
+  private final String audioUrl;
+
   public static FollowUpResponse noFollowUp() {
-    return new FollowUpResponse(false, null, null);
+    return new FollowUpResponse(false, null, null, null);
   }
 }

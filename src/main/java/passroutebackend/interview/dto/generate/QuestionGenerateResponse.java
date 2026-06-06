@@ -15,17 +15,15 @@ public class QuestionGenerateResponse {
   @JsonProperty("questions")
   private List<QuestionItem> questions;
 
-  public List<String> getQuestionTexts() {
-    return questions.stream()
-        .map(QuestionItem::getQuestion)
-        .toList();
-  }
-
   @Getter
   @NoArgsConstructor
   @JsonIgnoreProperties(ignoreUnknown = true)
   public static class QuestionItem {
     @JsonProperty("question")
     private String question;
+
+    // ONE_ON_ONE만 값 존재, 토론/미지원/합성 실패 시 null
+    @JsonProperty("audio_url")
+    private String audioUrl;
   }
 }

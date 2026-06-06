@@ -21,4 +21,8 @@ public class FollowUpRequest {
 
   @JsonProperty("user_id")
   private final Long userId;
+
+  // 원질문과 같은 목소리(TTS) 유지를 위한 면접관 persona
+  @JsonProperty("persona")
+  private final String persona;
 }

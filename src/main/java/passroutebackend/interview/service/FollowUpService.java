@@ -34,9 +34,10 @@ public class FollowUpService {
     }
 
     InterviewQuestion followUpQuestion = transactionService.saveFollowUpQuestion(
-        request.getQuestionId(), aiResponse.getFollowUpQuestion()
+        request.getQuestionId(), aiResponse.getFollowUpQuestion(), aiResponse.getAudioUrl()
     );
 
-    return AnswerSubmitResponse.followUp(followUpQuestion.getId(), followUpQuestion.getQuestionText());
+    return AnswerSubmitResponse.followUp(
+        followUpQuestion.getId(), followUpQuestion.getQuestionText(), followUpQuestion.getAudioUrl());
   }
 }

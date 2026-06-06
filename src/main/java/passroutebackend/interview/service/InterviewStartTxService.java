@@ -11,6 +11,7 @@ import passroutebackend.document.repository.DocumentRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
+import passroutebackend.interview.dto.generate.QuestionGenerateResponse.QuestionItem;
 import passroutebackend.interview.dto.generate.SelfIntroItemDto;
 import passroutebackend.interview.dto.generate.SessionPreparation;
 import passroutebackend.interview.dto.response.QuestionDto;
@@ -87,23 +88,25 @@ public class InterviewStartTxService {
   }
 
   @Transactional
-  public List<QuestionDto> saveQuestions(Long sessionId, List<String> questionTexts) {
+  public List<QuestionDto> saveQuestions(Long sessionId, List<QuestionItem> questionItems) {
     InterviewSession session = interviewSessionRepository.getReferenceById(sessionId);
 
     List<InterviewQuestion> questions = new ArrayList<>();
-    for (int i = 0; i < questionTexts.size(); i++) {
+    for (int i = 0; i < questionItems.size(); i++) {
+      QuestionItem item = questionItems.get(i);
       questions.add(InterviewQuestion.builder()
           .session(session)
           .setNumber(1)
-          .questionText(questionTexts.get(i))
+          .questionText(item.getQuestion())
           .questionOrder(i + 1)
           .followUp(false)
+          .audioUrl(item.getAudioUrl())
           .build());
     }
     interviewQuestionRepository.saveAll(questions);
 
     return questions.stream()
-        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder()))
+        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder(), q.getAudioUrl()))
         .toList();
   }
 

@@ -10,4 +10,5 @@ public class QuestionDto {
   private Long questionId;
   private String questionText;
   private int questionOrder;
+  private String audioUrl;
 }
