@@ -134,4 +134,39 @@ public class InterviewReport {
     this.gazeOffCount = gazeOffCount;
     this.avgBlinkPerMin = avgBlinkPerMin;
   }
+
+  // GENERATING row를 완료 결과로 in-place 갱신 (호출 전 status==GENERATING 보장 + 락 필요)
+  public void completeReport(Double sessionScore, InterviewReadiness interviewReadiness,
+      String overall, String strengths, String weaknesses, String improvements,
+      String questionFeedback, String recommendedQuestions, String finalAdvice,
+      String readinessComment, String keyWeakness, String itemAverages,
+      Double voiceScore, Double faceScore,
+      Double avgWpm, Double avgSilenceDuration, Integer fillerCount,
+      Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
+    this.sessionScore = sessionScore;
+    this.interviewReadiness = interviewReadiness;
+    this.overall = overall;
+    this.strengths = strengths;
+    this.weaknesses = weaknesses;
+    this.improvements = improvements;
+    this.questionFeedback = questionFeedback;
+    this.recommendedQuestions = recommendedQuestions;
+    this.finalAdvice = finalAdvice;
+    this.readinessComment = readinessComment;
+    this.keyWeakness = keyWeakness;
+    this.itemAverages = itemAverages;
+    this.voiceScore = voiceScore;
+    this.faceScore = faceScore;
+    this.avgWpm = avgWpm;
+    this.avgSilenceDuration = avgSilenceDuration;
+    this.fillerCount = fillerCount;
+    this.avgGazeRatio = avgGazeRatio;
+    this.gazeOffCount = gazeOffCount;
+    this.avgBlinkPerMin = avgBlinkPerMin;
+    this.reportStatus = ReportStatus.COMPLETED;
+  }
+
+  public void markFailed() {
+    this.reportStatus = ReportStatus.FAILED;
+  }
 }

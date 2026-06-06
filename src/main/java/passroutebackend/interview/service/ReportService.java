@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.interview.client.AiServerClient;
@@ -35,6 +36,7 @@ import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewSession;
 import passroutebackend.interview.entity.InterviewType;
+import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.entity.VoiceAnalysis;
 
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.stream.Collectors;
@@ -57,6 +60,18 @@ public class ReportService {
   private final ReportTransactionService reportTransactionService;
   private final InterviewScoreCalculator scoreCalculator;
   private final ObjectMapper objectMapper;
+
+  // 이 시간을 초과해도 GENERATING이면 워커가 죽은 것으로 보고 FAILED 처리(무한 폴링 차단).
+  // AI 순차 2콜(최대 240초) + 평가 대기(150초) 여유. 운영에서 report.stale-timeout-seconds로 조정 가능.
+  @Value("${report.stale-timeout-seconds:480}")
+  private long staleTimeoutSeconds;
+
+  // 리포트 생성 전, 답변별 비동기 평가(percentage)가 끝날 때까지 최대 대기 시간.
+  // 종료~평가완료 레이스로 인한 "평가된 답변 0개" 방지. 초과 시 평가된 답변만으로 진행.
+  @Value("${report.evaluation-wait-seconds:150}")
+  private long evaluationWaitSeconds;
+
+  private static final long EVALUATION_POLL_INTERVAL_MS = 3000L;
 
   private static final Map<String, Double> TECHNICAL_WEIGHTS = Map.of(
       "relevance", 0.15, "logic", 0.15, "specificity", 0.15,
@@ -85,18 +100,22 @@ public class ReportService {
     ITEM_LABELS.put("growth", "성장 가능성");
   }
 
-  @Async("evaluationExecutor")
+  @Async("reportExecutor")
   public void generateReportAsync(Long sessionId) {
+    // 시작 시점에 GENERATING row를 즉시 커밋(REQUIRES_NEW). 이미 존재하면 중복 생성 스킵.
+    if (!reportTransactionService.startGeneratingReport(sessionId)) {
+      log.info("리포트 이미 존재, 생성 생략 sessionId={}", sessionId);
+      return;
+    }
     try {
-      if (reportTransactionService.findReport(sessionId).isPresent()) {
-        log.info("리포트 이미 존재, 생성 생략 sessionId={}", sessionId);
-        return;
-      }
+      // 답변별 비동기 평가가 끝날 때까지 대기(레이스 방지). 초과 시 평가된 답변만으로 진행.
+      awaitEvaluations(sessionId);
 
       ReportContext ctx = reportTransactionService.loadContext(sessionId);
 
       if (ctx.getQuestionAnswers().isEmpty()) {
-        log.warn("평가 완료된 답변 없음, 리포트 생성 생략 sessionId={}", sessionId);
+        log.warn("평가 완료된 답변 없음, 리포트 실패 처리 sessionId={}", sessionId);
+        reportTransactionService.saveFailedReport(sessionId);
         return;
       }
 
@@ -208,6 +227,51 @@ public class ReportService {
 
   public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
     return reportTransactionService.findReport(sessionId, userId);
+  }
+
+  // 제출된 답변이 0개인지 (전부 스킵/빈답변 → 리포트 생성 불가, 재시도 무의미한 영구 실패 구분용)
+  public boolean hasNoAnswers(Long sessionId) {
+    return reportTransactionService.countAnswers(sessionId) == 0;
+  }
+
+  // 모든 제출 답변의 평가(percentage)가 채워질 때까지 폴링 대기. 초과하면 평가된 것만으로 진행.
+  private void awaitEvaluations(Long sessionId) {
+    long total = reportTransactionService.countAnswers(sessionId);
+    if (total == 0) {
+      return; // 제출된 답변 자체가 없음 → 대기 무의미(이후 빈 답변으로 FAILED 처리)
+    }
+    long deadlineMs = System.currentTimeMillis() + evaluationWaitSeconds * 1000L;
+    while (System.currentTimeMillis() < deadlineMs) {
+      long evaluated = reportTransactionService.countEvaluatedAnswers(sessionId);
+      if (evaluated >= total) {
+        return; // 전부 평가 완료
+      }
+      try {
+        Thread.sleep(EVALUATION_POLL_INTERVAL_MS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
+    log.warn("평가 완료 대기 {}초 초과, 평가된 답변만으로 리포트 생성 진행 sessionId={}",
+        evaluationWaitSeconds, sessionId);
+  }
+
+  // GENERATING이 임계값을 초과했으면(워커 사망/배포 중단 등) FAILED로 조건부 전환. 실제 전환되면 true.
+  public boolean failIfStale(InterviewReport report) {
+    if (report.getReportStatus() != ReportStatus.GENERATING) {
+      return false;
+    }
+    LocalDateTime createdAt = report.getCreatedAt();
+    if (createdAt == null
+        || createdAt.isAfter(LocalDateTime.now().minusSeconds(staleTimeoutSeconds))) {
+      return false; // 임계값 이내 → 정상 진행 중
+    }
+    boolean flipped = reportTransactionService.markStaleAsFailed(report.getId());
+    if (flipped) {
+      log.warn("리포트 생성이 임계값({}초) 초과로 FAILED 처리, reportId={}", staleTimeoutSeconds, report.getId());
+    }
+    return flipped;
   }
 
 

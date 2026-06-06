@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
@@ -85,6 +86,16 @@ public class ReportTransactionService {
   }
 
   @Transactional(readOnly = true)
+  public long countAnswers(Long sessionId) {
+    return answerRepository.countBySessionId(sessionId);
+  }
+
+  @Transactional(readOnly = true)
+  public long countEvaluatedAnswers(Long sessionId) {
+    return answerRepository.countEvaluatedBySessionId(sessionId);
+  }
+
+  @Transactional(readOnly = true)
   public Optional<InterviewReport> findReport(Long sessionId, Long userId) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
@@ -104,6 +115,22 @@ public class ReportTransactionService {
     return reportRepository.findBySession(session);
   }
 
+  // 생성 시작 시점에 GENERATING row를 별도 트랜잭션으로 즉시 커밋(폴러 가시성 확보).
+  // 이미 리포트가 있으면(완료/실패/동시진행) false 반환 → 중복 생성 스킵.
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public boolean startGeneratingReport(Long sessionId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+    if (reportRepository.findBySession(session).isPresent()) {
+      return false;
+    }
+    reportRepository.save(InterviewReport.builder()
+        .session(session)
+        .reportStatus(ReportStatus.GENERATING)
+        .build());
+    return true;
+  }
+
   @Transactional
   public void saveReport(Long sessionId, double sessionScore, InterviewReadiness interviewReadiness,
       String overall, String strengths, String weaknessesJson, String improvements,
@@ -114,45 +141,41 @@ public class ReportTransactionService {
       Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
-    InterviewReport report = InterviewReport.builder()
-        .session(session)
-        .sessionScore(sessionScore)
-        .interviewReadiness(interviewReadiness)
-        .overall(overall)
-        .strengths(strengths)
-        .weaknesses(weaknessesJson)
-        .improvements(improvements)
-        .questionFeedback(questionFeedbackJson)
-        .recommendedQuestions(recommendedQuestionsJson)
-        .finalAdvice(finalAdvice)
-        .readinessComment(readinessComment)
-        .keyWeakness(keyWeaknessJson)
-        .itemAverages(itemAveragesJson)
-        .reportStatus(ReportStatus.COMPLETED)
-        .voiceScore(voiceScore)
-        .faceScore(faceScore)
-        .avgWpm(avgWpm)
-        .avgSilenceDuration(avgSilenceDuration)
-        .fillerCount(fillerCount)
-        .avgGazeRatio(avgGazeRatio)
-        .gazeOffCount(gazeOffCount)
-        .avgBlinkPerMin(avgBlinkPerMin)
-        .build();
-    reportRepository.save(report);
+    InterviewReport report = reportRepository.findBySessionForUpdate(session).orElse(null);
+    // 워치독이 이미 FAILED로 선점했거나 행이 없으면 완료 결과를 덮어쓰지 않는다(부활 방지).
+    if (report == null || report.getReportStatus() != ReportStatus.GENERATING) {
+      log.warn("리포트가 GENERATING 상태가 아니어서 완료 저장 생략, sessionId={}", sessionId);
+      return;
+    }
+    report.completeReport(sessionScore, interviewReadiness, overall, strengths, weaknessesJson,
+        improvements, questionFeedbackJson, recommendedQuestionsJson, finalAdvice, readinessComment,
+        keyWeaknessJson, itemAveragesJson, voiceScore, faceScore,
+        avgWpm, avgSilenceDuration, fillerCount, avgGazeRatio, gazeOffCount, avgBlinkPerMin);
   }
 
   @Transactional
   public void saveFailedReport(Long sessionId) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
-    if (reportRepository.findBySession(session).isPresent()) {
+    InterviewReport report = reportRepository.findBySessionForUpdate(session).orElse(null);
+    // GENERATING row가 없는 예외적 경우(시작 insert 누락 등)만 FAILED로 새로 기록.
+    if (report == null) {
+      reportRepository.save(InterviewReport.builder()
+          .session(session)
+          .reportStatus(ReportStatus.FAILED)
+          .build());
       return;
     }
-    InterviewReport report = InterviewReport.builder()
-        .session(session)
-        .reportStatus(ReportStatus.FAILED)
-        .build();
-    reportRepository.save(report);
+    // 이미 COMPLETED면 건드리지 않고, GENERATING일 때만 FAILED로 전환.
+    if (report.getReportStatus() == ReportStatus.GENERATING) {
+      report.markFailed();
+    }
+  }
+
+  // 워치독: stale GENERATING을 FAILED로 조건부 전환. 실제 전환되면 true.
+  @Transactional
+  public boolean markStaleAsFailed(Long reportId) {
+    return reportRepository.markStaleAsFailed(reportId) > 0;
   }
 
   @Transactional(readOnly = true)
