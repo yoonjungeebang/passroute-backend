@@ -61,8 +61,21 @@ public class ReportController {
           .body(ApiResponse.accepted("리포트 생성 중입니다."));
     }
     InterviewReport report = reportOpt.get();
-    if (report.getReportStatus() == ReportStatus.FAILED) {
+    ReportStatus status = report.getReportStatus();
+    if (status == ReportStatus.FAILED) {
+      // 답변이 0개면 영구 실패(재시도 무의미) → I013, 그 외엔 일시 실패(재시도 가능) → I010
+      if (reportService.hasNoAnswers(sessionId)) {
+        throw CustomException.of(ErrorCode.REPORT_NO_ANSWERS);
+      }
       throw CustomException.of(ErrorCode.REPORT_GENERATION_FAILED);
+    }
+    if (status == ReportStatus.GENERATING) {
+      // 임계값 초과(워커 사망 등)면 FAILED 전환 후 실패 응답 → 무한 폴링 차단
+      if (reportService.failIfStale(report)) {
+        throw CustomException.of(ErrorCode.REPORT_GENERATION_FAILED);
+      }
+      return ResponseEntity.status(HttpStatus.ACCEPTED)
+          .body(ApiResponse.accepted("리포트 생성 중입니다."));
     }
     return ResponseEntity.ok(ApiResponse.success(reportService.toResponseDto(report)));
   }
