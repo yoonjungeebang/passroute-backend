@@ -276,8 +276,14 @@ public class DebateService {
     TurnStance userStance = toTurnStance(session.getUserStance());
     String topicTitle = session.getTopic().getTitle();
 
-    String pendingStt = session.getPendingStt();
-    boolean hasNewSpeech = pendingStt != null && !pendingStt.isBlank();
+    // 사용자 발화: FE가 body로 보낸 전사(content)를 우선 사용한다.
+    // FE는 AI-WS의 {status:"completed", text}로 전사를 이미 보유하므로, 이를 직접 받으면
+    // AI 서버의 pending_stt 비동기 쓰기 타이밍에 의존하지 않아 레이스가 사라진다.
+    // content가 없으면(구 경로/타 클라이언트) AI-WS가 채운 pending_stt로 폴백한다.
+    String userContent = (req.getContent() != null && !req.getContent().isBlank())
+        ? req.getContent()
+        : session.getPendingStt();
+    boolean hasNewSpeech = userContent != null && !userContent.isBlank();
 
     // 새 발화가 있으면 저장 + 평가.
     // PRACTICE 재시도는 같은 라운드의 직전 시도를 교체한다 (히스토리/리포트 오염 방지).
@@ -290,30 +296,31 @@ public class DebateService {
           : competitorTurns.get(competitorTurns.size() - 1).getContent();
 
       // 직전 시도 삭제 + 새 발화 저장을 단일 트랜잭션으로 묶어 원자성 보장.
-      Long turnId = transactionService.replaceUserTurn(session, round, userStance, pendingStt);
+      Long turnId = transactionService.replaceUserTurn(session, round, userStance, userContent);
       session.updatePendingStt(null); // 저장은 아래에서 1회로 통합 (낙관적 락 충돌 방지)
 
       // 턴이 커밋된 뒤 평가 호출 → @Async가 새 턴을 확실히 조회한다.
       // 양 모드 공통 호출·누적 저장, 노출만 GET /state에서 분기 (PRACTICE 즉시 / REAL 종료 리포트).
       evaluationService.evaluateAsync(
           sessionId, userId, turnId,
-          pendingStt, round, session.getUserStance(),
+          userContent, round, session.getUserStance(),
           topicTitle, opponentPreviousTurn);
     }
 
     // 시도(commit=false, PRACTICE 한정): 라운드를 확정하지 않고 재시도 여지를 둔 채 종료.
     if (!commit) {
       if (!hasNewSpeech) {
-        // 새 발화도 없고 확정도 아닌 빈 요청.
-        throw CustomException.of(ErrorCode.INVALID_INPUT);
+        // STT가 아직 pending_stt에 도착하지 않음 → FE에 재시도 신호.
+        throw CustomException.of(ErrorCode.DEBATE_STT_NOT_READY);
       }
       transactionService.saveSession(session); // pendingStt 소비만 반영 (상태 전이 없음)
       return;
     }
 
     // 확정(commit=true): 제출된 발화가 반드시 존재해야 한다.
+    // (새 발화도 없고 이전 시도도 없으면 STT 미도착으로 보고 재시도 신호)
     if (!hasNewSpeech && !transactionService.existsUserTurn(session, round)) {
-      throw CustomException.of(ErrorCode.DEBATE_NO_TURN_TO_COMMIT);
+      throw CustomException.of(ErrorCode.DEBATE_STT_NOT_READY);
     }
 
     // pendingStt 소비 + 라운드 lock(*_USER → *_AI)을 세션 저장 1회로 함께 반영한다.
