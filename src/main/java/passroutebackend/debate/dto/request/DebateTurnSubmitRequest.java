@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DebateTurnSubmitRequest {
 
+  /**
+   * 사용자 발화 전사(STT). FE가 AI-WS에서 받은 텍스트를 직접 보내면 이를 우선 사용한다.
+   * 비어 있으면 AI-WS가 DB(pending_stt)에 써준 값으로 폴백한다.
+   */
   private String content;
 
   /**

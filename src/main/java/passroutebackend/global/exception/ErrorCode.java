@@ -68,7 +68,7 @@ public enum ErrorCode {
   PERSONA_NOT_FOUND(HttpStatus.NOT_FOUND, "DB003", "AI 페르소나를 찾을 수 없습니다."),
   INVALID_DEBATE_STATE(HttpStatus.BAD_REQUEST, "DB004", "잘못된 토론 상태 전이입니다."),
   DEBATE_TURN_OUT_OF_ORDER(HttpStatus.BAD_REQUEST, "DB005", "현재 사용자 턴이 아닙니다."),
-  DEBATE_NO_TURN_TO_COMMIT(HttpStatus.BAD_REQUEST, "DB006", "확정할 발화가 없습니다.");
+  DEBATE_STT_NOT_READY(HttpStatus.CONFLICT, "DB006", "아직 인식된 발화가 없습니다. 잠시 후 다시 시도해주세요.");
 
   private final HttpStatus status;
   private final String code;

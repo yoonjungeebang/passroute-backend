@@ -23,6 +23,7 @@ import passroutebackend.debate.entity.DebateTopic;
 import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
 import passroutebackend.debate.entity.TurnStance;
+import passroutebackend.global.exception.CustomException;
 import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
 import passroutebackend.interview.entity.Difficulty;
@@ -30,6 +31,7 @@ import passroutebackend.interview.entity.Difficulty;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -213,6 +215,40 @@ class DebateModeServiceTest {
 
       verify(stateMachine).onUserTurnSubmitted(session);
       verify(debateService).generateAiCompetitorTurnAsync(SESSION_ID, USER_ID, DebateRound.OPENING);
+    }
+
+    @Test
+    @DisplayName("body content가 있으면 pending_stt보다 우선 사용한다 (레이스 제거)")
+    void prefersBodyContentOverPendingStt() {
+      DebateSession session = sessionWithMode(DebateMode.PRACTICE);
+      session.updatePendingStt("AI가 DB에 늦게 써준 값");
+      stubForSubmit(session);
+      doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
+      DebateTurnSubmitRequest req = submitRequest(true);
+      ReflectionTestUtils.setField(req, "content", "FE가 보낸 전사");
+
+      debateService.submitUserTurn(USER_ID, SESSION_ID, req);
+
+      verify(transactionService).replaceUserTurn(
+          eq(session), eq(DebateRound.OPENING), any(), eq("FE가 보낸 전사"));
+      verify(evaluationService).evaluateAsync(
+          any(), any(), any(), eq("FE가 보낸 전사"), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("content도 pending_stt도 없으면(STT 미도착) STT_NOT_READY로 거부하고 아무것도 저장하지 않는다")
+    void rejectsWhenSttNotReady() {
+      DebateSession session = sessionWithMode(DebateMode.PRACTICE); // pendingStt 미설정(null)
+      when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
+      when(stateMachine.isWaitingForUser(session)).thenReturn(true);
+
+      assertThatThrownBy(() ->
+          debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(false)))
+          .isInstanceOf(CustomException.class);
+
+      verify(transactionService, never()).replaceUserTurn(any(), any(), any(), any());
+      verify(evaluationService, never()).evaluateAsync(
+          any(), any(), any(), any(), any(), any(), any(), any());
     }
   }
 
