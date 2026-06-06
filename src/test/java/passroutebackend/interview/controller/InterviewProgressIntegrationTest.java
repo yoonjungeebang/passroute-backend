@@ -201,7 +201,7 @@ class InterviewProgressIntegrationTest {
     void withFollowUp() throws Exception {
       // AI 서버가 꼬리질문 반환하도록 mock 설정
       Mockito.when(aiServerClient.requestFollowUp(any()))
-          .thenReturn(new FollowUpResponse(true, "구체적인 경험을 말씀해주세요.", null));
+          .thenReturn(new FollowUpResponse(true, "구체적인 경험을 말씀해주세요.", null, null));
 
       // q2 (스킵 키워드 없는 질문) 답변
       String body = answerBody(q2.getId(), "캡슐화, 상속, 다형성, 추상화가 있습니다.");

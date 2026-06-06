@@ -43,16 +43,21 @@ public class InterviewQuestion {
   @Column(nullable = false)
   private boolean followUp;
 
+  // AI 서버 TTS 음성 URL (ONE_ON_ONE만 값 존재, 미지원/합성 실패 시 null)
+  @Column(nullable = true, length = 512)
+  private String audioUrl;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 
   @Builder
   public InterviewQuestion(InterviewSession session, int setNumber,
-      String questionText, int questionOrder, boolean followUp) {
+      String questionText, int questionOrder, boolean followUp, String audioUrl) {
     this.session = session;
     this.setNumber = setNumber;
     this.questionText = questionText;
     this.questionOrder = questionOrder;
     this.followUp = followUp;
+    this.audioUrl = audioUrl;
   }
 }

@@ -75,11 +75,13 @@ public class FollowUpTransactionService {
         room.getInterviewType().getValue(),
         room.getDifficulty().getValue(),
         conversation,
-        room.getUserId()
+        room.getUserId(),
+        room.getAiInterviewer()
     );
   }
 
-  public InterviewQuestion saveFollowUpQuestion(Long questionId, String followUpQuestionText) {
+  public InterviewQuestion saveFollowUpQuestion(Long questionId, String followUpQuestionText,
+      String audioUrl) {
     InterviewQuestion question = questionRepository.findById(questionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.QUESTION_NOT_FOUND));
 
@@ -96,6 +98,7 @@ public class FollowUpTransactionService {
         .questionText(followUpQuestionText)
         .questionOrder(nextOrder)
         .followUp(true)
+        .audioUrl(audioUrl)
         .build();
     return questionRepository.save(followUpQuestion);
   }

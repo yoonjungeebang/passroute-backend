@@ -32,7 +32,7 @@ public class InterviewSessionTxService {
 
     List<QuestionDto> questions = questionRepository.findBySessionOrderByQuestionOrderAsc(session)
         .stream()
-        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder()))
+        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder(), q.getAudioUrl()))
         .toList();
 
     return new SessionQuestionListResponse(questions);
