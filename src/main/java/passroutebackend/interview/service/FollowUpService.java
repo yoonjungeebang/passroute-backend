@@ -29,7 +29,11 @@ public class FollowUpService {
 
     FollowUpResponse aiResponse = aiServerClient.requestFollowUp(followUpRequest);
 
-    if (!aiResponse.isHasFollowUp()) {
+    // AI가 has_follow_up=true로 응답해도 질문 본문이 비어 오면(NOT NULL 위배 방지)
+    // 예외 대신 꼬리질문 없음으로 우아하게 처리한다.
+    if (!aiResponse.isHasFollowUp()
+        || aiResponse.getFollowUpQuestion() == null
+        || aiResponse.getFollowUpQuestion().isBlank()) {
       return AnswerSubmitResponse.noFollowUp();
     }
 
