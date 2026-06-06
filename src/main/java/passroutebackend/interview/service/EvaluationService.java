@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.interview.client.AiServerClient;
@@ -28,44 +29,62 @@ public class EvaluationService {
   private final EvaluationTransactionService evaluationTransactionService;
   private final ObjectMapper objectMapper;
 
+  // AI 평가 호출 실패(타임아웃/500/null) 시 재시도 횟수. percentage가 채워져야 리포트에 포함됨.
+  @Value("${evaluation.max-attempts:3}")
+  private int maxAttempts;
+
+  private static final long RETRY_BACKOFF_MS = 2000L;
+
   @Async("evaluationExecutor")
   public void evaluateAsync(Long questionId, VoiceData voiceData) {
-    try {
-      // 트랜잭션 안에서 Lazy 연관관계 탐색 후 단순 데이터로 반환
-      EvaluationContext ctx = evaluationTransactionService.loadContext(questionId);
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // 트랜잭션 안에서 Lazy 연관관계 탐색 후 단순 데이터로 반환
+        EvaluationContext ctx = evaluationTransactionService.loadContext(questionId);
 
-      QuestionEvaluationResponse evalResponse = aiServerClient.evaluateQuestion(
-          new QuestionEvaluationRequest(
-              ctx.getJobPosition(),
-              ctx.getCompanyName(),
-              List.of(),
-              ctx.getInterviewType(),
-              ctx.getQuestionText(),
-              ctx.getAnswerText()
-          )
-      );
+        QuestionEvaluationResponse evalResponse = aiServerClient.evaluateQuestion(
+            new QuestionEvaluationRequest(
+                ctx.getJobPosition(),
+                ctx.getCompanyName(),
+                List.of(),
+                ctx.getInterviewType(),
+                ctx.getQuestionText(),
+                ctx.getAnswerText()
+            )
+        );
 
-      StarEvaluationResponse starResponse = aiServerClient.evaluateStar(
-          new StarEvaluationRequest(ctx.getQuestionText(), ctx.getAnswerText())
-      );
+        StarEvaluationResponse starResponse = aiServerClient.evaluateStar(
+            new StarEvaluationRequest(ctx.getQuestionText(), ctx.getAnswerText())
+        );
 
-      if (evalResponse == null || starResponse == null) {
-        log.warn("AI 서버 응답이 null, questionId={}", questionId);
-        return;
+        if (evalResponse == null || starResponse == null) {
+          throw new IllegalStateException("AI 평가 응답이 null");
+        }
+
+        LlmScores llmScores = evalResponse.getLlmScores();
+        double voicePenalty = calculateVoicePenalty(voiceData);
+        double concisenessFinal = calculateConcisenessFinal(
+            llmScores != null ? llmScores.getConciseness() : null, voicePenalty);
+        double percentage = calculatePercentage(llmScores, concisenessFinal, ctx.getInterviewType());
+
+        String llmScoresJson = toJson(evalResponse.getLlmScores());
+        Integer starScore = starResponse.getStarEvaluation() != null ? starResponse.getStarEvaluation().getStarScore() : null;
+        evaluationTransactionService.saveResult(ctx.getAnswerId(), percentage, starScore, llmScoresJson, concisenessFinal);
+        return; // 성공
+
+      } catch (Exception e) {
+        if (attempt >= maxAttempts) {
+          log.warn("평가 처리 실패(최종 {}회), questionId={}", attempt, questionId, e);
+          return;
+        }
+        log.warn("평가 처리 실패, 재시도 {}/{}, questionId={}: {}", attempt, maxAttempts, questionId, e.getMessage());
+        try {
+          Thread.sleep(RETRY_BACKOFF_MS);
+        } catch (InterruptedException ie) {
+          Thread.currentThread().interrupt();
+          return;
+        }
       }
-
-      LlmScores llmScores = evalResponse.getLlmScores();
-      double voicePenalty = calculateVoicePenalty(voiceData);
-      double concisenessFinal = calculateConcisenessFinal(
-          llmScores != null ? llmScores.getConciseness() : null, voicePenalty);
-      double percentage = calculatePercentage(llmScores, concisenessFinal, ctx.getInterviewType());
-
-      String llmScoresJson = toJson(evalResponse.getLlmScores());
-      Integer starScore = starResponse.getStarEvaluation() != null ? starResponse.getStarEvaluation().getStarScore() : null;
-      evaluationTransactionService.saveResult(ctx.getAnswerId(), percentage, starScore, llmScoresJson, concisenessFinal);
-
-    } catch (Exception e) {
-      log.warn("평가 처리 실패, questionId={}", questionId, e);
     }
   }
 
