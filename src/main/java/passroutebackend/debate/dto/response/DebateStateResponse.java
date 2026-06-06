@@ -3,6 +3,7 @@ package passroutebackend.debate.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import passroutebackend.debate.entity.DebateBranchChoice;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateState;
 
@@ -22,6 +23,11 @@ public class DebateStateResponse {
   private int prepSeconds;
   private DebateState currentState;
   private boolean isWaitingForUser;
+
+  // 사용자 분기 선택(버튼) 대기 여부 + 가능한 선택지 (REBUTTAL_1_DECISION에서만 채워짐).
+  private boolean awaitingDecision;
+  private List<DebateBranchChoice> availableChoices;
+
   private Long version;
   private List<DebateTurnSummary> latestTurns;
 }

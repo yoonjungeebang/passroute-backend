@@ -24,6 +24,8 @@ import passroutebackend.interview.dto.debate.DebateTurnEvalRequest;
 import passroutebackend.interview.dto.debate.DebateTurnEvalResponse;
 import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
 import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
+import passroutebackend.interview.dto.debate.InterviewerCueRequest;
+import passroutebackend.interview.dto.debate.InterviewerCueResponse;
 import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
 import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
 import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
@@ -171,6 +173,11 @@ public class AiServerClient {
   public InterviewerClosingResponse generateInterviewerClosing(InterviewerClosingRequest request) {
     return callDebateApi("/debate/interviewer-closing", request, InterviewerClosingResponse.class,
         "면접관 마무리 생성");
+  }
+
+  public InterviewerCueResponse generateInterviewerCue(InterviewerCueRequest request) {
+    return callDebateApi("/debate/interviewer-cue", request, InterviewerCueResponse.class,
+        "면접관 진행 cue 생성");
   }
 
   public DebateTurnEvalResponse evaluateDebateTurn(DebateTurnEvalRequest request) {

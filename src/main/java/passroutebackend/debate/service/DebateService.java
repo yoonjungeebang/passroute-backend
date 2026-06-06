@@ -2,6 +2,7 @@ package passroutebackend.debate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
@@ -16,6 +17,7 @@ import passroutebackend.debate.dto.response.DebateTurnSummary;
 import com.fasterxml.jackson.core.type.TypeReference;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateBranchChoice;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
@@ -41,6 +43,9 @@ import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
 import passroutebackend.interview.dto.debate.DebateTurnItem;
 import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
 import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
+import passroutebackend.interview.dto.debate.InterviewerCueRequest;
+import passroutebackend.interview.dto.debate.InterviewerCueResponse;
+import passroutebackend.interview.dto.debate.InterviewerCueType;
 import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
 import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
 import passroutebackend.interview.dto.debate.PersonaPayload;
@@ -65,6 +70,12 @@ public class DebateService {
   private final DebateStateMachine stateMachine;
   private final DebateEvaluationService evaluationService;
   private final AiServerClient aiServerClient;
+  /**
+   * 자기 자신 프록시. @Async 자가호출은 프록시를 안 거쳐 동기 실행되므로,
+   * 컨트롤러 스레드에서 비동기 작업을 띄울 때는 이 프록시를 통해 호출한다.
+   * ObjectProvider는 지연 조회라 자기 참조 순환 주입 문제가 없다.
+   */
+  private final ObjectProvider<DebateService> selfProvider;
 
   // ── 토픽 / 페르소나 목록 ───────────────────────────────────────────────────
 
@@ -208,7 +219,7 @@ public class DebateService {
     DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
     stateMachine.onSessionStarted(session);
     transactionService.saveSession(session);
-    generateInterviewerOpeningAsync(sessionId, userId);
+    selfProvider.getObject().generateInterviewerOpeningAsync(sessionId, userId);
   }
 
   @Async("debateExecutor")
@@ -248,12 +259,17 @@ public class DebateService {
     List<DebateTurnSummary> latestTurns = transactionService.findTurnsBySession(session).stream()
         .map(turn -> toTurnSummary(turn, exposeEval))
         .toList();
+    boolean awaitingDecision = stateMachine.isWaitingForDecision(session);
     return DebateStateResponse.builder()
         .sessionId(session.getId())
         .mode(session.getMode())
         .prepSeconds(session.getPrepSeconds())
         .currentState(session.getCurrentState())
         .isWaitingForUser(stateMachine.isWaitingForUser(session))
+        .awaitingDecision(awaitingDecision)
+        .availableChoices(awaitingDecision
+            ? List.of(DebateBranchChoice.REBUT_AGAIN, DebateBranchChoice.FINISH)
+            : List.of())
         .version(session.getVersion())
         .latestTurns(latestTurns)
         .build();
@@ -328,8 +344,20 @@ public class DebateService {
     stateMachine.onUserTurnSubmitted(session);
     transactionService.saveSession(session);
 
-    // AI 경쟁자 답변 생성
-    generateAiCompetitorTurnAsync(sessionId, userId, round);
+    // AI 경쟁자 답변 생성 (프록시 경유 → 실제 비동기)
+    selfProvider.getObject().generateAiCompetitorTurnAsync(sessionId, userId, round);
+  }
+
+  // ── 분기 선택 (반박 한 번 더 / 토론 마무리) ──────────────────────────────────
+
+  public void chooseBranch(Long userId, Long sessionId, DebateBranchChoice choice) {
+    DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
+    // 가드: REBUTTAL_1_DECISION이 아니면 INVALID_DEBATE_STATE, choice null이면 INVALID_INPUT
+    stateMachine.onBranchChosen(session, choice);
+    transactionService.saveSession(session);
+    // 선택 직후 면접관 cue 생성 (REBUTTAL_EXTRA 또는 CLOSING_GUIDE) → 이후 사용자 턴으로 전이
+    // 프록시 경유 → 컨트롤러 스레드를 막지 않고 실제 비동기로 실행
+    selfProvider.getObject().generateInterviewerCueAsync(sessionId, userId);
   }
 
   @Async("debateExecutor")
@@ -394,10 +422,9 @@ public class DebateService {
       stateMachine.onAiTurnCompleted(session);
       transactionService.saveSession(session);
 
-      // CLOSING_AI 완료 후 자동으로 INTERVIEWER_CLOSING 생성 트리거
-      if (session.getCurrentState() == DebateState.INTERVIEWER_CLOSING) {
-        generateInterviewerClosingAsync(sessionId, userId);
-      }
+      // AI 경쟁자 발화 후 진입한 상태에 따라 다음 면접관 단계(cue/클로징)를 이어서 트리거.
+      // (REBUTTAL_1_DECISION이면 사용자 선택 대기라 아무것도 트리거하지 않음)
+      triggerNextInterviewerStep(session, sessionId, userId);
 
     } catch (Exception e) {
       log.warn("AI 경쟁자 답변 생성 실패: sessionId={}, round={}, error={}",
@@ -424,6 +451,54 @@ public class DebateService {
     } catch (Exception e) {
       log.warn("면접관 마무리 생성 실패: sessionId={}, error={}", sessionId, e.getMessage());
     }
+  }
+
+  /**
+   * 면접관 진행 멘트(cue) 생성. cue 상태(INTERVIEWER_*_CUE)에서 호출.
+   * 현재 상태 → cue_type 매핑하여 AI 호출 → AI_INTERVIEWER MODERATION 턴 저장 → 다음 사용자 턴으로 전이.
+   */
+  @Async("debateExecutor")
+  public void generateInterviewerCueAsync(Long sessionId, Long userId) {
+    try {
+      DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
+      InterviewerCueType cueType = toCueType(session.getCurrentState());
+
+      InterviewerCueResponse response = aiServerClient.generateInterviewerCue(
+          InterviewerCueRequest.builder().cueType(cueType).build());
+
+      transactionService.saveTurn(session, SpeakerType.AI_INTERVIEWER, null,
+          TurnStance.NEUTRAL, DebateRound.MODERATION, response.getContent(), response.getAudioUrl());
+      stateMachine.onAiTurnCompleted(session); // *_CUE → 다음 *_USER
+      transactionService.saveSession(session);
+
+    } catch (Exception e) {
+      log.warn("면접관 cue 생성 실패: sessionId={}, error={}", sessionId, e.getMessage());
+    }
+  }
+
+  /**
+   * AI 발화/cue 완료 후 진입 상태에 맞는 다음 면접관 단계를 트리거. (사용자 대기 상태면 트리거 없음)
+   *
+   * <p>호출자({@code generate*Async})가 이미 debateExecutor 백그라운드 스레드에서 돌고 있으므로,
+   * 여기서는 프록시를 거치지 않는 직접 호출(동기 연속 실행)이 의도된 동작이다.
+   * 라운드 순서 보장이 필요하고 톰캣 스레드도 아니라 별도 비동기 디스패치가 불필요하다.
+   */
+  private void triggerNextInterviewerStep(DebateSession session, Long sessionId, Long userId) {
+    switch (session.getCurrentState()) {
+      case INTERVIEWER_REBUTTAL_CUE, INTERVIEWER_REBUTTAL2_CUE, INTERVIEWER_CLOSING_CUE ->
+          generateInterviewerCueAsync(sessionId, userId);
+      case INTERVIEWER_CLOSING -> generateInterviewerClosingAsync(sessionId, userId);
+      default -> { /* REBUTTAL_1_DECISION 등: 사용자 입력/선택 대기 → 트리거 없음 */ }
+    }
+  }
+
+  private InterviewerCueType toCueType(DebateState state) {
+    return switch (state) {
+      case INTERVIEWER_REBUTTAL_CUE -> InterviewerCueType.REBUTTAL_START;
+      case INTERVIEWER_REBUTTAL2_CUE -> InterviewerCueType.REBUTTAL_EXTRA;
+      case INTERVIEWER_CLOSING_CUE -> InterviewerCueType.CLOSING_GUIDE;
+      default -> throw CustomException.of(ErrorCode.INVALID_DEBATE_STATE);
+    };
   }
 
   // ── 헬퍼 ──────────────────────────────────────────────────────────────────

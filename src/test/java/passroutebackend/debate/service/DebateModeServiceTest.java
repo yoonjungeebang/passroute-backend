@@ -8,12 +8,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateBranchChoice;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
@@ -62,6 +64,7 @@ class DebateModeServiceTest {
   @Mock private DebateStateMachine stateMachine;
   @Mock private DebateEvaluationService evaluationService;
   @Mock private AiServerClient aiServerClient;
+  @Mock private ObjectProvider<DebateService> selfProvider;
 
   @InjectMocks @Spy private DebateService debateService;
 
@@ -193,6 +196,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
 
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(true));
@@ -209,6 +213,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.REAL);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
 
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(false));
@@ -223,6 +228,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("AI가 DB에 늦게 써준 값");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
       DebateTurnSubmitRequest req = submitRequest(true);
       ReflectionTestUtils.setField(req, "content", "FE가 보낸 전사");
@@ -249,6 +255,28 @@ class DebateModeServiceTest {
       verify(transactionService, never()).replaceUserTurn(any(), any(), any(), any());
       verify(evaluationService, never()).evaluateAsync(
           any(), any(), any(), any(), any(), any(), any(), any());
+    }
+  }
+
+  // ── 분기 선택 wiring ────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("chooseBranch - 분기 선택 위임/트리거")
+  class ChooseBranch {
+
+    @Test
+    @DisplayName("상태머신에 선택 위임 후 세션 저장 + 면접관 cue 생성을 트리거한다")
+    void delegatesAndTriggersCue() {
+      DebateSession session = sessionWithMode(DebateMode.PRACTICE);
+      when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
+      doNothing().when(debateService).generateInterviewerCueAsync(anyLong(), anyLong());
+
+      debateService.chooseBranch(USER_ID, SESSION_ID, DebateBranchChoice.FINISH);
+
+      verify(stateMachine).onBranchChosen(session, DebateBranchChoice.FINISH);
+      verify(transactionService).saveSession(session);
+      verify(debateService).generateInterviewerCueAsync(SESSION_ID, USER_ID);
     }
   }
 
