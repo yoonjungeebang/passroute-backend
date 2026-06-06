@@ -2,6 +2,7 @@ package passroutebackend.debate.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
@@ -69,6 +70,12 @@ public class DebateService {
   private final DebateStateMachine stateMachine;
   private final DebateEvaluationService evaluationService;
   private final AiServerClient aiServerClient;
+  /**
+   * 자기 자신 프록시. @Async 자가호출은 프록시를 안 거쳐 동기 실행되므로,
+   * 컨트롤러 스레드에서 비동기 작업을 띄울 때는 이 프록시를 통해 호출한다.
+   * ObjectProvider는 지연 조회라 자기 참조 순환 주입 문제가 없다.
+   */
+  private final ObjectProvider<DebateService> selfProvider;
 
   // ── 토픽 / 페르소나 목록 ───────────────────────────────────────────────────
 
@@ -212,7 +219,7 @@ public class DebateService {
     DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
     stateMachine.onSessionStarted(session);
     transactionService.saveSession(session);
-    generateInterviewerOpeningAsync(sessionId, userId);
+    selfProvider.getObject().generateInterviewerOpeningAsync(sessionId, userId);
   }
 
   @Async("debateExecutor")
@@ -337,8 +344,8 @@ public class DebateService {
     stateMachine.onUserTurnSubmitted(session);
     transactionService.saveSession(session);
 
-    // AI 경쟁자 답변 생성
-    generateAiCompetitorTurnAsync(sessionId, userId, round);
+    // AI 경쟁자 답변 생성 (프록시 경유 → 실제 비동기)
+    selfProvider.getObject().generateAiCompetitorTurnAsync(sessionId, userId, round);
   }
 
   // ── 분기 선택 (반박 한 번 더 / 토론 마무리) ──────────────────────────────────
@@ -349,7 +356,8 @@ public class DebateService {
     stateMachine.onBranchChosen(session, choice);
     transactionService.saveSession(session);
     // 선택 직후 면접관 cue 생성 (REBUTTAL_EXTRA 또는 CLOSING_GUIDE) → 이후 사용자 턴으로 전이
-    generateInterviewerCueAsync(sessionId, userId);
+    // 프록시 경유 → 컨트롤러 스레드를 막지 않고 실제 비동기로 실행
+    selfProvider.getObject().generateInterviewerCueAsync(sessionId, userId);
   }
 
   @Async("debateExecutor")
@@ -468,7 +476,13 @@ public class DebateService {
     }
   }
 
-  /** AI 발화/cue 완료 후 진입 상태에 맞는 다음 면접관 단계를 트리거. (사용자 대기 상태면 트리거 없음) */
+  /**
+   * AI 발화/cue 완료 후 진입 상태에 맞는 다음 면접관 단계를 트리거. (사용자 대기 상태면 트리거 없음)
+   *
+   * <p>호출자({@code generate*Async})가 이미 debateExecutor 백그라운드 스레드에서 돌고 있으므로,
+   * 여기서는 프록시를 거치지 않는 직접 호출(동기 연속 실행)이 의도된 동작이다.
+   * 라운드 순서 보장이 필요하고 톰캣 스레드도 아니라 별도 비동기 디스패치가 불필요하다.
+   */
   private void triggerNextInterviewerStep(DebateSession session, Long sessionId, Long userId) {
     switch (session.getCurrentState()) {
       case INTERVIEWER_REBUTTAL_CUE, INTERVIEWER_REBUTTAL2_CUE, INTERVIEWER_CLOSING_CUE ->

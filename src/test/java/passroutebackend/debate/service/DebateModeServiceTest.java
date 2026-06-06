@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
@@ -63,6 +64,7 @@ class DebateModeServiceTest {
   @Mock private DebateStateMachine stateMachine;
   @Mock private DebateEvaluationService evaluationService;
   @Mock private AiServerClient aiServerClient;
+  @Mock private ObjectProvider<DebateService> selfProvider;
 
   @InjectMocks @Spy private DebateService debateService;
 
@@ -194,6 +196,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
 
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(true));
@@ -210,6 +213,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.REAL);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
 
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(false));
@@ -224,6 +228,7 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("AI가 DB에 늦게 써준 값");
       stubForSubmit(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
       DebateTurnSubmitRequest req = submitRequest(true);
       ReflectionTestUtils.setField(req, "content", "FE가 보낸 전사");
@@ -264,6 +269,7 @@ class DebateModeServiceTest {
     void delegatesAndTriggersCue() {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
+      when(selfProvider.getObject()).thenReturn(debateService);
       doNothing().when(debateService).generateInterviewerCueAsync(anyLong(), anyLong());
 
       debateService.chooseBranch(USER_ID, SESSION_ID, DebateBranchChoice.FINISH);
