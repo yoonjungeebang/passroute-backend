@@ -83,6 +83,19 @@ public class InterviewSessionTxService {
         .orElse(null);
   }
 
+  @Transactional
+  public void saveWorstClip(Long sessionId, Long userId, Long questionId, String videoUrl, Double clipScore) {
+    findAndValidateOwnership(sessionId, userId);
+    InterviewAnswer answer = answerRepository.findByQuestion_Id(questionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.ANSWER_NOT_FOUND));
+    answer.updateVideoClip(videoUrl, clipScore);
+  }
+
+  @Transactional(readOnly = true)
+  public void validateSessionOwnership(Long sessionId, Long userId) {
+    findAndValidateOwnership(sessionId, userId);
+  }
+
   private InterviewSession findAndValidateOwnership(Long sessionId, Long userId) {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));

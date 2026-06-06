@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
+import passroutebackend.interview.dto.ClipUploadUrlResponse;
+import passroutebackend.interview.dto.SaveWorstClipRequest;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.service.InterviewSessionService;
@@ -83,5 +86,34 @@ public class InterviewSessionController {
       @AuthenticationPrincipal Long userId,
       @PathVariable Long sessionId) {
     return ApiResponse.success(sessionService.getWorstClipVideoUrl(sessionId, userId));
+  }
+
+  @Operation(summary = "클립 업로드용 Presigned URL 발급", description = "S3에 영상을 직접 PUT 업로드할 수 있는 presigned URL과 업로드 완료 후 접근할 fileUrl을 반환합니다.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Presigned URL 발급 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
+  @GetMapping("/{sessionId}/clip-upload-url")
+  public ApiResponse<ClipUploadUrlResponse> getClipUploadUrl(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId,
+      @RequestParam Long questionId) {
+    return ApiResponse.success(sessionService.getClipUploadUrl(sessionId, userId, questionId));
+  }
+
+  @Operation(summary = "최악 클립 저장", description = "업로드된 클립의 S3 URL과 점수를 해당 답변에 저장합니다.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "저장 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션 또는 답변을 찾을 수 없음")
+  })
+  @PostMapping("/{sessionId}/worst-clip")
+  public ApiResponse<Void> saveWorstClip(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId,
+      @Valid @RequestBody SaveWorstClipRequest request) {
+    sessionService.saveWorstClip(sessionId, userId, request);
+    return ApiResponse.success(null);
   }
 }

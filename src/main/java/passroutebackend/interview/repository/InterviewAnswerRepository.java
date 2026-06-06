@@ -15,4 +15,6 @@ public interface InterviewAnswerRepository extends JpaRepository<InterviewAnswer
   List<InterviewAnswer> findByQuestionIn(List<InterviewQuestion> questions);
 
   Optional<InterviewAnswer> findFirstByQuestionSessionAndClipScoreIsNotNullOrderByClipScoreAsc(InterviewSession session);
+
+  Optional<InterviewAnswer> findByQuestion_Id(Long questionId);
 }
