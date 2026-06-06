@@ -3,6 +3,7 @@ package passroutebackend.interview.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,11 +125,18 @@ public class ReportTransactionService {
     if (reportRepository.findBySession(session).isPresent()) {
       return false;
     }
-    reportRepository.save(InterviewReport.builder()
-        .session(session)
-        .reportStatus(ReportStatus.GENERATING)
-        .build());
-    return true;
+    try {
+      // saveAndFlush로 즉시 insert → 동시 트리거 시 unique(session_id) 위반을 여기서 잡는다.
+      reportRepository.saveAndFlush(InterviewReport.builder()
+          .session(session)
+          .reportStatus(ReportStatus.GENERATING)
+          .build());
+      return true;
+    } catch (DataIntegrityViolationException e) {
+      // 다른 스레드가 거의 동시에 먼저 생성함 → 중복 생성 스킵(우아하게 처리)
+      log.info("리포트 동시 생성 시도 감지, 중복 생성 스킵 sessionId={}", sessionId);
+      return false;
+    }
   }
 
   @Transactional
