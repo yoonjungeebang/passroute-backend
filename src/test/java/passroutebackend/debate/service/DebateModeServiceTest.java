@@ -14,6 +14,7 @@ import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.entity.DebateBranchChoice;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateRound;
 import passroutebackend.debate.entity.DebateSession;
@@ -249,6 +250,27 @@ class DebateModeServiceTest {
       verify(transactionService, never()).replaceUserTurn(any(), any(), any(), any());
       verify(evaluationService, never()).evaluateAsync(
           any(), any(), any(), any(), any(), any(), any(), any());
+    }
+  }
+
+  // ── 분기 선택 wiring ────────────────────────────────────────────────────────
+
+  @Nested
+  @DisplayName("chooseBranch - 분기 선택 위임/트리거")
+  class ChooseBranch {
+
+    @Test
+    @DisplayName("상태머신에 선택 위임 후 세션 저장 + 면접관 cue 생성을 트리거한다")
+    void delegatesAndTriggersCue() {
+      DebateSession session = sessionWithMode(DebateMode.PRACTICE);
+      when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
+      doNothing().when(debateService).generateInterviewerCueAsync(anyLong(), anyLong());
+
+      debateService.chooseBranch(USER_ID, SESSION_ID, DebateBranchChoice.FINISH);
+
+      verify(stateMachine).onBranchChosen(session, DebateBranchChoice.FINISH);
+      verify(transactionService).saveSession(session);
+      verify(debateService).generateInterviewerCueAsync(SESSION_ID, USER_ID);
     }
   }
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import passroutebackend.debate.dto.request.DebateBranchRequest;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTopicGenerateRequest;
 import passroutebackend.debate.dto.request.DebateTopicSuggestRequest;
@@ -103,6 +104,17 @@ public class DebateController {
     debateService.submitUserTurn(userId, sessionId, request);
     return ResponseEntity.status(HttpStatus.ACCEPTED)
         .body(ApiResponse.accepted("발화가 제출되었습니다."));
+  }
+
+  @Operation(summary = "토론 분기 선택 (반박 한 번 더 / 토론 마무리)")
+  @PostMapping("/{sessionId}/branch")
+  public ResponseEntity<ApiResponse<Void>> chooseBranch(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId,
+      @Valid @RequestBody DebateBranchRequest request) {
+    debateService.chooseBranch(userId, sessionId, request.getChoice());
+    return ResponseEntity.status(HttpStatus.ACCEPTED)
+        .body(ApiResponse.accepted("선택이 반영되었습니다."));
   }
 
   @Operation(summary = "토론 종료 + 리포트 비동기 생성")
