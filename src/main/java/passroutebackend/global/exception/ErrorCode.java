@@ -55,6 +55,7 @@ public enum ErrorCode {
   REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "I009", "리포트를 찾을 수 없습니다."),
   REPORT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "I010", "리포트 생성에 실패했습니다."),
   SESSION_NOT_ENDED(HttpStatus.BAD_REQUEST, "I011", "아직 종료되지 않은 면접 세션입니다."),
+  REPORT_NO_ANSWERS(HttpStatus.UNPROCESSABLE_ENTITY, "I013", "답변 기록이 없어 리포트를 생성할 수 없습니다."),
 
   // Schedule
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),
