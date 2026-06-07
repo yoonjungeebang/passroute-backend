@@ -32,6 +32,7 @@ public class InterviewSessionTxService {
 
     List<QuestionDto> questions = questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session)
         .stream()
+        .filter(q -> !q.isFollowUp())
         .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder(), q.getAudioUrl()))
         .toList();
 

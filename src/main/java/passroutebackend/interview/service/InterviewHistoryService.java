@@ -24,6 +24,7 @@ import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -123,7 +124,11 @@ public class InterviewHistoryService {
                                          Map<Long, List<InterviewQuestion>> questionsBySessionId,
                                          Map<Long, InterviewAnswer> answerByQuestionId) {
         List<InterviewQuestion> questions = questionsBySessionId
-                .getOrDefault(session.getId(), List.of());
+                .getOrDefault(session.getId(), List.of())
+                .stream()
+                .sorted(Comparator.comparingInt(InterviewQuestion::getSetNumber)
+                        .thenComparingInt(InterviewQuestion::getQuestionOrder))
+                .toList();
 
         List<QuestionAnswer> questionAnswers = questions.stream()
                 .map(q -> {
