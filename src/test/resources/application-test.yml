@@ -38,6 +38,7 @@ cloud:
       static: ap-northeast-2
     s3:
       bucket: dummy
+      clip-bucket: dummy
 
 jwt:
   secret: cGFzc3JvdXRlLWJhY2tlbmQtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=
