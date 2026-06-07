@@ -17,4 +17,6 @@ public class SaveWorstClipRequest {
 
   @NotNull
   private final Double clipScore;
+
+  private final String clipReason;
 }

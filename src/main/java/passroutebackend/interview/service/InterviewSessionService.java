@@ -6,6 +6,7 @@ import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.AnswerSubmitResponse;
 import passroutebackend.interview.dto.ClipUploadUrlResponse;
 import passroutebackend.interview.dto.SaveWorstClipRequest;
+import passroutebackend.interview.dto.WorstClipResponse;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 
@@ -54,7 +55,7 @@ public class InterviewSessionService {
     reportService.generateReportAsync(sessionId);
   }
 
-  public String getWorstClipVideoUrl(Long sessionId, Long userId) {
+  public WorstClipResponse getWorstClipVideoUrl(Long sessionId, Long userId) {
     return txService.getWorstClipVideoUrl(sessionId, userId);
   }
 
@@ -64,6 +65,6 @@ public class InterviewSessionService {
   }
 
   public void saveWorstClip(Long sessionId, Long userId, SaveWorstClipRequest request) {
-    txService.saveWorstClip(sessionId, userId, request.getQuestionId(), request.getVideoUrl(), request.getClipScore());
+    txService.saveWorstClip(sessionId, userId, request.getQuestionId(), request.getVideoUrl(), request.getClipScore(), request.getClipReason());
   }
 }

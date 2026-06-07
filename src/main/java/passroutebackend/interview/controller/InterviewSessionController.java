@@ -19,6 +19,7 @@ import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.ClipUploadUrlResponse;
 import passroutebackend.interview.dto.SaveWorstClipRequest;
+import passroutebackend.interview.dto.WorstClipResponse;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.service.InterviewSessionService;
@@ -75,14 +76,14 @@ public class InterviewSessionController {
         .body(ApiResponse.accepted("리포트를 생성 중입니다."));
   }
 
-  @Operation(summary = "최저 점수 클립 URL 조회", description = "세션에서 clip_score가 가장 낮은 답변의 S3 영상 URL을 반환합니다.")
+  @Operation(summary = "최저 점수 클립 조회", description = "세션에서 clip_score가 가장 낮은 답변의 S3 영상 URL과 선택 사유를 반환합니다.")
   @ApiResponses({
-      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 반환 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
   })
   @GetMapping("/{sessionId}/worst-clip")
-  public ApiResponse<String> getWorstClip(
+  public ApiResponse<WorstClipResponse> getWorstClip(
       @AuthenticationPrincipal Long userId,
       @PathVariable Long sessionId) {
     return ApiResponse.success(sessionService.getWorstClipVideoUrl(sessionId, userId));
