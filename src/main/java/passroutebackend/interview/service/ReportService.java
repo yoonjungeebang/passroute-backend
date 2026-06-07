@@ -165,6 +165,14 @@ public class ReportService {
         return;
       }
 
+      // 꼬리질문 여부 주입: AI가 echo한 question_index를 ctx의 followUp 플래그와 매칭
+      Map<Integer, Boolean> followUpByIndex = ctx.getQuestionAnswers().stream()
+          .collect(Collectors.toMap(QuestionAnswerData::getQuestionIndex, QuestionAnswerData::isFollowUp));
+      if (reportResponse.getQuestionFeedback() != null) {
+        reportResponse.getQuestionFeedback().forEach(qf ->
+            qf.setFollowUp(followUpByIndex.getOrDefault(qf.getQuestionIndex(), false)));
+      }
+
       List<VoiceAnalysis> voiceList = reportTransactionService.loadVoiceAnalysis(sessionId);
       List<FaceAnalysis> faceList = reportTransactionService.loadFaceAnalysis(sessionId);
       InterviewSession session = reportTransactionService.loadSession(sessionId);

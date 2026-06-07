@@ -27,6 +27,7 @@ import passroutebackend.interview.repository.InterviewReportRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
 import passroutebackend.interview.repository.VoiceAnalysisRepository;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,11 +59,22 @@ public class ReportTransactionService {
     Map<Long, InterviewAnswer> answerByQuestionId = answers.stream()
         .collect(Collectors.toMap(a -> a.getQuestion().getId(), Function.identity()));
 
+    // 실제 진행 순서 복원: 꼬리질문은 questionOrder가 부모보다 뒤에 매겨지지만(생성 시점 때문),
+    // answeredAt(답변 시각)은 부모 답변 직후이므로 answeredAt 기준 정렬이 실제 순서와 일치한다.
+    List<InterviewQuestion> answeredInOrder = questions.stream()
+        .filter(q -> {
+          InterviewAnswer a = answerByQuestionId.get(q.getId());
+          return a != null && a.getPercentage() != null;
+        })
+        .sorted(Comparator
+            .comparing((InterviewQuestion q) -> answerByQuestionId.get(q.getId()).getAnsweredAt())
+            .thenComparing(q -> answerByQuestionId.get(q.getId()).getId()))
+        .collect(Collectors.toList());
+
     List<QuestionAnswerData> questionAnswers = new java.util.ArrayList<>();
     int index = 1;
-    for (InterviewQuestion q : questions) {
+    for (InterviewQuestion q : answeredInOrder) {
       InterviewAnswer answer = answerByQuestionId.get(q.getId());
-      if (answer == null || answer.getPercentage() == null) continue;
       String llmScoresJson = answer.getLlmScores();
       LlmScores llmScores = parseLlmScores(llmScoresJson);
       questionAnswers.add(new QuestionAnswerData(
@@ -73,7 +85,8 @@ public class ReportTransactionService {
           answer.getStarScore(),
           llmScoresJson,
           llmScores,
-          answer.getConcisenessFinal()
+          answer.getConcisenessFinal(),
+          q.isFollowUp()
       ));
     }
 
