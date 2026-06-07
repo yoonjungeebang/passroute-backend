@@ -17,7 +17,7 @@ public class ClipUploadService {
 
   private final S3Presigner s3Presigner;
 
-  @Value("${cloud.aws.s3.bucket}")
+  @Value("${cloud.aws.s3.clip-bucket}")
   private String bucket;
 
   @Value("${cloud.aws.region.static}")
