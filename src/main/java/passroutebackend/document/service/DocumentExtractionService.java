@@ -13,6 +13,7 @@ import passroutebackend.document.entity.Document.EmbedStatus;
 import passroutebackend.document.entity.DocumentAnalysis;
 import passroutebackend.document.repository.DocumentAnalysisRepository;
 import passroutebackend.document.repository.DocumentRepository;
+import passroutebackend.interview.client.AiServerClient;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -28,6 +29,7 @@ public class DocumentExtractionService {
     private final S3Client s3Client;
     private final DocumentRepository documentRepository;
     private final DocumentAnalysisRepository documentAnalysisRepository;
+    private final AiServerClient aiServerClient;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
@@ -65,6 +67,9 @@ public class DocumentExtractionService {
             // @Transactional 더티체킹으로 자동 반영 (명시적 save 불필요)
             document.updateEmbedStatus(EmbedStatus.DONE);
             log.info("PDF 텍스트 추출 완료 documentId={}, 길이={}", documentId, extractedText.length());
+
+            String docType = document.getType().name().toLowerCase();
+            aiServerClient.storeDocument(document.getUser().getId().toString(), extractedText, docType);
 
         } catch (Exception e) {
             log.error("PDF 텍스트 추출 실패 documentId={}", documentId, e);

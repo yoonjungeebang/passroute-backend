@@ -70,6 +70,7 @@ public class InterviewStartTxService {
         .orElse("");
 
     QuestionGenerateRequest aiRequest = new QuestionGenerateRequest(
+        userId.toString(),
         room.getInterviewType().name(),
         room.getDifficulty().name(),
         room.getCompanyName(),
