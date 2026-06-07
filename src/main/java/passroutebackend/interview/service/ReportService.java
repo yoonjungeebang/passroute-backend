@@ -480,16 +480,16 @@ public class ReportService {
 
   private List<QuestionEvaluationForReport> buildQuestionEvaluations(List<QuestionAnswerData> questionAnswers, String interviewType) {
     return questionAnswers.stream()
-        .map(qa -> new QuestionEvaluationForReport(
-            qa.getQuestionIndex(),
-            interviewType,
-            qa.getQuestionText(),
-            qa.getAnswerText(),
-            qa.getPercentage(),
-            buildQuestionSummary(qa.getLlmScores()),
-            new StarEvalForReport(qa.getStarScore() != null, qa.getStarScore()),
-            null
-        ))
+        .map(qa -> QuestionEvaluationForReport.builder()
+            .questionIndex(qa.getQuestionIndex())
+            .questionType(interviewType)
+            .question(qa.getQuestionText())
+            .answer(qa.getAnswerText())
+            .percentage(qa.getPercentage())
+            .summary(buildQuestionSummary(qa.getLlmScores()))
+            .starEvaluation(new StarEvalForReport(qa.getStarScore() != null, qa.getStarScore()))
+            .voiceFeedback(null)
+            .build())
         .collect(Collectors.toList());
   }
 
