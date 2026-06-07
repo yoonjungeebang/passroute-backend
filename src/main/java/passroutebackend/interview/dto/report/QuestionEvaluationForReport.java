@@ -15,6 +15,11 @@ public class QuestionEvaluationForReport {
   private String questionType;
 
   private String question;
+
+  // STT 답변 원문 (AI가 답변 인용 기반 구체 피드백 생성에 사용). optional, null 허용.
+  @JsonProperty("answer")
+  private String answer;
+
   private Double percentage;
   private QuestionSummary summary;
 

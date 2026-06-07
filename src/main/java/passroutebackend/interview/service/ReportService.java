@@ -484,6 +484,7 @@ public class ReportService {
             qa.getQuestionIndex(),
             interviewType,
             qa.getQuestionText(),
+            qa.getAnswerText(),
             qa.getPercentage(),
             buildQuestionSummary(qa.getLlmScores()),
             new StarEvalForReport(qa.getStarScore() != null, qa.getStarScore()),
