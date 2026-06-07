@@ -105,6 +105,20 @@ public class DebateStateMachine {
   }
 
   /**
+   * 면접관 오프닝 생성 실패 시 호출. INTERVIEWER_OPENING → OPENING_USER.
+   * 오프닝을 생략하고 사용자 차례로 진행시켜 세션이 INTERVIEWER_OPENING에 갇히지 않게 한다.
+   * 이미 다른 상태면(중복 호출/경쟁) 아무것도 하지 않는다(멱등).
+   */
+  public boolean onInterviewerOpeningFailed(DebateSession session) {
+    requireSession(session);
+    if (session.getCurrentState() == DebateState.INTERVIEWER_OPENING) {
+      session.transitionTo(DebateState.OPENING_USER);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * 현재 사용자 턴(발화) 대기 여부.
    * 컨트롤러의 POST /turn 가드, GET /state 응답 계산용.
    *

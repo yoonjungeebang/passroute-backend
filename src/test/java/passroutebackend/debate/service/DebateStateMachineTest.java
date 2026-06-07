@@ -191,6 +191,40 @@ class DebateStateMachineTest {
         .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
   }
 
+  // ── 5-1. 오프닝 생성 실패 폴백 ───────────────────────────────────────────────
+
+  @Test
+  @DisplayName("onInterviewerOpeningFailed — INTERVIEWER_OPENING이면 OPENING_USER로 폴백")
+  void interviewerOpeningFailedFallsBackToUser() {
+    DebateSession session = createSession();
+    session.transitionTo(DebateState.INTERVIEWER_OPENING);
+
+    boolean result = stateMachine.onInterviewerOpeningFailed(session);
+
+    assertThat(result).isTrue();
+    assertThat(session.getCurrentState()).isEqualTo(DebateState.OPENING_USER);
+  }
+
+  @Test
+  @DisplayName("onInterviewerOpeningFailed — INTERVIEWER_OPENING이 아니면 멱등(상태 유지)")
+  void interviewerOpeningFailedNoOpWhenNotOpening() {
+    DebateSession session = createSession();
+    session.transitionTo(DebateState.OPENING_USER);
+
+    boolean result = stateMachine.onInterviewerOpeningFailed(session);
+
+    assertThat(result).isFalse();
+    assertThat(session.getCurrentState()).isEqualTo(DebateState.OPENING_USER);
+  }
+
+  @Test
+  @DisplayName("onInterviewerOpeningFailed — session이 null이면 INVALID_INPUT")
+  void rejectNullSessionOnOpeningFailed() {
+    assertThatThrownBy(() -> stateMachine.onInterviewerOpeningFailed(null))
+        .isInstanceOf(CustomException.class)
+        .hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_INPUT);
+  }
+
   // ── 6. 대기 상태 헬퍼 ────────────────────────────────────────────────────────
 
   @Nested
