@@ -96,9 +96,9 @@ public class InterviewStartTxService {
       QuestionItem item = questionItems.get(i);
       questions.add(InterviewQuestion.builder()
           .session(session)
-          .setNumber(1)
+          .setNumber(i + 1)
           .questionText(item.getQuestion())
-          .questionOrder(i + 1)
+          .questionOrder(0)
           .followUp(false)
           .audioUrl(item.getAudioUrl())
           .build());

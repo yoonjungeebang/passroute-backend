@@ -18,4 +18,7 @@ public interface InterviewQuestionRepository extends JpaRepository<InterviewQues
 
   // ReportTransactionService + InterviewSessionTxService: 세션 전체 질문 조회
   List<InterviewQuestion> findBySessionOrderByQuestionOrderAsc(InterviewSession session);
+
+  // 세트 순서 → 세트 내 순서로 정렬 (saveQuestions 픽스 이후 생성된 세션용)
+  List<InterviewQuestion> findBySessionOrderBySetNumberAscQuestionOrderAsc(InterviewSession session);
 }

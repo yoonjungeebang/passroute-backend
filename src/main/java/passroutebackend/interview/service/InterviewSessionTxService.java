@@ -30,7 +30,7 @@ public class InterviewSessionTxService {
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
 
-    List<QuestionDto> questions = questionRepository.findBySessionOrderByQuestionOrderAsc(session)
+    List<QuestionDto> questions = questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session)
         .stream()
         .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder(), q.getAudioUrl()))
         .toList();
@@ -57,7 +57,7 @@ public class InterviewSessionTxService {
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
 
     List<InterviewQuestion> allQuestions =
-        questionRepository.findBySessionOrderByQuestionOrderAsc(session);
+        questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session);
     List<InterviewAnswer> answers = answerRepository.findByQuestionIn(allQuestions);
 
     return answers.size() >= allQuestions.size();

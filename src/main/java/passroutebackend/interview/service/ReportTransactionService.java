@@ -53,7 +53,7 @@ public class ReportTransactionService {
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
     InterviewRoom room = session.getInterviewRoom();
 
-    List<InterviewQuestion> questions = questionRepository.findBySessionOrderByQuestionOrderAsc(session);
+    List<InterviewQuestion> questions = questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session);
     List<InterviewAnswer> answers = answerRepository.findByQuestionIn(questions);
 
     Map<Long, InterviewAnswer> answerByQuestionId = answers.stream()
