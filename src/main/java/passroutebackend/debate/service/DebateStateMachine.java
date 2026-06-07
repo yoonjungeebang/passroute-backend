@@ -109,11 +109,13 @@ public class DebateStateMachine {
    * 오프닝을 생략하고 사용자 차례로 진행시켜 세션이 INTERVIEWER_OPENING에 갇히지 않게 한다.
    * 이미 다른 상태면(중복 호출/경쟁) 아무것도 하지 않는다(멱등).
    */
-  public void onInterviewerOpeningFailed(DebateSession session) {
+  public boolean onInterviewerOpeningFailed(DebateSession session) {
     requireSession(session);
     if (session.getCurrentState() == DebateState.INTERVIEWER_OPENING) {
       session.transitionTo(DebateState.OPENING_USER);
+      return true;
     }
+    return false;
   }
 
   /**

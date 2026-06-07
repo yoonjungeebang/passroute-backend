@@ -199,8 +199,9 @@ class DebateStateMachineTest {
     DebateSession session = createSession();
     session.transitionTo(DebateState.INTERVIEWER_OPENING);
 
-    stateMachine.onInterviewerOpeningFailed(session);
+    boolean result = stateMachine.onInterviewerOpeningFailed(session);
 
+    assertThat(result).isTrue();
     assertThat(session.getCurrentState()).isEqualTo(DebateState.OPENING_USER);
   }
 
@@ -210,8 +211,9 @@ class DebateStateMachineTest {
     DebateSession session = createSession();
     session.transitionTo(DebateState.OPENING_USER);
 
-    stateMachine.onInterviewerOpeningFailed(session);
+    boolean result = stateMachine.onInterviewerOpeningFailed(session);
 
+    assertThat(result).isFalse();
     assertThat(session.getCurrentState()).isEqualTo(DebateState.OPENING_USER);
   }
 

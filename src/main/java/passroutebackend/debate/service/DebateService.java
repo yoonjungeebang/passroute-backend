@@ -248,13 +248,14 @@ public class DebateService {
 
     } catch (Exception e) {
       // 오프닝 생성 실패 시 세션이 INTERVIEWER_OPENING에 갇히지 않도록 오프닝을 생략하고 사용자 차례로 진행.
-      log.warn("면접관 오프닝 생성 실패, 오프닝 생략 후 사용자 차례로 진행: sessionId={}, error={}", sessionId, e.getMessage());
+      log.warn("면접관 오프닝 생성 실패, 오프닝 생략 후 사용자 차례로 진행: sessionId={}", sessionId, e);
       try {
         DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
-        stateMachine.onInterviewerOpeningFailed(session);
-        transactionService.saveSession(session);
+        if (stateMachine.onInterviewerOpeningFailed(session)) {
+          transactionService.saveSession(session);
+        }
       } catch (Exception ex) {
-        log.warn("오프닝 실패 폴백 처리도 실패: sessionId={}, error={}", sessionId, ex.getMessage());
+        log.warn("오프닝 실패 폴백 처리도 실패: sessionId={}", sessionId, ex);
       }
     }
   }
