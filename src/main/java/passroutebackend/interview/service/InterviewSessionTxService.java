@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.interview.dto.WorstClipResponse;
 import passroutebackend.interview.dto.response.QuestionDto;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.entity.InterviewAnswer;
@@ -76,19 +77,19 @@ public class InterviewSessionTxService {
   }
 
   @Transactional(readOnly = true)
-  public String getWorstClipVideoUrl(Long sessionId, Long userId) {
+  public WorstClipResponse getWorstClipVideoUrl(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
     return answerRepository.findFirstByQuestionSessionAndClipScoreIsNotNullOrderByClipScoreAsc(session)
-        .map(InterviewAnswer::getVideoUrl)
+        .map(answer -> new WorstClipResponse(answer.getVideoUrl(), answer.getClipReason()))
         .orElse(null);
   }
 
   @Transactional
-  public void saveWorstClip(Long sessionId, Long userId, Long questionId, String videoUrl, Double clipScore) {
+  public void saveWorstClip(Long sessionId, Long userId, Long questionId, String videoUrl, Double clipScore, String clipReason) {
     findAndValidateOwnership(sessionId, userId);
     InterviewAnswer answer = answerRepository.findByQuestion_Id(questionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.ANSWER_NOT_FOUND));
-    answer.updateVideoClip(videoUrl, clipScore);
+    answer.updateVideoClip(videoUrl, clipScore, clipReason);
   }
 
   @Transactional(readOnly = true)

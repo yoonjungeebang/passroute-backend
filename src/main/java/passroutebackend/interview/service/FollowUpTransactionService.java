@@ -48,7 +48,7 @@ public class FollowUpTransactionService {
         .answerText(request.getAnswerText())
         .build();
     if (request.getVideoUrl() != null) {
-      answer.updateVideoClip(request.getVideoUrl(), request.getClipScore());
+      answer.updateVideoClip(request.getVideoUrl(), request.getClipScore(), request.getClipReason());
     }
     answerRepository.save(answer);
 

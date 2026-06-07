@@ -21,4 +21,6 @@ public class AnswerSubmitRequest {
   private final String videoUrl;
 
   private final Double clipScore;
+
+  private final String clipReason;
 }

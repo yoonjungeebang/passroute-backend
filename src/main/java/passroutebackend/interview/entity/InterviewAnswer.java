@@ -52,6 +52,9 @@ public class InterviewAnswer {
   @Column
   private Double clipScore;
 
+  @Column(length = 50)
+  private String clipReason;
+
   @CreationTimestamp
   private LocalDateTime answeredAt;
 
@@ -68,8 +71,9 @@ public class InterviewAnswer {
     this.concisenessFinal = concisenessFinal;
   }
 
-  public void updateVideoClip(String videoUrl, Double clipScore) {
+  public void updateVideoClip(String videoUrl, Double clipScore, String clipReason) {
     this.videoUrl = videoUrl;
     this.clipScore = clipScore;
+    this.clipReason = clipReason;
   }
 }
