@@ -24,7 +24,9 @@ import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.report.ItemAvg;
 import passroutebackend.interview.dto.report.ItemAverages;
 import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewFormat;
+import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewRoom;
@@ -33,6 +35,8 @@ import passroutebackend.interview.entity.InterviewType;
 import passroutebackend.interview.entity.ReportStatus;
 import passroutebackend.interview.entity.RoomStatus;
 import passroutebackend.interview.entity.SessionStatus;
+import passroutebackend.interview.repository.InterviewAnswerRepository;
+import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewReportRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
@@ -66,6 +70,8 @@ class ReportControllerIntegrationTest {
   @Autowired private InterviewRoomRepository roomRepository;
   @Autowired private InterviewSessionRepository sessionRepository;
   @Autowired private InterviewReportRepository reportRepository;
+  @Autowired private InterviewQuestionRepository questionRepository;
+  @Autowired private InterviewAnswerRepository answerRepository;
   @Autowired private InterviewScheduleRepository scheduleRepository;
   @PersistenceContext private EntityManager em;
 
@@ -176,6 +182,52 @@ class ReportControllerIntegrationTest {
           .andExpect(jsonPath("$.data.voiceAnalysis.avgSilenceDuration").doesNotExist())
           .andExpect(jsonPath("$.data.voiceAnalysis.fillerCount").doesNotExist())
           .andExpect(jsonPath("$.data.voiceAnalysis.score").doesNotExist());
+    }
+
+    @Test
+    @DisplayName("성공 - 생성 중(GENERATING, 임계값 이내) → 202")
+    void generatingFresh() throws Exception {
+      InterviewReport report = saveGeneratingInterviewReport(selfIntro.getId(), 1);
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isAccepted());
+    }
+
+    @Test
+    @DisplayName("실패 - 생성 중이 임계값 초과(stale, 답변 있음) → FAILED 전환 + 500(I010, 재시도 가능)")
+    void generatingStale() throws Exception {
+      InterviewReport report = saveGeneratingInterviewReport(selfIntro.getId(), 1);
+      attachEvaluatedAnswer(report.getSession());  // 답변 있음 → 일시실패(I010)로 분류
+      Long sessionId = report.getSession().getId();
+      Long reportId = report.getId();
+      // created_at을 임계값(기본 480초)보다 과거로 백데이트해 stale 상황 재현
+      em.createQuery("UPDATE InterviewReport r SET r.createdAt = :t WHERE r.id = :id")
+          .setParameter("t", LocalDateTime.now().minusHours(1))
+          .setParameter("id", reportId)
+          .executeUpdate();
+      em.flush();
+      em.clear();
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", sessionId)
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().is5xxServerError())
+          .andExpect(jsonPath("$.code").value("I010"));
+
+      em.clear();
+      InterviewReport reloaded = reportRepository.findById(reportId).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertEquals(ReportStatus.FAILED, reloaded.getReportStatus());
+    }
+
+    @Test
+    @DisplayName("실패 - FAILED + 답변 0개(전부 스킵) → I013(재시도 불가)")
+    void failedNoAnswers() throws Exception {
+      InterviewReport report = saveInterviewReportWithStatus(selfIntro.getId(), 1, ReportStatus.FAILED);
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isUnprocessableEntity())
+          .andExpect(jsonPath("$.code").value("I013"));
     }
   }
 
@@ -479,6 +531,58 @@ class ReportControllerIntegrationTest {
         .build());
     em.flush();  // native JdbcTemplate 쿼리에서 즉시 보이도록 DB에 반영
     return saved;
+  }
+
+  private InterviewReport saveGeneratingInterviewReport(Long siId, int sessionNumber) {
+    return saveInterviewReportWithStatus(siId, sessionNumber, ReportStatus.GENERATING);
+  }
+
+  private InterviewReport saveInterviewReportWithStatus(Long siId, int sessionNumber, ReportStatus status) {
+    InterviewRoom room = roomRepository.save(InterviewRoom.builder()
+        .userId(user.getId())
+        .siId(siId)
+        .companyName("카카오")
+        .jobPosition("백엔드")
+        .interviewType(InterviewType.TECHNICAL)
+        .interviewFormat(InterviewFormat.ONE_ON_ONE)
+        .interviewMode("PRACTICE")
+        .aiInterviewer("TECH_INTERVIEWER")
+        .interviewCount(3)
+        .difficulty(Difficulty.NORMAL)
+        .pressureLevel(5)
+        .followupCount(3)
+        .status(RoomStatus.IN_PROGRESS)
+        .build());
+
+    InterviewSession session = sessionRepository.save(InterviewSession.builder()
+        .interviewRoom(room)
+        .sessionNumber(sessionNumber)
+        .status(SessionStatus.IN_PROGRESS)
+        .build());
+    session.end(SessionStatus.COMPLETED);  // 리포트 생성은 세션 종료 후 시작되므로 종료 상태여야 함
+    sessionRepository.save(session);
+
+    InterviewReport saved = reportRepository.save(InterviewReport.builder()
+        .session(session)
+        .reportStatus(status)
+        .build());
+    em.flush();
+    return saved;
+  }
+
+  // 평가 완료(percentage 채워진) 답변 1건을 세션에 부착 → "답변 있음"(일시실패 I010) 케이스 구성
+  private void attachEvaluatedAnswer(InterviewSession session) {
+    InterviewQuestion q = questionRepository.save(InterviewQuestion.builder()
+        .session(session)
+        .setNumber(1)
+        .questionText("질문")
+        .questionOrder(1)
+        .followUp(false)
+        .build());
+    InterviewAnswer a = InterviewAnswer.builder().question(q).answerText("답변").build();
+    a.updateEvaluationResult(80.0, 3, null, 4.0);
+    answerRepository.save(a);
+    em.flush();
   }
 
   private InterviewSchedule saveSchedule(Long userId, String companyName, String jobPosition, LocalDateTime when) {
