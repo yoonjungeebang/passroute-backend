@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.AnswerSubmitResponse;
+import passroutebackend.interview.dto.ClipUploadUrlResponse;
+import passroutebackend.interview.dto.SaveWorstClipRequest;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 
@@ -14,6 +16,7 @@ public class InterviewSessionService {
   private final InterviewSessionTxService txService;
   private final FollowUpService followUpService;
   private final ReportService reportService;
+  private final ClipUploadService clipUploadService;
 
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {
     return txService.getQuestions(sessionId, userId);
@@ -45,5 +48,14 @@ public class InterviewSessionService {
 
   public String getWorstClipVideoUrl(Long sessionId, Long userId) {
     return txService.getWorstClipVideoUrl(sessionId, userId);
+  }
+
+  public ClipUploadUrlResponse getClipUploadUrl(Long sessionId, Long userId, Long questionId) {
+    txService.validateSessionOwnership(sessionId, userId);
+    return clipUploadService.generatePresignedUrl(sessionId, questionId);
+  }
+
+  public void saveWorstClip(Long sessionId, Long userId, SaveWorstClipRequest request) {
+    txService.saveWorstClip(sessionId, userId, request.getQuestionId(), request.getVideoUrl(), request.getClipScore());
   }
 }

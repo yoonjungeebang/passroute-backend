@@ -18,6 +18,7 @@ public interface InterviewAnswerRepository extends JpaRepository<InterviewAnswer
 
   Optional<InterviewAnswer> findFirstByQuestionSessionAndClipScoreIsNotNullOrderByClipScoreAsc(InterviewSession session);
 
+  Optional<InterviewAnswer> findByQuestion_Id(Long questionId);
   // 리포트 생성 전 평가 완료 대기용 진행도
   @Query("SELECT COUNT(a) FROM InterviewAnswer a WHERE a.question.session.id = :sessionId")
   long countBySessionId(@Param("sessionId") Long sessionId);

@@ -91,6 +91,7 @@ jobs:
               "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" \
               "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" \
               "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" \
+              "AWS_S3_CLIP_BUCKET=${{ secrets.AWS_S3_CLIP_BUCKET }}" \
               "COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}" \
               "COOLSMS_API_SECRET=${{ secrets.COOLSMS_API_SECRET }}" \
               "COOLSMS_SENDER=${{ secrets.COOLSMS_SENDER }}" \

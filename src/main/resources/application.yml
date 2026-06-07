@@ -71,3 +71,4 @@ cloud:
       static: ap-northeast-2
     s3:
       bucket: ${AWS_S3_BUCKET}
+      clip-bucket: ${AWS_S3_CLIP_BUCKET}
