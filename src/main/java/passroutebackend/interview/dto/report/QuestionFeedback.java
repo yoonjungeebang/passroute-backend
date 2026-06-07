@@ -24,4 +24,12 @@ public class QuestionFeedback {
 
   @JsonProperty("voice_comment")
   private String voiceComment;
+
+  // AI 응답엔 없는 필드. 백엔드가 꼬리질문 여부를 주입(FE의 Q1-1 라벨링용).
+  @JsonProperty("follow_up")
+  private boolean followUp;
+
+  public void setFollowUp(boolean followUp) {
+    this.followUp = followUp;
+  }
 }

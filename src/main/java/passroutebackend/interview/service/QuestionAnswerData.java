@@ -16,4 +16,5 @@ public class QuestionAnswerData {
     private String llmScoresJson;
     private LlmScores llmScores;
     private Double concisenessFinal;
+    private boolean followUp;
 }
