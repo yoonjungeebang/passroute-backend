@@ -29,6 +29,14 @@ public class InterviewSessionService {
     // 답변 저장 + 꼬리질문 생성 + 비동기 평가 (기존 서비스 재사용)
     AnswerSubmitResponse followUpResponse = followUpService.submitAnswer(request);
 
+    // 현재 답변에서 꼬리질문이 없어도, 세션 내 미답변 꼬리질문이 있으면 대신 반환
+    // (프론트가 꼬리질문을 메인 질문보다 늦게 보여주는 경우 보정)
+    if (!followUpResponse.isHasFollowUp()) {
+      followUpResponse = txService.findFirstPendingFollowUp(sessionId)
+          .map(q -> AnswerSubmitResponse.followUp(q.getId(), q.getQuestionText(), q.getAudioUrl()))
+          .orElse(followUpResponse);
+    }
+
     // 마지막 질문 여부 계산 (답변 저장 완료 후 조회)
     boolean isLastQuestion = txService.computeIsLastQuestion(sessionId, followUpResponse.isHasFollowUp());
 

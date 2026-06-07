@@ -36,6 +36,7 @@ import passroutebackend.interview.dto.evaluation.QuestionEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.QuestionEvaluationResponse;
 import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
 import passroutebackend.interview.dto.evaluation.StarEvaluationResponse;
+import passroutebackend.interview.dto.generate.DocumentStoreRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
 import passroutebackend.interview.dto.report.ReportGenerationRequest;
@@ -56,6 +57,19 @@ public class AiServerClient {
       @Qualifier("debateAiServerRestClient") RestClient debateAiServerRestClient) {
     this.aiServerRestClient = aiServerRestClient;
     this.debateAiServerRestClient = debateAiServerRestClient;
+  }
+
+  public void storeDocument(String userId, String text, String docType) {
+    try {
+      aiServerRestClient.post()
+          .uri("/resume/documents/store")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(new DocumentStoreRequest(userId, text, docType))
+          .retrieve()
+          .toBodilessEntity();
+    } catch (Exception e) {
+      log.warn("ChromaDB 문서 저장 실패 userId={}, docType={}: {}", userId, docType, e.getMessage());
+    }
   }
 
   public QuestionGenerateResponse generateQuestions(QuestionGenerateRequest request) {

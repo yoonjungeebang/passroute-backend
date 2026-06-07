@@ -10,6 +10,9 @@ import lombok.Getter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QuestionGenerateRequest {
 
+  @JsonProperty("user_id")
+  private final String userId;
+
   @JsonProperty("interview_type")
   private final String interviewType;
 

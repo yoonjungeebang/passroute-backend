@@ -17,6 +17,9 @@ import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,30 @@ public class InterviewSessionTxService {
     if (session.getStatus() == SessionStatus.COMPLETED) {
       throw CustomException.of(ErrorCode.SESSION_ALREADY_ENDED);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<InterviewQuestion> findFirstPendingFollowUp(Long sessionId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+
+    List<InterviewQuestion> followUpQuestions =
+        questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session)
+            .stream()
+            .filter(InterviewQuestion::isFollowUp)
+            .toList();
+
+    if (followUpQuestions.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Set<Long> answeredIds = answerRepository.findByQuestionIn(followUpQuestions).stream()
+        .map(a -> a.getQuestion().getId())
+        .collect(Collectors.toSet());
+
+    return followUpQuestions.stream()
+        .filter(q -> !answeredIds.contains(q.getId()))
+        .findFirst();
   }
 
   @Transactional(readOnly = true)
