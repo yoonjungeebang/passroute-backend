@@ -119,28 +119,38 @@ public class DebateReportService {
       Double avgWpm = null;
       Double avgSilenceDuration = null;
       Integer fillerCount = null;
-      if (!voiceList.isEmpty()) {
+      boolean hasVoiceData = voiceList.stream().anyMatch(v ->
+          v.getAvgWpm() != null || v.getFillerCount() != null || v.getAvgSilenceDuration() != null);
+      if (hasVoiceData) {
         voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
-        avgWpm = voiceList.stream().filter(v -> v.getAvgWpm() != null)
-            .mapToDouble(v -> v.getAvgWpm()).average().orElse(0.0);
-        avgSilenceDuration = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
-            .mapToDouble(v -> v.getAvgSilenceDuration()).average().orElse(0.0);
-        fillerCount = voiceList.stream().filter(v -> v.getFillerCount() != null)
-            .mapToInt(v -> v.getFillerCount()).sum();
+        List<Double> wpms = voiceList.stream().filter(v -> v.getAvgWpm() != null)
+            .map(v -> (double) v.getAvgWpm()).toList();
+        avgWpm = wpms.isEmpty() ? null : wpms.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Double> silences = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
+            .map(v -> (double) v.getAvgSilenceDuration()).toList();
+        avgSilenceDuration = silences.isEmpty() ? null : silences.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Integer> fillers = voiceList.stream().filter(v -> v.getFillerCount() != null)
+            .map(VoiceAnalysis::getFillerCount).toList();
+        fillerCount = fillers.isEmpty() ? null : fillers.stream().mapToInt(Integer::intValue).sum();
       }
 
       Double faceScore = null;
       Double avgGazeRatio = null;
       Integer gazeOffCount = null;
       Double avgBlinkPerMin = null;
-      if (!faceList.isEmpty()) {
+      boolean hasFaceData = faceList.stream().anyMatch(f ->
+          f.getAvgGazeRatio() != null || f.getGazeOffCount() != null || f.getAvgBlinkPerMin() != null);
+      if (hasFaceData) {
         faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
-        avgGazeRatio = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
-            .mapToDouble(f -> f.getAvgGazeRatio()).average().orElse(0.0);
-        gazeOffCount = (int) faceList.stream().filter(f -> f.getGazeOffCount() != null)
-            .mapToLong(f -> f.getGazeOffCount()).sum();
-        avgBlinkPerMin = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
-            .mapToDouble(f -> f.getAvgBlinkPerMin()).average().orElse(0.0);
+        List<Double> gazeRatios = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
+            .map(f -> (double) f.getAvgGazeRatio()).toList();
+        avgGazeRatio = gazeRatios.isEmpty() ? null : gazeRatios.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Integer> gazeOffs = faceList.stream().filter(f -> f.getGazeOffCount() != null)
+            .map(FaceAnalysis::getGazeOffCount).toList();
+        gazeOffCount = gazeOffs.isEmpty() ? null : gazeOffs.stream().mapToInt(Integer::intValue).sum();
+        List<Double> blinks = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
+            .map(f -> (double) f.getAvgBlinkPerMin()).toList();
+        avgBlinkPerMin = blinks.isEmpty() ? null : blinks.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
       }
 
       // 5. 저장
