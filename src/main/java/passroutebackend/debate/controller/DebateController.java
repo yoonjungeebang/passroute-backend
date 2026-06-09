@@ -19,11 +19,14 @@ import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTopicGenerateRequest;
 import passroutebackend.debate.dto.request.DebateTopicSuggestRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
+import passroutebackend.debate.dto.request.SaveDebateWorstClipRequest;
+import passroutebackend.debate.dto.response.DebateClipUploadUrlResponse;
 import passroutebackend.debate.dto.response.DebatePersonaResponse;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.dto.response.DebateTopicResponse;
 import passroutebackend.debate.dto.response.DebateTopicSuggestResponse;
+import passroutebackend.debate.dto.response.DebateWorstClipResponse;
 import passroutebackend.debate.entity.TopicCategory;
 import passroutebackend.debate.service.DebateReportService;
 import passroutebackend.debate.service.DebateService;
@@ -126,6 +129,33 @@ public class DebateController {
     reportService.generateReportAsync(sessionId, userId);
     return ResponseEntity.status(HttpStatus.ACCEPTED)
         .body(ApiResponse.accepted("리포트를 생성 중입니다."));
+  }
+
+  @Operation(summary = "영상 클립 S3 업로드용 presigned URL 발급")
+  @GetMapping("/{sessionId}/clip-upload-url")
+  public ResponseEntity<ApiResponse<DebateClipUploadUrlResponse>> getClipUploadUrl(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId,
+      @RequestParam Long questionId) {
+    return ResponseEntity.ok(ApiResponse.success(debateService.getClipUploadUrl(userId, sessionId, questionId)));
+  }
+
+  @Operation(summary = "가장 못했던 구간 클립 저장")
+  @PostMapping("/{sessionId}/worst-clip")
+  public ResponseEntity<ApiResponse<Void>> saveWorstClip(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId,
+      @Valid @RequestBody SaveDebateWorstClipRequest request) {
+    debateService.saveWorstClip(userId, sessionId, request);
+    return ResponseEntity.ok(ApiResponse.success(null));
+  }
+
+  @Operation(summary = "가장 못했던 구간 클립 조회")
+  @GetMapping("/{sessionId}/worst-clip")
+  public ResponseEntity<ApiResponse<DebateWorstClipResponse>> getWorstClip(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId) {
+    return ResponseEntity.ok(ApiResponse.success(debateService.getWorstClip(userId, sessionId)));
   }
 
 }

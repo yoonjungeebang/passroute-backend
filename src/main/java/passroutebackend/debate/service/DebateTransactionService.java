@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import passroutebackend.debate.dto.response.DebateWorstClipResponse;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
 import passroutebackend.debate.entity.DebateMode;
@@ -142,6 +143,21 @@ public class DebateTransactionService {
   @Transactional
   public DebateSession saveSession(DebateSession session) {
     return sessionRepository.save(session);
+  }
+
+  // ── worst-clip ────────────────────────────────────────────────────────────
+
+  @Transactional
+  public void saveWorstClip(Long sessionId, Long userId, String videoUrl, Double clipScore, String clipReason) {
+    DebateSession session = findSessionForUserOrThrow(sessionId, userId);
+    session.updateWorstClip(videoUrl, clipScore, clipReason);
+  }
+
+  @Transactional(readOnly = true)
+  public DebateWorstClipResponse getWorstClip(Long sessionId, Long userId) {
+    DebateSession session = findSessionForUserOrThrow(sessionId, userId);
+    if (session.getVideoUrl() == null) return null;
+    return new DebateWorstClipResponse(session.getVideoUrl(), session.getClipReason());
   }
 
   // ── 턴 저장 ──────────────────────────────────────────────────────────────
