@@ -9,11 +9,14 @@ import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTopicGenerateRequest;
 import passroutebackend.debate.dto.request.DebateTopicSuggestRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
+import passroutebackend.debate.dto.request.SaveDebateWorstClipRequest;
+import passroutebackend.debate.dto.response.DebateClipUploadUrlResponse;
 import passroutebackend.debate.dto.response.DebateSessionCreateResponse;
 import passroutebackend.debate.dto.response.DebateStateResponse;
 import passroutebackend.debate.dto.response.DebateTopicCandidateResponse;
 import passroutebackend.debate.dto.response.DebateTopicSuggestResponse;
 import passroutebackend.debate.dto.response.DebateTurnSummary;
+import passroutebackend.debate.dto.response.DebateWorstClipResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import passroutebackend.debate.entity.AiCompetitor;
 import passroutebackend.debate.entity.AiPersona;
@@ -70,6 +73,7 @@ public class DebateService {
   private final DebateStateMachine stateMachine;
   private final DebateEvaluationService evaluationService;
   private final AiServerClient aiServerClient;
+  private final passroutebackend.interview.service.ClipUploadService clipUploadService;
   /**
    * 자기 자신 프록시. @Async 자가호출은 프록시를 안 거쳐 동기 실행되므로,
    * 컨트롤러 스레드에서 비동기 작업을 띄울 때는 이 프록시를 통해 호출한다.
@@ -584,6 +588,23 @@ public class DebateService {
         .weaknesses(parseStringList(persona.getWeaknesses()))
         .systemPromptTemplate(persona.getSystemPromptTemplate())
         .build();
+  }
+
+  // ── worst-clip ────────────────────────────────────────────────────────────
+
+  public DebateClipUploadUrlResponse getClipUploadUrl(Long userId, Long sessionId, Long questionId) {
+    transactionService.findSessionForUserOrThrow(sessionId, userId);
+    var result = clipUploadService.generatePresignedUrl(sessionId, questionId);
+    return new DebateClipUploadUrlResponse(result.getUploadUrl(), result.getFileUrl());
+  }
+
+  public void saveWorstClip(Long userId, Long sessionId, SaveDebateWorstClipRequest request) {
+    transactionService.saveWorstClip(sessionId, userId,
+        request.getVideoUrl(), request.getClipScore(), request.getClipReason());
+  }
+
+  public DebateWorstClipResponse getWorstClip(Long userId, Long sessionId) {
+    return transactionService.getWorstClip(sessionId, userId);
   }
 
   private List<String> parseStringList(String json) {

@@ -74,6 +74,14 @@ public class DebateSession {
   @Column(columnDefinition = "LONGTEXT")
   private String pendingStt;
 
+  @Column(length = 500)
+  private String videoUrl;
+
+  private Double clipScore;
+
+  @Column(length = 50)
+  private String clipReason;
+
   @Builder
   public DebateSession(Long userId, DebateTopic topic, DebateStance userStance,
       Difficulty difficulty, DebateMode mode, int prepSeconds) {
@@ -99,5 +107,11 @@ public class DebateSession {
 
   public void updatePendingStt(String stt) {
     this.pendingStt = stt;
+  }
+
+  public void updateWorstClip(String videoUrl, Double clipScore, String clipReason) {
+    this.videoUrl = videoUrl;
+    this.clipScore = clipScore;
+    this.clipReason = clipReason;
   }
 }
