@@ -68,6 +68,18 @@ public class DebateReport {
   @Column(columnDefinition = "TEXT")
   private String debateReadinessComment;
 
+  // 음성 분석 집계
+  private Double voiceScore;
+  private Double avgWpm;
+  private Double avgSilenceDuration;
+  private Integer fillerCount;
+
+  // 표정 분석 집계
+  private Double faceScore;
+  private Double avgGazeRatio;
+  private Integer gazeOffCount;
+  private Double avgBlinkPerMin;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 
@@ -75,7 +87,9 @@ public class DebateReport {
   public DebateReport(DebateSession session, Double sessionScore, ReportStatus reportStatus,
       String overall, String strengths, String weaknesses, String improvements,
       String turnFeedback, String strategyAnalysis, String recommendedTopics,
-      String finalAdvice, String debateReadinessComment) {
+      String finalAdvice, String debateReadinessComment,
+      Double voiceScore, Double avgWpm, Double avgSilenceDuration, Integer fillerCount,
+      Double faceScore, Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
     this.session = session;
     this.sessionScore = sessionScore;
     this.reportStatus = reportStatus;
@@ -88,5 +102,13 @@ public class DebateReport {
     this.recommendedTopics = recommendedTopics;
     this.finalAdvice = finalAdvice;
     this.debateReadinessComment = debateReadinessComment;
+    this.voiceScore = voiceScore;
+    this.avgWpm = avgWpm;
+    this.avgSilenceDuration = avgSilenceDuration;
+    this.fillerCount = fillerCount;
+    this.faceScore = faceScore;
+    this.avgGazeRatio = avgGazeRatio;
+    this.gazeOffCount = gazeOffCount;
+    this.avgBlinkPerMin = avgBlinkPerMin;
   }
 }

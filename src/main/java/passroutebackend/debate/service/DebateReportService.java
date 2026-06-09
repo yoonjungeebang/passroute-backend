@@ -18,7 +18,13 @@ import passroutebackend.interview.dto.debate.DebateTurnEvalItem;
 import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
 import passroutebackend.interview.dto.debate.DebateTurnFeedback;
 import passroutebackend.interview.dto.debate.DebateWeaknessItem;
+import passroutebackend.interview.dto.report.FaceAnalysisSummary;
+import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
+import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.interview.entity.ReportStatus;
+import passroutebackend.interview.entity.VoiceAnalysis;
+import passroutebackend.interview.service.InterviewScoreCalculator;
+import passroutebackend.interview.service.ReportTransactionService;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +39,8 @@ public class DebateReportService {
 
   private final DebateTransactionService transactionService;
   private final AiServerClient aiServerClient;
+  private final ReportTransactionService reportTransactionService;
+  private final InterviewScoreCalculator scoreCalculator;
 
   @Async("debateExecutor")
   public void generateReportAsync(Long sessionId, Long userId) {
@@ -99,7 +107,53 @@ public class DebateReportService {
           .average()
           .orElse(0.0);
 
-      // 4. 저장
+      // 4. 음성·표정 분석 집계 (데이터 없으면 null)
+      List<VoiceAnalysis> voiceList = reportTransactionService.loadVoiceAnalysis(sessionId);
+      List<FaceAnalysis> faceList = reportTransactionService.loadFaceAnalysis(sessionId);
+
+      double totalMinutes = (session.getEndedAt() != null && session.getCreatedAt() != null)
+          ? java.time.Duration.between(session.getCreatedAt(), session.getEndedAt()).toSeconds() / 60.0
+          : 0.0;
+
+      Double voiceScore = null;
+      Double avgWpm = null;
+      Double avgSilenceDuration = null;
+      Integer fillerCount = null;
+      boolean hasVoiceData = voiceList.stream().anyMatch(v ->
+          v.getAvgWpm() != null || v.getFillerCount() != null || v.getAvgSilenceDuration() != null);
+      if (hasVoiceData) {
+        voiceScore = scoreCalculator.calcVoiceScore(voiceList, totalMinutes);
+        List<Double> wpms = voiceList.stream().filter(v -> v.getAvgWpm() != null)
+            .map(v -> (double) v.getAvgWpm()).toList();
+        avgWpm = wpms.isEmpty() ? null : wpms.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Double> silences = voiceList.stream().filter(v -> v.getAvgSilenceDuration() != null)
+            .map(v -> (double) v.getAvgSilenceDuration()).toList();
+        avgSilenceDuration = silences.isEmpty() ? null : silences.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Integer> fillers = voiceList.stream().filter(v -> v.getFillerCount() != null)
+            .map(VoiceAnalysis::getFillerCount).toList();
+        fillerCount = fillers.isEmpty() ? null : fillers.stream().mapToInt(Integer::intValue).sum();
+      }
+
+      Double faceScore = null;
+      Double avgGazeRatio = null;
+      Integer gazeOffCount = null;
+      Double avgBlinkPerMin = null;
+      boolean hasFaceData = faceList.stream().anyMatch(f ->
+          f.getAvgGazeRatio() != null || f.getGazeOffCount() != null || f.getAvgBlinkPerMin() != null);
+      if (hasFaceData) {
+        faceScore = scoreCalculator.calcFaceScore(faceList, totalMinutes);
+        List<Double> gazeRatios = faceList.stream().filter(f -> f.getAvgGazeRatio() != null)
+            .map(f -> (double) f.getAvgGazeRatio()).toList();
+        avgGazeRatio = gazeRatios.isEmpty() ? null : gazeRatios.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        List<Integer> gazeOffs = faceList.stream().filter(f -> f.getGazeOffCount() != null)
+            .map(FaceAnalysis::getGazeOffCount).toList();
+        gazeOffCount = gazeOffs.isEmpty() ? null : gazeOffs.stream().mapToInt(Integer::intValue).sum();
+        List<Double> blinks = faceList.stream().filter(f -> f.getAvgBlinkPerMin() != null)
+            .map(f -> (double) f.getAvgBlinkPerMin()).toList();
+        avgBlinkPerMin = blinks.isEmpty() ? null : blinks.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+      }
+
+      // 5. 저장
       transactionService.saveReport(
           session,
           sessionScore,
@@ -112,7 +166,9 @@ public class DebateReportService {
           report.getStrategyAnalysis(),
           transactionService.toJson(report.getRecommendedTopics()),
           report.getFinalAdvice(),
-          report.getDebateReadinessComment()
+          report.getDebateReadinessComment(),
+          voiceScore, avgWpm, avgSilenceDuration, fillerCount,
+          faceScore, avgGazeRatio, gazeOffCount, avgBlinkPerMin
       );
 
       log.info("토론 리포트 생성 완료: sessionId={}, sessionScore={}", sessionId, sessionScore);
@@ -134,6 +190,16 @@ public class DebateReportService {
   }
 
   public DebateReportApiResponse toApiResponse(DebateReport report) {
+    VoiceAnalysisSummary voiceAnalysis = (report.getVoiceScore() != null)
+        ? new VoiceAnalysisSummary(report.getAvgWpm(), report.getAvgSilenceDuration(),
+            report.getFillerCount(), report.getVoiceScore())
+        : null;
+
+    FaceAnalysisSummary faceAnalysis = (report.getFaceScore() != null)
+        ? new FaceAnalysisSummary(report.getAvgGazeRatio(), report.getGazeOffCount(),
+            report.getAvgBlinkPerMin(), report.getFaceScore())
+        : null;
+
     return DebateReportApiResponse.builder()
         .sessionId(report.getSession().getId())
         .sessionScore(report.getSessionScore())
@@ -146,6 +212,8 @@ public class DebateReportService {
         .recommendedTopics(transactionService.parseJson(report.getRecommendedTopics(), new TypeReference<List<String>>() {}))
         .finalAdvice(report.getFinalAdvice())
         .debateReadinessComment(report.getDebateReadinessComment())
+        .voiceAnalysis(voiceAnalysis)
+        .faceAnalysis(faceAnalysis)
         .createdAt(report.getCreatedAt())
         .build();
   }
