@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import passroutebackend.interview.dto.debate.DebateTurnFeedback;
 import passroutebackend.interview.dto.debate.DebateWeaknessItem;
+import passroutebackend.interview.dto.report.FaceAnalysisSummary;
+import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,5 +31,7 @@ public class DebateReportApiResponse {
   private List<String> recommendedTopics;
   private String finalAdvice;
   private String debateReadinessComment;
+  private VoiceAnalysisSummary voiceAnalysis;
+  private FaceAnalysisSummary faceAnalysis;
   private LocalDateTime createdAt;
 }

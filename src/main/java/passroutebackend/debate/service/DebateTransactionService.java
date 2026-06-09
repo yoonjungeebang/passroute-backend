@@ -219,7 +219,9 @@ public class DebateTransactionService {
   public void saveReport(DebateSession session, Double sessionScore, ReportStatus status,
       String overall, String strengths, String weaknessesJson, String improvements,
       String turnFeedbackJson, String strategyAnalysis, String recommendedTopicsJson,
-      String finalAdvice, String debateReadinessComment) {
+      String finalAdvice, String debateReadinessComment,
+      Double voiceScore, Double avgWpm, Double avgSilenceDuration, Integer fillerCount,
+      Double faceScore, Double avgGazeRatio, Integer gazeOffCount, Double avgBlinkPerMin) {
     DebateReport report = DebateReport.builder()
         .session(session)
         .sessionScore(sessionScore)
@@ -233,6 +235,14 @@ public class DebateTransactionService {
         .recommendedTopics(recommendedTopicsJson)
         .finalAdvice(finalAdvice)
         .debateReadinessComment(debateReadinessComment)
+        .voiceScore(voiceScore)
+        .avgWpm(avgWpm)
+        .avgSilenceDuration(avgSilenceDuration)
+        .fillerCount(fillerCount)
+        .faceScore(faceScore)
+        .avgGazeRatio(avgGazeRatio)
+        .gazeOffCount(gazeOffCount)
+        .avgBlinkPerMin(avgBlinkPerMin)
         .build();
     reportRepository.save(report);
   }
