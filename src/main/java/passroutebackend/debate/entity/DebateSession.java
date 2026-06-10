@@ -82,6 +82,12 @@ public class DebateSession {
   @Column(length = 50)
   private String clipReason;
 
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive = true;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
   @Builder
   public DebateSession(Long userId, DebateTopic topic, DebateStance userStance,
       Difficulty difficulty, DebateMode mode, int prepSeconds) {
@@ -113,5 +119,11 @@ public class DebateSession {
     this.videoUrl = videoUrl;
     this.clipScore = clipScore;
     this.clipReason = clipReason;
+  }
+
+  // ── 소프트 딜리트 (InterviewSession과 동일 컨벤션) ─────────────
+  public void softDelete() {
+    this.isActive = false;
+    this.deletedAt = LocalDateTime.now();
   }
 }

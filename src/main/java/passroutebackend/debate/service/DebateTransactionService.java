@@ -145,6 +145,16 @@ public class DebateTransactionService {
     return sessionRepository.save(session);
   }
 
+  // 토론 리포트(세션) 소프트 삭제. 멱등: 이미 삭제됐으면 no-op.
+  @Transactional
+  public void softDeleteSession(Long sessionId, Long userId) {
+    DebateSession session = findSessionForUserOrThrow(sessionId, userId);
+    if (!session.isActive()) {
+      return;
+    }
+    session.softDelete();
+  }
+
   // ── worst-clip ────────────────────────────────────────────────────────────
 
   @Transactional

@@ -18,6 +18,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import passroutebackend.debate.entity.DebateMode;
+import passroutebackend.debate.entity.DebateReport;
+import passroutebackend.debate.entity.DebateSession;
+import passroutebackend.debate.entity.DebateStance;
+import passroutebackend.debate.entity.DebateState;
+import passroutebackend.debate.entity.DebateTopic;
+import passroutebackend.debate.entity.TopicCategory;
+import passroutebackend.debate.repository.DebateReportRepository;
+import passroutebackend.debate.repository.DebateSessionRepository;
+import passroutebackend.debate.repository.DebateTopicRepository;
 import passroutebackend.global.config.S3TestConfig;
 import passroutebackend.global.jwt.JwtTokenProvider;
 import passroutebackend.interview.client.AiServerClient;
@@ -51,6 +61,7 @@ import passroutebackend.user.entity.AuthProvider;
 import passroutebackend.user.entity.User;
 import passroutebackend.user.repository.UserRepository;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,6 +84,9 @@ class ReportControllerIntegrationTest {
   @Autowired private InterviewQuestionRepository questionRepository;
   @Autowired private InterviewAnswerRepository answerRepository;
   @Autowired private InterviewScheduleRepository scheduleRepository;
+  @Autowired private DebateTopicRepository debateTopicRepository;
+  @Autowired private DebateSessionRepository debateSessionRepository;
+  @Autowired private DebateReportRepository debateReportRepository;
   @PersistenceContext private EntityManager em;
 
   @MockBean private AiServerClient aiServerClient;
@@ -252,6 +266,102 @@ class ReportControllerIntegrationTest {
       mockMvc.perform(get("/reports/debate/{sessionId}", 999999L)
               .header("Authorization", "Bearer " + token))
           .andExpect(status().isNotFound());
+    }
+  }
+
+  // =========================================================
+  // DELETE /api/reports/debate/{sessionId}
+  // =========================================================
+
+  @Nested
+  @DisplayName("토론 리포트 삭제")
+  class DeleteDebateReport {
+
+    @Test
+    @DisplayName("실패 - 인증 토큰 없음 → 401")
+    void unauthorized() throws Exception {
+      mockMvc.perform(delete("/reports/debate/{sessionId}", 1L))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("성공 - 본인 세션 삭제 → 200 + isActive=false")
+    void success() throws Exception {
+      DebateSession session = saveCompletedDebateSession(user, 80.0);
+
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk());
+
+      em.flush();
+      em.clear();
+      DebateSession reloaded = debateSessionRepository.findById(session.getId()).orElseThrow();
+      org.junit.jupiter.api.Assertions.assertFalse(reloaded.isActive(), "삭제 후 isActive는 false여야 함");
+    }
+
+    @Test
+    @DisplayName("멱등 - 이미 삭제된 세션 재삭제 → 200")
+    void idempotent() throws Exception {
+      DebateSession session = saveCompletedDebateSession(user, 80.0);
+
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk());
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("실패 - 존재하지 않는 세션 → 404")
+    void notFound() throws Exception {
+      mockMvc.perform(delete("/reports/debate/{sessionId}", 999999L)
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("실패 - 타인 소유 세션 → 404")
+    void accessDenied() throws Exception {
+      DebateSession session = saveCompletedDebateSession(user, 80.0);
+
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + otherToken))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("삭제 후 단건 조회에서 제외 → 404")
+    void excludedFromSingleGet() throws Exception {
+      DebateSession session = saveCompletedDebateSession(user, 80.0);
+
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk());
+      mockMvc.perform(get("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("삭제 후 통합 목록에서 제외")
+    void excludedFromList() throws Exception {
+      DebateSession session = saveCompletedDebateSession(user, 80.0);
+
+      mockMvc.perform(get("/reports").param("type", "debate")
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.items.length()").value(1));
+
+      mockMvc.perform(delete("/reports/debate/{sessionId}", session.getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk());
+      em.flush();  // 네이티브 통합목록 쿼리가 soft-delete를 보도록 반영
+
+      mockMvc.perform(get("/reports").param("type", "debate")
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.data.items.length()").value(0));
     }
   }
 
@@ -470,6 +580,38 @@ class ReportControllerIntegrationTest {
         """, companyName, jobPosition);
     SelfIntroRequestDto dto = objectMapper.readValue(json, SelfIntroRequestDto.class);
     return selfIntroRepository.save(SelfIntro.create(user, dto));
+  }
+
+  private DebateSession saveCompletedDebateSession(User owner, double score) {
+    DebateTopic topic = debateTopicRepository.save(DebateTopic.builder()
+        .topicKey("topic_test_" + owner.getId())
+        .title("AI 윤리 토론")
+        .description("설명")
+        .category(TopicCategory.AI_ETHICS)
+        .proKeyPoints("[]")
+        .conKeyPoints("[]")
+        .generated(false)
+        .build());
+
+    DebateSession session = debateSessionRepository.save(DebateSession.builder()
+        .userId(owner.getId())
+        .topic(topic)
+        .userStance(DebateStance.PRO)
+        .difficulty(Difficulty.NORMAL)
+        .mode(DebateMode.PRACTICE)
+        .prepSeconds(60)
+        .build());
+    session.transitionTo(DebateState.FINISHED);  // ended_at 설정 → 통합목록 노출 조건 충족
+    debateSessionRepository.save(session);
+
+    debateReportRepository.save(DebateReport.builder()
+        .session(session)
+        .sessionScore(score)
+        .reportStatus(ReportStatus.COMPLETED)
+        .overall("총평 텍스트")
+        .build());
+    em.flush();  // 네이티브 통합목록 쿼리에서 즉시 보이도록
+    return session;
   }
 
   private InterviewReport saveCompletedInterviewReport(

@@ -9,6 +9,8 @@ import passroutebackend.debate.dto.response.DebateReportApiResponse;
 import passroutebackend.debate.entity.DebateReport;
 import passroutebackend.debate.entity.DebateSession;
 import passroutebackend.debate.entity.DebateTurn;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.debate.DebateReportRequest;
 import passroutebackend.interview.dto.debate.DebateReportResponse;
@@ -186,7 +188,14 @@ public class DebateReportService {
 
   public Optional<DebateReport> findReport(Long userId, Long sessionId) {
     DebateSession session = transactionService.findSessionForUserOrThrow(sessionId, userId);
+    if (!session.isActive()) {
+      throw CustomException.of(ErrorCode.DEBATE_SESSION_NOT_FOUND);
+    }
     return transactionService.findReportBySession(session);
+  }
+
+  public void deleteDebateReport(Long userId, Long sessionId) {
+    transactionService.softDeleteSession(sessionId, userId);
   }
 
   public DebateReportApiResponse toApiResponse(DebateReport report) {
