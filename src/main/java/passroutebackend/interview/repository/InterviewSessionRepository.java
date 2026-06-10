@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long> {
 
-    List<InterviewSession> findByInterviewRoomAndDeletedAtIsNullOrderBySessionNumberAsc(InterviewRoom interviewRoom);
+    List<InterviewSession> findByInterviewRoomAndIsActiveTrueOrderBySessionNumberAsc(InterviewRoom interviewRoom);
 
     int countByInterviewRoom(InterviewRoom interviewRoom);
 }

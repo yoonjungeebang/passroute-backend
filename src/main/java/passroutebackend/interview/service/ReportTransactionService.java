@@ -116,7 +116,7 @@ public class ReportTransactionService {
     if (!session.getInterviewRoom().getUserId().equals(userId)) {
       throw CustomException.of(ErrorCode.ACCESS_DENIED);
     }
-    if (session.getDeletedAt() != null) {
+    if (!session.isActive()) {
       throw CustomException.of(ErrorCode.SESSION_NOT_FOUND);
     }
     if (session.getStatus() != SessionStatus.COMPLETED) {
@@ -140,7 +140,7 @@ public class ReportTransactionService {
     if (!session.getInterviewRoom().getUserId().equals(userId)) {
       throw CustomException.of(ErrorCode.ACCESS_DENIED);
     }
-    if (session.getDeletedAt() != null) {
+    if (!session.isActive()) {
       return;
     }
     session.softDelete();

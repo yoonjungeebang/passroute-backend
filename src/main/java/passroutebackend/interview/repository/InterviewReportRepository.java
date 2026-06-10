@@ -36,7 +36,7 @@ public interface InterviewReportRepository extends JpaRepository<InterviewReport
         JOIN FETCH r.session s
         JOIN FETCH s.interviewRoom rm
       WHERE rm.siId = :siId
-        AND s.deletedAt IS NULL
+        AND s.isActive = true
         AND s.status = passroutebackend.interview.entity.SessionStatus.COMPLETED
         AND r.reportStatus = passroutebackend.interview.entity.ReportStatus.COMPLETED
       ORDER BY s.endedAt ASC
@@ -49,7 +49,7 @@ public interface InterviewReportRepository extends JpaRepository<InterviewReport
         JOIN FETCH s.interviewRoom rm
       WHERE rm.userId = :userId
         AND rm.companyName IN :companyNames
-        AND s.deletedAt IS NULL
+        AND s.isActive = true
         AND s.status = passroutebackend.interview.entity.SessionStatus.COMPLETED
         AND r.reportStatus = passroutebackend.interview.entity.ReportStatus.COMPLETED
       ORDER BY s.endedAt DESC
