@@ -61,6 +61,7 @@ public class ReportListQueryRepository {
           AND ds.user_id = :userId
           AND dr.report_status = 'COMPLETED'
           AND ds.ended_at IS NOT NULL
+          AND ds.is_active = true
           AND (:q IS NULL OR LOWER(dt.title) LIKE :q)
       )
       ORDER BY date DESC, domain_id DESC
@@ -98,6 +99,7 @@ public class ReportListQueryRepository {
             AND ds.user_id = :userId
             AND dr.report_status = 'COMPLETED'
             AND ds.ended_at IS NOT NULL
+            AND ds.is_active = true
             AND (:q IS NULL OR LOWER(dt.title) LIKE :q)
         )
       ) AS combined
