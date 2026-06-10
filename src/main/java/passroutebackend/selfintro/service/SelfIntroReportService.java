@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,11 +16,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.report.ItemAverages;
+import passroutebackend.interview.dto.report.SelfIntroSummaryAiResponse;
+import passroutebackend.interview.dto.report.SelfIntroSummaryRequest;
 import passroutebackend.interview.dto.report.WeaknessItem;
 import passroutebackend.interview.entity.InterviewReadiness;
 import passroutebackend.interview.entity.InterviewReport;
 import passroutebackend.interview.repository.InterviewReportRepository;
+import passroutebackend.selfintro.dto.response.AiSummary;
 import passroutebackend.selfintro.dto.response.ItemTrendItem;
 import passroutebackend.selfintro.dto.response.ReadinessInfo;
 import passroutebackend.selfintro.dto.response.RecommendedQuestionCount;
@@ -38,6 +43,10 @@ public class SelfIntroReportService {
   private final SelfIntroRepository selfIntroRepository;
   private final InterviewReportRepository interviewReportRepository;
   private final ObjectMapper objectMapper;
+  private final AiServerClient aiServerClient;
+
+  // selfIntroId:lastSessionId 키. 새 세션으로 마지막 세션 id가 바뀔 때만 재생성. 성공 응답만 캐싱.
+  private final Map<String, AiSummary> aiSummaryCache = new ConcurrentHashMap<>();
 
   private static final String GROWTH_SUMMARY_N0 = "아직 응시 이력이 없습니다. 첫 면접을 시작해보세요.";
   private static final String GROWTH_SUMMARY_N1 = "1회 응시했습니다. 회차별 추이 분석은 2회차부터 가능합니다.";
@@ -77,6 +86,7 @@ public class SelfIntroReportService {
     List<RecommendedQuestionCount> topRecommendedQuestions = buildTopRecommendedQuestions(reports);
     ReadinessInfo readiness = buildReadiness(overallAverage);
     String growthSummary = buildGrowthSummary(reports);
+    AiSummary aiSummary = buildAiSummary(selfIntro, reports, overallAverage, itemAverages, itemTrend, readiness);
 
     return SelfIntroReportResponse.builder()
         .selfIntroId(selfIntro.getId())
@@ -93,6 +103,7 @@ public class SelfIntroReportService {
         .topRecommendedQuestions(topRecommendedQuestions)
         .readiness(readiness)
         .growthSummary(growthSummary)
+        .aiSummary(aiSummary)
         .build();
   }
 
@@ -307,6 +318,81 @@ public class SelfIntroReportService {
       return GROWTH_SUMMARY_DOWN;
     }
     return GROWTH_SUMMARY_STABLE;
+  }
+
+  // ── AI 종합 피드백 (best-effort: 실패 시 null → 프론트는 growthSummary 폴백) ──────
+
+  private AiSummary buildAiSummary(SelfIntro selfIntro, List<InterviewReport> reports,
+      double overallAverage, Map<String, Double> itemAverages,
+      List<ItemTrendItem> itemTrend, ReadinessInfo readiness) {
+    Long lastSessionId = reports.get(reports.size() - 1).getSession().getId();
+    String cacheKey = selfIntro.getId() + ":" + lastSessionId;
+    AiSummary cached = aiSummaryCache.get(cacheKey);
+    if (cached != null) {
+      return cached;
+    }
+
+    SelfIntroSummaryRequest request = SelfIntroSummaryRequest.builder()
+        .jobTitle(selfIntro.getJobPosition())
+        .companyName(selfIntro.getCompanyName())
+        .totalSessions(reports.size())
+        .overallAverage(overallAverage)
+        .itemAverages(toSnakeCaseKeys(itemAverages))
+        .itemTrend(toAiItemTrend(itemTrend))
+        .sessions(buildAiSessions(reports))
+        .readiness(readiness.getLevel().name())
+        .build();
+
+    SelfIntroSummaryAiResponse response = aiServerClient.generateSelfIntroSummary(request);
+    if (response == null || response.getSelfIntroSummary() == null) {
+      return null;
+    }
+    SelfIntroSummaryAiResponse.SelfIntroSummary s = response.getSelfIntroSummary();
+    AiSummary aiSummary = new AiSummary(s.getOverall(), s.getRepeatedWeakness(), s.getNextSteps());
+    aiSummaryCache.put(cacheKey, aiSummary);
+    return aiSummary;
+  }
+
+  private Map<String, Double> toSnakeCaseKeys(Map<String, Double> map) {
+    Map<String, Double> result = new LinkedHashMap<>();
+    for (Map.Entry<String, Double> e : map.entrySet()) {
+      result.put(toSnakeCase(e.getKey()), e.getValue());
+    }
+    return result;
+  }
+
+  private List<SelfIntroSummaryRequest.ItemTrend> toAiItemTrend(List<ItemTrendItem> itemTrend) {
+    List<SelfIntroSummaryRequest.ItemTrend> result = new ArrayList<>();
+    for (ItemTrendItem t : itemTrend) {
+      result.add(new SelfIntroSummaryRequest.ItemTrend(
+          toSnakeCase(t.getItem()), t.getFirstAvg(), t.getLastAvg(), t.getDirection().name()));
+    }
+    return result;
+  }
+
+  private List<SelfIntroSummaryRequest.Session> buildAiSessions(List<InterviewReport> reports) {
+    List<SelfIntroSummaryRequest.Session> sessions = new ArrayList<>();
+    int round = 1;
+    for (InterviewReport r : reports) {
+      sessions.add(new SelfIntroSummaryRequest.Session(
+          round++, safeScore(r), parseKeyWeaknessJson(r.getKeyWeakness())));
+    }
+    return sessions;
+  }
+
+  private List<String> parseKeyWeaknessJson(String json) {
+    if (json == null || json.isBlank()) return List.of();
+    try {
+      return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+    } catch (Exception e) {
+      log.warn("keyWeakness JSON 파싱 실패: {}", e.getMessage());
+      return List.of();
+    }
+  }
+
+  // camelCase 항목 키 → snake_case (예: jobRelevance → job_relevance). AI 요청 snake_case 규약.
+  private static String toSnakeCase(String camel) {
+    return camel.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase();
   }
 
   private static class QuestionStat {
