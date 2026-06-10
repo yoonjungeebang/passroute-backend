@@ -116,6 +116,9 @@ public class ReportTransactionService {
     if (!session.getInterviewRoom().getUserId().equals(userId)) {
       throw CustomException.of(ErrorCode.ACCESS_DENIED);
     }
+    if (session.getDeletedAt() != null) {
+      throw CustomException.of(ErrorCode.SESSION_NOT_FOUND);
+    }
     if (session.getStatus() != SessionStatus.COMPLETED) {
       throw CustomException.of(ErrorCode.SESSION_NOT_ENDED);
     }
@@ -127,6 +130,20 @@ public class ReportTransactionService {
     InterviewSession session = sessionRepository.findById(sessionId)
         .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
     return reportRepository.findBySession(session);
+  }
+
+  // 면접 리포트(세션) 소프트 삭제. 멱등: 이미 삭제됐으면 no-op.
+  @Transactional
+  public void softDeleteSession(Long sessionId, Long userId) {
+    InterviewSession session = sessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+    if (!session.getInterviewRoom().getUserId().equals(userId)) {
+      throw CustomException.of(ErrorCode.ACCESS_DENIED);
+    }
+    if (session.getDeletedAt() != null) {
+      return;
+    }
+    session.softDelete();
   }
 
   // 생성 시작 시점에 GENERATING row를 별도 트랜잭션으로 즉시 커밋(폴러 가시성 확보).
