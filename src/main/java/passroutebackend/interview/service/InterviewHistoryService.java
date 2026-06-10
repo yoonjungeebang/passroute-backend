@@ -56,7 +56,7 @@ public class InterviewHistoryService {
         }
 
         List<InterviewSession> sessions = interviewSessionRepository
-                .findByInterviewRoomOrderBySessionNumberAsc(room);
+                .findByInterviewRoomAndIsActiveTrueOrderBySessionNumberAsc(room);
 
         List<InterviewQuestion> allQuestions = interviewQuestionRepository
                 .findBySessionInOrderBySessionIdAscQuestionOrderAsc(sessions);

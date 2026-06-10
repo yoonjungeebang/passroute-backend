@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -78,6 +79,20 @@ public class ReportController {
           .body(ApiResponse.accepted("리포트 생성 중입니다."));
     }
     return ResponseEntity.ok(ApiResponse.success(reportService.toResponseDto(report)));
+  }
+
+  @Operation(summary = "면접 리포트 삭제", description = "면접 세션(=리포트) 1건 소프트 삭제. 멱등(이미 삭제 시에도 200).")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
+  @DeleteMapping("/interview/{sessionId}")
+  public ResponseEntity<ApiResponse<Void>> deleteInterviewReport(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId) {
+    reportService.deleteInterviewReport(sessionId, userId);
+    return ResponseEntity.ok(ApiResponse.success());
   }
 
   @Operation(summary = "토론 리포트 조회", description = "토론 세션의 단건 리포트. 생성 중 202, 완료 200, FAILED 500.")

@@ -237,6 +237,10 @@ public class ReportService {
     return reportTransactionService.findReport(sessionId, userId);
   }
 
+  public void deleteInterviewReport(Long sessionId, Long userId) {
+    reportTransactionService.softDeleteSession(sessionId, userId);
+  }
+
   // 제출된 답변이 0개인지 (전부 스킵/빈답변 → 리포트 생성 불가, 재시도 무의미한 영구 실패 구분용)
   public boolean hasNoAnswers(Long sessionId) {
     return reportTransactionService.countAnswers(sessionId) == 0;
