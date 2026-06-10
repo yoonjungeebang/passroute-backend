@@ -119,6 +119,19 @@ public class ReportController {
     return ResponseEntity.ok(ApiResponse.success(debateReportService.toApiResponse(report)));
   }
 
+  @Operation(summary = "토론 리포트 삭제", description = "토론 세션(=리포트) 1건 소프트 삭제. 멱등(이미 삭제 시에도 200).")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
+  @DeleteMapping("/debate/{sessionId}")
+  public ResponseEntity<ApiResponse<Void>> deleteDebateReport(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId) {
+    debateReportService.deleteDebateReport(userId, sessionId);
+    return ResponseEntity.ok(ApiResponse.success());
+  }
+
   @Operation(summary = "자소서 리포트 조회", description = "자소서에 연결된 면접 세션들의 집계 리포트. 응시 이력 0건이어도 200 + 빈 응답.")
   @ApiResponses({
       @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "리포트 반환 성공"),
