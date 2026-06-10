@@ -30,4 +30,5 @@ public class SelfIntroReportResponse {
   private List<RecommendedQuestionCount> topRecommendedQuestions;
   private ReadinessInfo readiness;
   private String growthSummary;
+  private AiSummary aiSummary;
 }

@@ -41,6 +41,8 @@ import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
 import passroutebackend.interview.dto.report.ReportGenerationRequest;
 import passroutebackend.interview.dto.report.ReportGenerationResponse;
+import passroutebackend.interview.dto.report.SelfIntroSummaryAiResponse;
+import passroutebackend.interview.dto.report.SelfIntroSummaryRequest;
 import passroutebackend.interview.dto.report.SessionSummaryRequest;
 import passroutebackend.interview.dto.report.SessionSummaryResponse;
 import passroutebackend.interview.dto.voice.VoiceAnalysisResponse;
@@ -160,6 +162,21 @@ public class AiServerClient {
         .body(request)
         .retrieve()
         .body(ReportGenerationResponse.class);
+  }
+
+  // 자소서별 AI 종합 피드백 (best-effort: 실패 시 null → 리포트 본문 흐름 격리)
+  public SelfIntroSummaryAiResponse generateSelfIntroSummary(SelfIntroSummaryRequest request) {
+    try {
+      return aiServerRestClient.post()
+          .uri("/report/self-intro/generate")
+          .contentType(MediaType.APPLICATION_JSON)
+          .body(request)
+          .retrieve()
+          .body(SelfIntroSummaryAiResponse.class);
+    } catch (Exception e) {
+      log.warn("자소서 AI 종합 피드백 생성 실패, 폴백 사용: {}", e.getMessage());
+      return null;
+    }
   }
 
   // ── 토론 면접 (debateAiServerRestClient 사용, timeout 180s) ─────────────────
