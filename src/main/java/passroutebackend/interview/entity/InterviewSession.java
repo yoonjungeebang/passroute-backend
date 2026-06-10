@@ -43,6 +43,12 @@ public class InterviewSession {
 
   private LocalDateTime endedAt;
 
+  @Column(name = "is_active", nullable = false)
+  private boolean isActive = true;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
   @Builder
   public InterviewSession(InterviewRoom interviewRoom, int sessionNumber, SessionStatus status) {
     this.interviewRoom = interviewRoom;
@@ -54,5 +60,11 @@ public class InterviewSession {
   public void end(SessionStatus status) {
     this.status = status;
     this.endedAt = LocalDateTime.now();
+  }
+
+  // ── 소프트 딜리트 (SelfIntro 컨벤션) ─────────────────────────
+  public void softDelete() {
+    this.isActive = false;
+    this.deletedAt = LocalDateTime.now();
   }
 }

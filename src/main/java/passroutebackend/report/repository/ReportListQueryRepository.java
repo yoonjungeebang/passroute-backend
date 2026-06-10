@@ -31,6 +31,7 @@ public class ReportListQueryRepository {
         WHERE :includeInterview = 1
           AND room.user_id = :userId
           AND s.status = 'COMPLETED'
+          AND s.deleted_at IS NULL
           AND ir.report_status = 'COMPLETED'
           AND (:resumeId IS NULL OR room.si_id = :resumeId)
           AND (:interviewTypeFilter IS NULL OR room.interview_type = :interviewTypeFilter)
@@ -76,6 +77,7 @@ public class ReportListQueryRepository {
           WHERE :includeInterview = 1
             AND room.user_id = :userId
             AND s.status = 'COMPLETED'
+            AND s.deleted_at IS NULL
             AND ir.report_status = 'COMPLETED'
             AND (:resumeId IS NULL OR room.si_id = :resumeId)
             AND (:interviewTypeFilter IS NULL OR room.interview_type = :interviewTypeFilter)
