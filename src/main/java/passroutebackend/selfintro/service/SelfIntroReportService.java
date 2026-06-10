@@ -2,13 +2,14 @@ package passroutebackend.selfintro.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,8 +46,12 @@ public class SelfIntroReportService {
   private final ObjectMapper objectMapper;
   private final AiServerClient aiServerClient;
 
-  // selfIntroId:lastSessionId 키. 새 세션으로 마지막 세션 id가 바뀔 때만 재생성. 성공 응답만 캐싱.
-  private final Map<String, AiSummary> aiSummaryCache = new ConcurrentHashMap<>();
+  // AI 종합 피드백 캐시. 키 = selfIntroId:lastSessionId (새 회차 완료 시에만 갱신).
+  // 크기 상한(LRU)으로 메모리 누수 방지, 실패는 짧은 TTL로 음성 캐싱(AI 장애 시 매 조회 호출 방지).
+  private static final int AI_SUMMARY_CACHE_MAX = 500;
+  private static final long AI_SUMMARY_FAILURE_TTL_MS = Duration.ofMinutes(1).toMillis();
+  private final Map<String, CachedSummary> aiSummaryCache =
+      Collections.synchronizedMap(new LruCache<>(AI_SUMMARY_CACHE_MAX));
 
   private static final String GROWTH_SUMMARY_N0 = "아직 응시 이력이 없습니다. 첫 면접을 시작해보세요.";
   private static final String GROWTH_SUMMARY_N1 = "1회 응시했습니다. 회차별 추이 분석은 2회차부터 가능합니다.";
@@ -327,9 +332,10 @@ public class SelfIntroReportService {
       List<ItemTrendItem> itemTrend, ReadinessInfo readiness) {
     Long lastSessionId = reports.get(reports.size() - 1).getSession().getId();
     String cacheKey = selfIntro.getId() + ":" + lastSessionId;
-    AiSummary cached = aiSummaryCache.get(cacheKey);
-    if (cached != null) {
-      return cached;
+    long now = System.currentTimeMillis();
+    CachedSummary cached = aiSummaryCache.get(cacheKey);
+    if (cached != null && cached.valid(now)) {
+      return cached.summary();
     }
 
     SelfIntroSummaryRequest request = SelfIntroSummaryRequest.builder()
@@ -345,11 +351,13 @@ public class SelfIntroReportService {
 
     SelfIntroSummaryAiResponse response = aiServerClient.generateSelfIntroSummary(request);
     if (response == null || response.getSelfIntroSummary() == null) {
+      // 실패를 짧은 TTL로 캐싱 → AI 장애 동안 매 조회마다 외부 호출(최대 120s 타임아웃)하는 것 방지
+      aiSummaryCache.put(cacheKey, new CachedSummary(null, now + AI_SUMMARY_FAILURE_TTL_MS));
       return null;
     }
     SelfIntroSummaryAiResponse.SelfIntroSummary s = response.getSelfIntroSummary();
     AiSummary aiSummary = new AiSummary(s.getOverall(), s.getRepeatedWeakness(), s.getNextSteps());
-    aiSummaryCache.put(cacheKey, aiSummary);
+    aiSummaryCache.put(cacheKey, new CachedSummary(aiSummary, 0));
     return aiSummary;
   }
 
@@ -392,7 +400,31 @@ public class SelfIntroReportService {
 
   // camelCase 항목 키 → snake_case (예: jobRelevance → job_relevance). AI 요청 snake_case 규약.
   private static String toSnakeCase(String camel) {
+    if (camel == null) {
+      return "";
+    }
     return camel.replaceAll("([a-z0-9])([A-Z])", "$1_$2").toLowerCase();
+  }
+
+  // summary == null 이면 실패 마킹(expiresAtMs 이후 재시도). 성공은 expiresAtMs == 0(만료 없음, 크기로만 축출).
+  private record CachedSummary(AiSummary summary, long expiresAtMs) {
+    boolean valid(long now) {
+      return expiresAtMs == 0 || now <= expiresAtMs;
+    }
+  }
+
+  private static final class LruCache<K, V> extends LinkedHashMap<K, V> {
+    private final int maxSize;
+
+    private LruCache(int maxSize) {
+      super(64, 0.75f, false);
+      this.maxSize = maxSize;
+    }
+
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+      return size() > maxSize;
+    }
   }
 
   private static class QuestionStat {
