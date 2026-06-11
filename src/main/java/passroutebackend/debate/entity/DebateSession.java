@@ -88,15 +88,25 @@ public class DebateSession {
   @Column(name = "deleted_at")
   private LocalDateTime deletedAt;
 
+  /** 선택한 자기소개서 ID (선택). 토론 중 참고 범위를 한정한 기업의 출처. */
+  @Column(name = "si_id")
+  private Long siId;
+
+  /** siId로부터 스냅샷한 기업명 (선택). 자기소개서가 이후 삭제/변경되어도 세션에는 유지된다. */
+  @Column(name = "company_name", length = 100)
+  private String companyName;
+
   @Builder
   public DebateSession(Long userId, DebateTopic topic, DebateStance userStance,
-      Difficulty difficulty, DebateMode mode, int prepSeconds) {
+      Difficulty difficulty, DebateMode mode, int prepSeconds, Long siId, String companyName) {
     this.userId = userId;
     this.topic = topic;
     this.userStance = userStance;
     this.difficulty = difficulty;
     this.mode = mode;
     this.prepSeconds = prepSeconds;
+    this.siId = siId;
+    this.companyName = companyName;
     this.currentState = DebateState.CREATED;
   }
 

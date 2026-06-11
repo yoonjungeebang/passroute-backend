@@ -20,4 +20,7 @@ public class DebateTopicSuggestRequest {
   @Min(1)
   @Max(5)
   private Integer count;
+
+  /** 선택한 자기소개서 ID (선택). 지정 시 해당 기업의 크롤링 뉴스로 범위를 한정해 주제를 추천한다. */
+  private Long introId;
 }

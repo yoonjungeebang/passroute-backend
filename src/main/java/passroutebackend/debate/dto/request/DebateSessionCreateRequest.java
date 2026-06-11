@@ -25,4 +25,7 @@ public class DebateSessionCreateRequest {
 
   @NotNull
   private DebateMode mode;
+
+  /** 선택한 자기소개서 ID (선택). 지정 시 해당 기업명을 세션에 연결해 토론 중 참고 범위를 한정한다. */
+  private Long introId;
 }

@@ -23,4 +23,7 @@ public class TopicSuggestAiRequest {
 
   // 1~5 (기본 3)
   private Integer count;
+
+  // 지정 시 해당 기업의 크롤링 뉴스로 범위를 한정 (company_name)
+  private String companyName;
 }

@@ -53,15 +53,17 @@ public class DebateController {
   @Operation(summary = "토론 주제 후보 추천 (크롤링 뉴스 기반)")
   @PostMapping("/topics/suggest")
   public ResponseEntity<ApiResponse<DebateTopicSuggestResponse>> suggestTopics(
+      @AuthenticationPrincipal Long userId,
       @Valid @RequestBody DebateTopicSuggestRequest request) {
-    return ResponseEntity.ok(ApiResponse.success(debateService.suggestTopics(request)));
+    return ResponseEntity.ok(ApiResponse.success(debateService.suggestTopics(userId, request)));
   }
 
   @Operation(summary = "토론 주제 생성 + 저장 (선택 후보 상세화 → topicId 발급)")
   @PostMapping("/topics/generate")
   public ResponseEntity<ApiResponse<DebateTopicResponse>> generateTopic(
+      @AuthenticationPrincipal Long userId,
       @Valid @RequestBody DebateTopicGenerateRequest request) {
-    DebateTopicResponse response = debateService.generateTopic(request);
+    DebateTopicResponse response = debateService.generateTopic(userId, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
   }
 
