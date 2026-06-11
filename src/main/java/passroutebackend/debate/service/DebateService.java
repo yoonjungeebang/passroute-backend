@@ -56,6 +56,7 @@ import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
 import passroutebackend.interview.dto.debate.TopicDetailAiResponse;
 import passroutebackend.interview.dto.debate.TopicSuggestAiRequest;
 import passroutebackend.interview.dto.debate.TopicSuggestAiResponse;
+import passroutebackend.selfintro.entity.SelfIntro;
 
 import java.util.List;
 import java.util.UUID;
@@ -124,16 +125,20 @@ public class DebateService {
   // ── AI 주제 추천 / 생성 ───────────────────────────────────────────────────
 
   /** 크롤링 뉴스 기반 주제 후보 N개 추천 (저장하지 않음). */
-  public DebateTopicSuggestResponse suggestTopics(DebateTopicSuggestRequest req) {
+  public DebateTopicSuggestResponse suggestTopics(Long userId, DebateTopicSuggestRequest req) {
     List<String> keywords = (req.getKeywords() == null)
         ? List.of()
         : req.getKeywords().stream().filter(k -> k != null && !k.isBlank()).toList();
     int count = (req.getCount() == null) ? 3 : req.getCount();
+    String companyName = (req.getIntroId() == null)
+        ? null
+        : transactionService.findSelfIntroOrThrow(req.getIntroId(), userId).getCompanyName();
 
     TopicSuggestAiResponse ai = aiServerClient.suggestDebateTopics(
         TopicSuggestAiRequest.builder()
             .keywords(keywords)
             .count(count)
+            .companyName(companyName)
             .build());
 
     List<DebateTopicCandidateResponse> candidates = (ai.getCandidates() == null)
@@ -153,12 +158,17 @@ public class DebateService {
   }
 
   /** 선택한 후보를 상세화(찬/반 논거)하여 DB에 저장 → 발급된 topicId(+주제 전체) 반환. */
-  public DebateTopicResponse generateTopic(DebateTopicGenerateRequest req) {
+  public DebateTopicResponse generateTopic(Long userId, DebateTopicGenerateRequest req) {
+    String companyName = (req.getIntroId() == null)
+        ? null
+        : transactionService.findSelfIntroOrThrow(req.getIntroId(), userId).getCompanyName();
+
     TopicDetailAiResponse ai = aiServerClient.generateDebateTopicDetail(
         TopicDetailAiRequest.builder()
             .title(req.getTitle())
             .summary(req.getDescription())
             .category(req.getCategory())
+            .companyName(companyName)
             .build());
 
     // 찬/반 논거는 토론 진행에 필수 → 누락 시 AI 응답 오류로 처리
@@ -207,9 +217,14 @@ public class DebateService {
     int prepSeconds = (req.getMode() == DebateMode.REAL)
         ? REAL_PREP_SECONDS
         : PRACTICE_PREP_SECONDS;
+    SelfIntro selfIntro = (req.getIntroId() == null)
+        ? null
+        : transactionService.findSelfIntroOrThrow(req.getIntroId(), userId);
     DebateSession session = transactionService.createSession(
         userId, topic, req.getUserStance(), persona, req.getDifficulty(),
-        req.getMode(), prepSeconds);
+        req.getMode(), prepSeconds,
+        selfIntro == null ? null : selfIntro.getId(),
+        selfIntro == null ? null : selfIntro.getCompanyName());
     return DebateSessionCreateResponse.builder()
         .sessionId(session.getId())
         .mode(session.getMode())

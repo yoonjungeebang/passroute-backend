@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -126,7 +127,8 @@ class DebateModeServiceTest {
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
           eq(USER_ID), eq(topic), eq(DebateStance.PRO), eq(persona),
-          eq(Difficulty.NORMAL), eq(DebateMode.REAL), eq(60))).thenReturn(saved);
+          eq(Difficulty.NORMAL), eq(DebateMode.REAL), eq(60),
+          isNull(), isNull())).thenReturn(saved);
 
       DebateSessionCreateResponse res =
           debateService.createSession(USER_ID, createRequest(DebateMode.REAL));
@@ -135,7 +137,8 @@ class DebateModeServiceTest {
       assertThat(res.getPrepSeconds()).isEqualTo(60);
       verify(transactionService).createSession(
           eq(USER_ID), eq(topic), eq(DebateStance.PRO), eq(persona),
-          eq(Difficulty.NORMAL), eq(DebateMode.REAL), eq(60));
+          eq(Difficulty.NORMAL), eq(DebateMode.REAL), eq(60),
+          isNull(), isNull());
     }
 
     @Test
@@ -149,7 +152,8 @@ class DebateModeServiceTest {
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
           eq(USER_ID), eq(topic), eq(DebateStance.PRO), eq(persona),
-          eq(Difficulty.NORMAL), eq(DebateMode.PRACTICE), eq(0))).thenReturn(saved);
+          eq(Difficulty.NORMAL), eq(DebateMode.PRACTICE), eq(0),
+          isNull(), isNull())).thenReturn(saved);
 
       DebateSessionCreateResponse res =
           debateService.createSession(USER_ID, createRequest(DebateMode.PRACTICE));
@@ -158,7 +162,8 @@ class DebateModeServiceTest {
       assertThat(res.getPrepSeconds()).isEqualTo(0);
       verify(transactionService).createSession(
           eq(USER_ID), eq(topic), eq(DebateStance.PRO), eq(persona),
-          eq(Difficulty.NORMAL), eq(DebateMode.PRACTICE), eq(0));
+          eq(Difficulty.NORMAL), eq(DebateMode.PRACTICE), eq(0),
+          isNull(), isNull());
     }
   }
 

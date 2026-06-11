@@ -29,6 +29,8 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.entity.Difficulty;
 import passroutebackend.interview.entity.ReportStatus;
+import passroutebackend.selfintro.entity.SelfIntro;
+import passroutebackend.selfintro.repository.SelfIntroRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +46,7 @@ public class DebateTransactionService {
   private final AiCompetitorRepository competitorRepository;
   private final DebateTurnRepository turnRepository;
   private final DebateReportRepository reportRepository;
+  private final SelfIntroRepository selfIntroRepository;
   private final ObjectMapper objectMapper;
 
   // ── 조회 ──────────────────────────────────────────────────────────────────
@@ -73,6 +76,13 @@ public class DebateTransactionService {
   public AiPersona findPersonaOrThrow(Long personaId) {
     return personaRepository.findById(personaId)
         .orElseThrow(() -> CustomException.of(ErrorCode.PERSONA_NOT_FOUND));
+  }
+
+  /** 사용자 소유의 자기소개서 조회. 토론 주제 추천/생성/세션 생성 시 기업명 범위 한정에 사용. */
+  @Transactional(readOnly = true)
+  public SelfIntro findSelfIntroOrThrow(Long introId, Long userId) {
+    return selfIntroRepository.findByIdAndUser_IdAndIsActiveTrue(introId, userId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SELF_INTRO_NOT_FOUND));
   }
 
   @Transactional(readOnly = true)
@@ -118,7 +128,8 @@ public class DebateTransactionService {
 
   @Transactional
   public DebateSession createSession(Long userId, DebateTopic topic, DebateStance userStance,
-      AiPersona persona, Difficulty difficulty, DebateMode mode, int prepSeconds) {
+      AiPersona persona, Difficulty difficulty, DebateMode mode, int prepSeconds,
+      Long siId, String companyName) {
     DebateSession session = DebateSession.builder()
         .userId(userId)
         .topic(topic)
@@ -126,6 +137,8 @@ public class DebateTransactionService {
         .difficulty(difficulty)
         .mode(mode)
         .prepSeconds(prepSeconds)
+        .siId(siId)
+        .companyName(companyName)
         .build();
     sessionRepository.save(session);
 

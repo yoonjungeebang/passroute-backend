@@ -23,4 +23,7 @@ public class TopicDetailAiRequest {
   private String summary;
 
   private TopicCategory category;
+
+  // 지정 시 해당 기업의 크롤링 뉴스를 참고 (company_name)
+  private String companyName;
 }

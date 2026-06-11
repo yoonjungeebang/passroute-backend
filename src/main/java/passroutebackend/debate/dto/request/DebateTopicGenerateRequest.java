@@ -21,4 +21,7 @@ public class DebateTopicGenerateRequest {
 
   @NotNull
   private TopicCategory category;
+
+  /** 선택한 자기소개서 ID (선택). 지정 시 해당 기업의 크롤링 뉴스를 참고해 상세 주제를 생성한다. */
+  private Long introId;
 }
