@@ -1,6 +1,7 @@
 package passroutebackend.global.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -55,5 +56,15 @@ class PersonaVideoUrlSignerTest {
     String url = "https://cdn.example.com/video.mp4";
 
     assertThat(signer.sign(url)).isEqualTo(url);
+  }
+
+  @Test
+  void failsFastWhenS3PresignerIsMissing() {
+    when(presignerProvider.getIfAvailable()).thenReturn(null);
+
+    assertThatThrownBy(() -> signer.sign(
+        "https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/test.mp4"))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("S3 Presigner");
   }
 }
