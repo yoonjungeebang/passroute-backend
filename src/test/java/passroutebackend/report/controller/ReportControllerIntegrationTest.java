@@ -145,6 +145,66 @@ class ReportControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("성공 - 새 피드백 구조(detailed_feedback/fact_check)가 응답에 내려온다")
+    void newFeedbackStructureExposed() throws Exception {
+      String questionFeedbackJson = """
+          [
+            {
+              "question_index": 1,
+              "question": "GET과 POST의 차이는?",
+              "question_type": "technical",
+              "percentage": 48,
+              "feedback": "GET/POST 용도를 반대로 설명했습니다.",
+              "detailed_feedback": {
+                "strength": "HTTP 메서드 개념은 인지",
+                "weakness": "용도를 반대로 설명",
+                "missing_info": ["멱등성", "캐시 가능 여부"],
+                "improvement_example": "GET은 조회, POST는 생성에 사용한다고 설명",
+                "suggested_answer": "GET은 조회하는 멱등 메서드, POST는 생성하는 비멱등 메서드입니다.",
+                "retry_strategy": "용도 → 멱등성 → 캐시 순으로 정리"
+              },
+              "fact_check": {
+                "is_fact_check_applicable": true,
+                "incorrect_claims": [
+                  { "user_claim": "GET은 생성, POST는 조회", "issue": "용도 반대",
+                    "correct_explanation": "GET은 조회, POST는 생성", "suggested_fix": "반대로 정정" }
+                ],
+                "unsupported_claims": ["근거 없이 더 빠르다고 단정"]
+              }
+            },
+            {
+              "question_index": 2,
+              "question": "협업 중 갈등 해결 경험은?",
+              "question_type": "personality",
+              "percentage": 85,
+              "feedback": "상황과 행동이 구체적이었습니다."
+            }
+          ]
+          """;
+      InterviewReport report =
+          saveCompletedReportWithQuestionFeedback(selfIntro.getId(), 1, questionFeedbackJson);
+
+      mockMvc.perform(get("/reports/interview/{sessionId}", report.getSession().getId())
+              .header("Authorization", "Bearer " + token))
+          .andExpect(status().isOk())
+          // 기존 문자열 feedback 유지
+          .andExpect(jsonPath("$.data.questionFeedback[0].feedback").value("GET/POST 용도를 반대로 설명했습니다."))
+          // 신규: detailed_feedback (60점 미만 → improvement/suggested/retry 채워짐)
+          .andExpect(jsonPath("$.data.questionFeedback[0].detailed_feedback.strength").value("HTTP 메서드 개념은 인지"))
+          .andExpect(jsonPath("$.data.questionFeedback[0].detailed_feedback.missing_info.length()").value(2))
+          .andExpect(jsonPath("$.data.questionFeedback[0].detailed_feedback.suggested_answer").exists())
+          // 신규: 기술 질문 fact_check
+          .andExpect(jsonPath("$.data.questionFeedback[0].fact_check.is_fact_check_applicable").value(true))
+          .andExpect(jsonPath("$.data.questionFeedback[0].fact_check.incorrect_claims[0].user_claim").value("GET은 생성, POST는 조회"))
+          .andExpect(jsonPath("$.data.questionFeedback[0].fact_check.unsupported_claims[0]").value("근거 없이 더 빠르다고 단정"))
+          // 하위호환: 새 필드 없는 인성 문항 → detailed_feedback 빈 객체, fact_check 미적용 기본값
+          .andExpect(jsonPath("$.data.questionFeedback[1].feedback").value("상황과 행동이 구체적이었습니다."))
+          .andExpect(jsonPath("$.data.questionFeedback[1].detailed_feedback.missing_info.length()").value(0))
+          .andExpect(jsonPath("$.data.questionFeedback[1].fact_check.is_fact_check_applicable").value(false))
+          .andExpect(jsonPath("$.data.questionFeedback[1].fact_check.incorrect_claims.length()").value(0));
+    }
+
+    @Test
     @DisplayName("실패 - 다른 유저 세션 → 403")
     void accessDenied() throws Exception {
       InterviewReport report = saveCompletedInterviewReport(selfIntro.getId(), 80.0, 1, List.of());
@@ -672,6 +732,44 @@ class ReportControllerIntegrationTest {
         .voiceScore(voiceScore)
         .build());
     em.flush();  // native JdbcTemplate 쿼리에서 즉시 보이도록 DB에 반영
+    return saved;
+  }
+
+  private InterviewReport saveCompletedReportWithQuestionFeedback(
+      Long siId, int sessionNumber, String questionFeedbackJson) {
+    InterviewRoom room = roomRepository.save(InterviewRoom.builder()
+        .userId(user.getId())
+        .siId(siId)
+        .companyName("카카오")
+        .jobPosition("백엔드")
+        .interviewType(InterviewType.TECHNICAL)
+        .interviewFormat(InterviewFormat.ONE_ON_ONE)
+        .interviewMode("PRACTICE")
+        .aiInterviewer("TECH_INTERVIEWER")
+        .interviewCount(3)
+        .difficulty(Difficulty.NORMAL)
+        .pressureLevel(5)
+        .followupCount(3)
+        .status(RoomStatus.COMPLETED)
+        .build());
+
+    InterviewSession session = sessionRepository.save(InterviewSession.builder()
+        .interviewRoom(room)
+        .sessionNumber(sessionNumber)
+        .status(SessionStatus.IN_PROGRESS)
+        .build());
+    session.end(SessionStatus.COMPLETED);
+    sessionRepository.save(session);
+
+    InterviewReport saved = reportRepository.save(InterviewReport.builder()
+        .session(session)
+        .sessionScore(70.0)
+        .interviewReadiness(InterviewReadiness.NEEDS_REVIEW)
+        .overall("총평 텍스트")
+        .questionFeedback(questionFeedbackJson)
+        .reportStatus(ReportStatus.COMPLETED)
+        .build());
+    em.flush();
     return saved;
   }
 
