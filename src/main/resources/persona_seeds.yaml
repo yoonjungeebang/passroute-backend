@@ -5,6 +5,8 @@ personas:
   # ─────────────────────────────────────────────────────────────
   - personaId: persona_01_stable
     name: 김지원
+    speakingVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%80%E1%85%B5%E1%86%B7%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%86%AB_speaking.mp4
+    silenceVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%80%E1%85%B5%E1%86%B7%E1%84%8C%E1%85%B5%E1%84%8B%E1%85%AF%E1%86%AB_idle.mp4
     background: 3년차 백엔드 개발자. 대기업 SI 프로젝트에서 결제 시스템 운영 경험.
     debateStyle: COOPERATIVE
     difficulty: NORMAL
@@ -37,6 +39,8 @@ personas:
   # ─────────────────────────────────────────────────────────────
   - personaId: persona_02_aggressive
     name: 박도현
+    speakingVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%87%E1%85%A1%E1%86%A8%E1%84%83%E1%85%A9%E1%84%92%E1%85%A7%E1%86%AB_speaking.mp4
+    silenceVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%87%E1%85%A1%E1%86%A8%E1%84%83%E1%85%A9%E1%84%92%E1%85%A7%E1%86%AB_idle.mp4
     background: 5년차 시니어 백엔드 개발자. 글로벌 빅테크 인턴십 및 국내 유니콘 스타트업 재직 중.
     debateStyle: AGGRESSIVE
     difficulty: HARD
@@ -70,6 +74,8 @@ personas:
   # ─────────────────────────────────────────────────────────────
   - personaId: persona_03_creative
     name: 이서연
+    speakingVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A5%E1%84%8B%E1%85%A7%E1%86%AB_speaking.mp4
+    silenceVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8B%E1%85%B5%E1%84%89%E1%85%A5%E1%84%8B%E1%85%A7%E1%86%AB_idle.mp4
     background: 2년차 풀스택 개발자. 헬스케어 스타트업에서 0→1 서비스 출시 경험.
     debateStyle: STORYTELLING
     difficulty: EASY
@@ -103,6 +109,8 @@ personas:
   # ─────────────────────────────────────────────────────────────
   - personaId: persona_04_veteran
     name: 최태진
+    speakingVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8E%E1%85%AC%E1%84%90%E1%85%A2%E1%84%8C%E1%85%B5%E1%86%AB_speaking.mp4
+    silenceVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8E%E1%85%AC%E1%84%90%E1%85%A2%E1%84%8C%E1%85%B5%E1%86%AB_idle.mp4
     background: 10년차 테크 리드. 핀테크·이커머스·B2B SaaS 등 다양한 도메인에서 팀 리딩 경험.
     debateStyle: DATA_DRIVEN
     difficulty: HARD
@@ -137,6 +145,8 @@ personas:
   # ─────────────────────────────────────────────────────────────
   - personaId: persona_05_nondev
     name: 정하은
+    speakingVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8C%E1%85%A5%E1%86%BC%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B3%E1%86%AB_speaking.mp4
+    silenceVideoUrl: https://passroute-files.s3.ap-northeast-2.amazonaws.com/avatars/competitor/%E1%84%90%E1%85%A9%E1%84%85%E1%85%A9%E1%86%AB_%E1%84%8C%E1%85%A5%E1%86%BC%E1%84%92%E1%85%A1%E1%84%8B%E1%85%B3%E1%86%AB_idle.mp4
     background: 비전공 부트캠프 출신 1년차 개발자. 인문학 학사 후 부트캠프 6개월 수료.
     debateStyle: COOPERATIVE
     difficulty: NORMAL

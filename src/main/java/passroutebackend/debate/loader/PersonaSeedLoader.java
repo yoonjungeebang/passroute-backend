@@ -44,15 +44,22 @@ public class PersonaSeedLoader implements ApplicationRunner {
         return;
       }
 
-      List<AiPersona> toInsert = new ArrayList<>();
-      int skipped = 0;
+      List<AiPersona> toSave = new ArrayList<>();
+      int inserted = 0;
+      int updated = 0;
       for (Map<String, Object> p : personas) {
         String personaKey = (String) p.get("personaId");
-        if (repository.findByPersonaKey(personaKey).isPresent()) {
-          skipped++;
+        String speakingVideoUrl = (String) p.get("speakingVideoUrl");
+        String silenceVideoUrl = (String) p.get("silenceVideoUrl");
+
+        AiPersona existing = repository.findByPersonaKey(personaKey).orElse(null);
+        if (existing != null) {
+          existing.updateVideoUrls(speakingVideoUrl, silenceVideoUrl);
+          toSave.add(existing);
+          updated++;
           continue;
         }
-        toInsert.add(AiPersona.builder()
+        toSave.add(AiPersona.builder()
             .personaKey(personaKey)
             .name((String) p.get("name"))
             .background((String) p.get("background"))
@@ -61,12 +68,13 @@ public class PersonaSeedLoader implements ApplicationRunner {
             .strengths(toJson(p.get("strengths")))
             .weaknesses(toJson(p.get("weaknesses")))
             .systemPromptTemplate((String) p.get("systemPromptTemplate"))
-            .speakingVideoUrl((String) p.get("speakingVideoUrl"))
-            .silenceVideoUrl((String) p.get("silenceVideoUrl"))
+            .speakingVideoUrl(speakingVideoUrl)
+            .silenceVideoUrl(silenceVideoUrl)
             .build());
+        inserted++;
       }
-      repository.saveAll(toInsert);
-      log.info("페르소나 시드 적재 완료: inserted={}, skipped={}", toInsert.size(), skipped);
+      repository.saveAll(toSave);
+      log.info("페르소나 시드 적재 완료: inserted={}, updated={}", inserted, updated);
     } catch (Exception e) {
       log.error("페르소나 시드 적재 실패", e);
     }
