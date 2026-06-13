@@ -531,7 +531,8 @@ public class ReportService {
         .strengths(report.getStrengths())
         .weaknesses(parseJsonAsType(report.getWeaknesses(), new TypeReference<List<WeaknessItem>>() {}))
         .improvements(report.getImprovements())
-        .questionFeedback(parseJsonAsType(report.getQuestionFeedback(), new TypeReference<List<QuestionFeedback>>() {}))
+        .questionFeedback(normalizeQuestionFeedback(
+            parseJsonAsType(report.getQuestionFeedback(), new TypeReference<List<QuestionFeedback>>() {})))
         .recommendedQuestions(parseJsonAsType(report.getRecommendedQuestions(), new TypeReference<List<String>>() {}))
         .finalAdvice(report.getFinalAdvice())
         .readinessComment(report.getReadinessComment())
@@ -569,6 +570,15 @@ public class ReportService {
     );
   }
 
+
+  // 조회 응답 직전, 각 문항 피드백에 새 필드 안전 기본값 주입(과거 리포트 하위호환).
+  private List<QuestionFeedback> normalizeQuestionFeedback(List<QuestionFeedback> feedback) {
+    if (feedback == null) {
+      return null;
+    }
+    feedback.forEach(QuestionFeedback::normalizeForResponse);
+    return feedback;
+  }
 
   // ── JSON 유틸 ──────────────────────────────────────────────────────────────
 
