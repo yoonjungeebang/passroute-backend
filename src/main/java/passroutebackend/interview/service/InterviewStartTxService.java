@@ -15,6 +15,7 @@ import passroutebackend.interview.dto.generate.QuestionGenerateResponse.Question
 import passroutebackend.interview.dto.generate.SelfIntroItemDto;
 import passroutebackend.interview.dto.generate.SessionPreparation;
 import passroutebackend.interview.dto.response.QuestionDto;
+import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
@@ -102,6 +103,7 @@ public class InterviewStartTxService {
           .questionOrder(0)
           .followUp(false)
           .audioUrl(item.getAudioUrl())
+          .csTopic(CsTopic.fromOrNull(item.getCsTopic()))
           .build());
     }
     interviewQuestionRepository.saveAll(questions);
