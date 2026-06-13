@@ -40,8 +40,15 @@ public class QuestionDetailedFeedback {
   @JsonAlias("retryStrategy")
   private String retryStrategy;
 
-  // 누락 방어: 배열은 null 대신 빈 리스트로 유지.
+  // 누락 방어: AI가 명시적 null을 보내면 초기값("")이 덮어써질 수 있으므로
+  // 문자열은 빈 문자열, 배열은 빈 리스트로 보장한다.
   public void normalize() {
+    if (strength == null) {
+      strength = "";
+    }
+    if (weakness == null) {
+      weakness = "";
+    }
     if (missingInfo == null) {
       missingInfo = new ArrayList<>();
     }

@@ -168,6 +168,21 @@ class QuestionFeedbackMappingTest {
       assertThat(qf.getFactCheck().getIncorrectClaims()).isEmpty();
       assertThat(qf.getFactCheck().getUnsupportedClaims()).isEmpty();
     }
+
+    @Test
+    @DisplayName("detailed_feedback에 strength/weakness가 명시적 null로 와도 normalize가 빈 문자열로 보장한다")
+    void normalizeGuardsExplicitNullStrings() throws Exception {
+      QuestionFeedback qf = read("""
+          { "question_index": 1, "feedback": "good",
+            "detailed_feedback": { "strength": null, "weakness": null, "missing_info": null } }
+          """);
+
+      qf.normalizeForResponse();
+
+      assertThat(qf.getDetailedFeedback().getStrength()).isEmpty();
+      assertThat(qf.getDetailedFeedback().getWeakness()).isEmpty();
+      assertThat(qf.getDetailedFeedback().getMissingInfo()).isEmpty();
+    }
   }
 
   @Nested

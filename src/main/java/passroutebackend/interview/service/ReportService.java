@@ -576,7 +576,12 @@ public class ReportService {
     if (feedback == null) {
       return null;
     }
-    feedback.forEach(QuestionFeedback::normalizeForResponse);
+    // 저장 JSON에 null 요소가 섞여 있어도 NPE 없이 진행.
+    feedback.forEach(qf -> {
+      if (qf != null) {
+        qf.normalizeForResponse();
+      }
+    });
     return feedback;
   }
 
