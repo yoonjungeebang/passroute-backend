@@ -2,6 +2,8 @@ package passroutebackend.interview.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -47,17 +49,23 @@ public class InterviewQuestion {
   @Column(nullable = true, length = 512)
   private String audioUrl;
 
+  // 1:1 기술 면접 질문의 CS 토픽 (인성/토론 면접 등은 null)
+  @Enumerated(EnumType.STRING)
+  @Column(name = "cs_topic", nullable = true, length = 30)
+  private CsTopic csTopic;
+
   @CreationTimestamp
   private LocalDateTime createdAt;
 
   @Builder
   public InterviewQuestion(InterviewSession session, int setNumber,
-      String questionText, int questionOrder, boolean followUp, String audioUrl) {
+      String questionText, int questionOrder, boolean followUp, String audioUrl, CsTopic csTopic) {
     this.session = session;
     this.setNumber = setNumber;
     this.questionText = questionText;
     this.questionOrder = questionOrder;
     this.followUp = followUp;
     this.audioUrl = audioUrl;
+    this.csTopic = csTopic;
   }
 }
