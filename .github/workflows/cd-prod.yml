@@ -60,33 +60,93 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upload deploy-prod.sh to EC2
+      - name: Copy docker-compose file to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_EC2_HOST }}
           username: ${{ secrets.PROD_EC2_USERNAME }}
           key: ${{ secrets.PROD_EC2_KEY }}
-          source: "deploy/deploy-prod.sh"
-          target: "/home/ubuntu"
+          source: "docker-compose.yml"
+          target: "~/"
 
-      - name: Run deploy-prod.sh on EC2
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:prod
+          PROD_MYSQL_URL: ${{ secrets.PROD_MYSQL_URL }}
+          PROD_MYSQL_USER: ${{ secrets.PROD_MYSQL_USER }}
+          PROD_MYSQL_PASSWORD: ${{ secrets.PROD_MYSQL_PASSWORD }}
+          AI_SERVER_URL: ${{ secrets.AI_SERVER_URL }}
+          FRONT_ORIGIN: ${{ secrets.FRONT_ORIGIN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          AWS_S3_CLIP_BUCKET: ${{ secrets.AWS_S3_CLIP_BUCKET }}
+          COOLSMS_API_KEY: ${{ secrets.COOLSMS_API_KEY }}
+          COOLSMS_API_SECRET: ${{ secrets.COOLSMS_API_SECRET }}
+          COOLSMS_SENDER: ${{ secrets.COOLSMS_SENDER }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          OAUTH2_REDIRECT_URI: ${{ secrets.OAUTH2_REDIRECT_URI }}
+          HR_MANAGER_SPEAKING_VIDEO_URL: ${{ secrets.HR_MANAGER_SPEAKING_VIDEO_URL }}
+          HR_MANAGER_SILENCE_VIDEO_URL: ${{ secrets.HR_MANAGER_SILENCE_VIDEO_URL }}
+          TEAM_LEAD_SPEAKING_VIDEO_URL: ${{ secrets.TEAM_LEAD_SPEAKING_VIDEO_URL }}
+          TEAM_LEAD_SILENCE_VIDEO_URL: ${{ secrets.TEAM_LEAD_SILENCE_VIDEO_URL }}
+          EXECUTIVE_SPEAKING_VIDEO_URL: ${{ secrets.EXECUTIVE_SPEAKING_VIDEO_URL }}
+          EXECUTIVE_SILENCE_VIDEO_URL: ${{ secrets.EXECUTIVE_SILENCE_VIDEO_URL }}
+          TECH_INTERVIEWER_SPEAKING_VIDEO_URL: ${{ secrets.TECH_INTERVIEWER_SPEAKING_VIDEO_URL }}
+          TECH_INTERVIEWER_SILENCE_VIDEO_URL: ${{ secrets.TECH_INTERVIEWER_SILENCE_VIDEO_URL }}
+          MODERATOR_SPEAKING_VIDEO_URL: ${{ secrets.MODERATOR_SPEAKING_VIDEO_URL }}
+          MODERATOR_SILENCE_VIDEO_URL: ${{ secrets.MODERATOR_SILENCE_VIDEO_URL }}
         with:
           host: ${{ secrets.PROD_EC2_HOST }}
           username: ${{ secrets.PROD_EC2_USERNAME }}
           key: ${{ secrets.PROD_EC2_KEY }}
+          envs: DOCKER_IMAGE,PROD_MYSQL_URL,PROD_MYSQL_USER,PROD_MYSQL_PASSWORD,AI_SERVER_URL,FRONT_ORIGIN,JWT_SECRET,AWS_ACCESS_KEY,AWS_SECRET_KEY,AWS_S3_BUCKET,AWS_S3_CLIP_BUCKET,COOLSMS_API_KEY,COOLSMS_API_SECRET,COOLSMS_SENDER,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,OAUTH2_REDIRECT_URI,HR_MANAGER_SPEAKING_VIDEO_URL,HR_MANAGER_SILENCE_VIDEO_URL,TEAM_LEAD_SPEAKING_VIDEO_URL,TEAM_LEAD_SILENCE_VIDEO_URL,EXECUTIVE_SPEAKING_VIDEO_URL,EXECUTIVE_SILENCE_VIDEO_URL,TECH_INTERVIEWER_SPEAKING_VIDEO_URL,TECH_INTERVIEWER_SILENCE_VIDEO_URL,MODERATOR_SPEAKING_VIDEO_URL,MODERATOR_SILENCE_VIDEO_URL
           script: |
-            chmod +x /home/ubuntu/deploy/deploy-prod.sh
+            set -eu
 
-            DOCKERHUB_USERNAME='${{ secrets.DOCKERHUB_USERNAME }}' \
-            DOCKER_IMAGE_NAME='${{ secrets.DOCKER_IMAGE_NAME }}' \
-            IMAGE_TAG='prod' \
-            PROD_MYSQL_URL='${{ secrets.PROD_MYSQL_URL }}' \
-            PROD_MYSQL_USER='${{ secrets.PROD_MYSQL_USER }}' \
-            PROD_MYSQL_PASSWORD='${{ secrets.PROD_MYSQL_PASSWORD }}' \
-            FRONT_ORIGIN='${{ secrets.FRONT_ORIGIN }}' \
-            JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-            COOLSMS_API_KEY='${{ secrets.COOLSMS_API_KEY }}' \
-            COOLSMS_API_SECRET='${{ secrets.COOLSMS_API_SECRET }}' \
-            COOLSMS_SENDER='${{ secrets.COOLSMS_SENDER }}' \
-            bash /home/ubuntu/deploy/deploy-prod.sh
+            docker pull "$DOCKER_IMAGE"
+
+            printf '%s\n' \
+              "DOCKER_IMAGE=$DOCKER_IMAGE" \
+              "CONTAINER_NAME=passroute-prod" \
+              "SPRING_PROFILES_ACTIVE=prod" \
+              "SPRING_DATA_REDIS_HOST=redis" \
+              "PROD_MYSQL_URL=$PROD_MYSQL_URL" \
+              "PROD_MYSQL_USER=$PROD_MYSQL_USER" \
+              "PROD_MYSQL_PASSWORD=$PROD_MYSQL_PASSWORD" \
+              "AI_SERVER_URL=$AI_SERVER_URL" \
+              "FRONT_ORIGIN=$FRONT_ORIGIN" \
+              "JWT_SECRET=$JWT_SECRET" \
+              "AWS_ACCESS_KEY=$AWS_ACCESS_KEY" \
+              "AWS_SECRET_KEY=$AWS_SECRET_KEY" \
+              "AWS_S3_BUCKET=$AWS_S3_BUCKET" \
+              "AWS_S3_CLIP_BUCKET=$AWS_S3_CLIP_BUCKET" \
+              "COOLSMS_API_KEY=$COOLSMS_API_KEY" \
+              "COOLSMS_API_SECRET=$COOLSMS_API_SECRET" \
+              "COOLSMS_SENDER=$COOLSMS_SENDER" \
+              "KAKAO_CLIENT_ID=$KAKAO_CLIENT_ID" \
+              "KAKAO_CLIENT_SECRET=$KAKAO_CLIENT_SECRET" \
+              "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" \
+              "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" \
+              "OAUTH2_REDIRECT_URI=$OAUTH2_REDIRECT_URI" \
+              "HR_MANAGER_SPEAKING_VIDEO_URL=$HR_MANAGER_SPEAKING_VIDEO_URL" \
+              "HR_MANAGER_SILENCE_VIDEO_URL=$HR_MANAGER_SILENCE_VIDEO_URL" \
+              "TEAM_LEAD_SPEAKING_VIDEO_URL=$TEAM_LEAD_SPEAKING_VIDEO_URL" \
+              "TEAM_LEAD_SILENCE_VIDEO_URL=$TEAM_LEAD_SILENCE_VIDEO_URL" \
+              "EXECUTIVE_SPEAKING_VIDEO_URL=$EXECUTIVE_SPEAKING_VIDEO_URL" \
+              "EXECUTIVE_SILENCE_VIDEO_URL=$EXECUTIVE_SILENCE_VIDEO_URL" \
+              "TECH_INTERVIEWER_SPEAKING_VIDEO_URL=$TECH_INTERVIEWER_SPEAKING_VIDEO_URL" \
+              "TECH_INTERVIEWER_SILENCE_VIDEO_URL=$TECH_INTERVIEWER_SILENCE_VIDEO_URL" \
+              "MODERATOR_SPEAKING_VIDEO_URL=$MODERATOR_SPEAKING_VIDEO_URL" \
+              "MODERATOR_SILENCE_VIDEO_URL=$MODERATOR_SILENCE_VIDEO_URL" > ~/.env
+
+            cd ~
+            docker compose up -d --remove-orphans
+            sleep 20
+            test "$(docker inspect -f '{{.State.Status}}' passroute-prod)" = "running"
+            docker image prune -f

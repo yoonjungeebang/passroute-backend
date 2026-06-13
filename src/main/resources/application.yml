@@ -1,4 +1,7 @@
 spring:
+  flyway:
+    enabled: false
+
   security:
     oauth2:
       client:
@@ -63,6 +66,7 @@ ai:
     timeout: 180s
 
 persona-video:
+  url-expiration: 6h
   interviewers:
     HR_MANAGER:
       speaking-video-url: ${HR_MANAGER_SPEAKING_VIDEO_URL:}

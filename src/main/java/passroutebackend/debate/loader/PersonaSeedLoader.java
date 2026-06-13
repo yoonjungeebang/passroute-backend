@@ -35,13 +35,11 @@ public class PersonaSeedLoader implements ApplicationRunner {
     try (InputStream is = new ClassPathResource(SEED_PATH).getInputStream()) {
       Map<String, Object> root = new Yaml().load(is);
       if (root == null) {
-        log.warn("persona_seeds.yaml이 비어 있습니다.");
-        return;
+        throw new IllegalStateException("persona_seeds.yaml이 비어 있습니다.");
       }
       List<Map<String, Object>> personas = (List<Map<String, Object>>) root.get("personas");
-      if (personas == null) {
-        log.warn("persona_seeds.yaml에 personas 키가 없음");
-        return;
+      if (personas == null || personas.isEmpty()) {
+        throw new IllegalStateException("persona_seeds.yaml에 personas가 없습니다.");
       }
 
       List<AiPersona> toSave = new ArrayList<>();
@@ -51,6 +49,7 @@ public class PersonaSeedLoader implements ApplicationRunner {
         String personaKey = (String) p.get("personaId");
         String speakingVideoUrl = (String) p.get("speakingVideoUrl");
         String silenceVideoUrl = (String) p.get("silenceVideoUrl");
+        validateVideoUrls(personaKey, speakingVideoUrl, silenceVideoUrl);
 
         AiPersona existing = repository.findByPersonaKey(personaKey).orElse(null);
         if (existing != null) {
@@ -75,8 +74,17 @@ public class PersonaSeedLoader implements ApplicationRunner {
       }
       repository.saveAll(toSave);
       log.info("페르소나 시드 적재 완료: inserted={}, updated={}", inserted, updated);
-    } catch (Exception e) {
-      log.error("페르소나 시드 적재 실패", e);
+    }
+  }
+
+  private void validateVideoUrls(String personaKey, String speakingVideoUrl,
+      String silenceVideoUrl) {
+    if (personaKey == null || personaKey.isBlank()) {
+      throw new IllegalStateException("페르소나 시드의 personaId가 비어 있습니다.");
+    }
+    if (speakingVideoUrl == null || speakingVideoUrl.isBlank()
+        || silenceVideoUrl == null || silenceVideoUrl.isBlank()) {
+      throw new IllegalStateException("페르소나 영상 URL이 비어 있습니다: " + personaKey);
     }
   }
 

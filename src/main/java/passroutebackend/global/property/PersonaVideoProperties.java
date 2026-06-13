@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,6 +17,8 @@ public class PersonaVideoProperties {
 
   private Map<String, VideoUrls> interviewers = new HashMap<>();
   private VideoUrls moderator = new VideoUrls();
+  private boolean presignEnabled = true;
+  private Duration urlExpiration = Duration.ofHours(6);
 
   public VideoUrls findInterviewer(String interviewerKey) {
     if (interviewerKey == null) {
