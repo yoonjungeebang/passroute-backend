@@ -89,6 +89,7 @@ class InterviewProgressIntegrationTest {
         .interviewType(InterviewType.PERSONALITY)
         .interviewFormat(InterviewFormat.ONE_ON_ONE)
         .interviewMode("PRACTICE")
+        .aiInterviewer("TECH_INTERVIEWER")
         .interviewCount(2)
         .difficulty(Difficulty.NORMAL)
         .pressureLevel(1)
@@ -139,7 +140,11 @@ class InterviewProgressIntegrationTest {
           .andExpect(jsonPath("$.data.questions[0].questionText").value(SKIP_QUESTION_TEXT))
           .andExpect(jsonPath("$.data.questions[0].questionOrder").value(1))
           .andExpect(jsonPath("$.data.questions[1].questionId").value(q2.getId()))
-          .andExpect(jsonPath("$.data.questions[1].questionOrder").value(2));
+          .andExpect(jsonPath("$.data.questions[1].questionOrder").value(2))
+          .andExpect(jsonPath("$.data.interviewer.speakingVideoUrl")
+              .value("https://test-bucket.s3.ap-northeast-2.amazonaws.com/interviewer-speaking.mp4"))
+          .andExpect(jsonPath("$.data.interviewer.silenceVideoUrl")
+              .value("https://test-bucket.s3.ap-northeast-2.amazonaws.com/interviewer-silence.mp4"));
     }
 
     @Test

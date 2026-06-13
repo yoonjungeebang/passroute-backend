@@ -85,7 +85,7 @@ public class InterviewStartTxService {
         coverLetter
     );
 
-    return new SessionPreparation(session.getId(), aiRequest);
+    return new SessionPreparation(session.getId(), aiRequest, room.getAiInterviewer());
   }
 
   @Transactional

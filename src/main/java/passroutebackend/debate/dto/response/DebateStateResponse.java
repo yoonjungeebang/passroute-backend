@@ -6,6 +6,7 @@ import lombok.Getter;
 import passroutebackend.debate.entity.DebateBranchChoice;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateState;
+import passroutebackend.interview.dto.response.PersonaVideoResponse;
 
 import java.util.List;
 
@@ -30,4 +31,6 @@ public class DebateStateResponse {
 
   private Long version;
   private List<DebateTurnSummary> latestTurns;
+  private PersonaVideoResponse moderator;
+  private PersonaVideoResponse opponent;
 }

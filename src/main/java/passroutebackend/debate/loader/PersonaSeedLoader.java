@@ -61,6 +61,8 @@ public class PersonaSeedLoader implements ApplicationRunner {
             .strengths(toJson(p.get("strengths")))
             .weaknesses(toJson(p.get("weaknesses")))
             .systemPromptTemplate((String) p.get("systemPromptTemplate"))
+            .speakingVideoUrl((String) p.get("speakingVideoUrl"))
+            .silenceVideoUrl((String) p.get("silenceVideoUrl"))
             .build());
       }
       repository.saveAll(toInsert);

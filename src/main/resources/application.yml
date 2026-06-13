@@ -62,6 +62,24 @@ ai:
   debate:
     timeout: 180s
 
+persona-video:
+  interviewers:
+    HR_MANAGER:
+      speaking-video-url: ${HR_MANAGER_SPEAKING_VIDEO_URL:}
+      silence-video-url: ${HR_MANAGER_SILENCE_VIDEO_URL:}
+    TEAM_LEAD:
+      speaking-video-url: ${TEAM_LEAD_SPEAKING_VIDEO_URL:}
+      silence-video-url: ${TEAM_LEAD_SILENCE_VIDEO_URL:}
+    EXECUTIVE:
+      speaking-video-url: ${EXECUTIVE_SPEAKING_VIDEO_URL:}
+      silence-video-url: ${EXECUTIVE_SILENCE_VIDEO_URL:}
+    TECH_INTERVIEWER:
+      speaking-video-url: ${TECH_INTERVIEWER_SPEAKING_VIDEO_URL:}
+      silence-video-url: ${TECH_INTERVIEWER_SILENCE_VIDEO_URL:}
+  moderator:
+    speaking-video-url: ${MODERATOR_SPEAKING_VIDEO_URL:}
+    silence-video-url: ${MODERATOR_SILENCE_VIDEO_URL:}
+
 cloud:
   aws:
     credentials:

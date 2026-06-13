@@ -21,5 +21,7 @@ public class DebatePersonaResponse {
   private Difficulty difficulty;
   private List<String> strengths;
   private List<String> weaknesses;
+  private String speakingVideoUrl;
+  private String silenceVideoUrl;
   // systemPromptTemplate은 응답에 노출 안 함 (LLM 시스템 프롬프트라 클라이언트 불필요)
 }

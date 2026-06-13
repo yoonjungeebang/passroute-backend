@@ -50,10 +50,17 @@ public class AiPersona {
   @Column(columnDefinition = "TEXT")
   private String systemPromptTemplate;
 
+  @Column(length = 1024)
+  private String speakingVideoUrl;
+
+  @Column(length = 1024)
+  private String silenceVideoUrl;
+
   @Builder
   public AiPersona(String personaKey, String name, String background,
       DebateStyle debateStyle, Difficulty difficulty,
-      String strengths, String weaknesses, String systemPromptTemplate) {
+      String strengths, String weaknesses, String systemPromptTemplate,
+      String speakingVideoUrl, String silenceVideoUrl) {
     this.personaKey = personaKey;
     this.name = name;
     this.background = background;
@@ -62,5 +69,7 @@ public class AiPersona {
     this.strengths = strengths;
     this.weaknesses = weaknesses;
     this.systemPromptTemplate = systemPromptTemplate;
+    this.speakingVideoUrl = speakingVideoUrl;
+    this.silenceVideoUrl = silenceVideoUrl;
   }
 }
