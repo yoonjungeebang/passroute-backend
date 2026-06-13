@@ -18,6 +18,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -42,6 +44,8 @@ public class PersonaSeedLoader implements ApplicationRunner {
         throw new IllegalStateException("persona_seeds.yaml에 personas가 없습니다.");
       }
 
+      Map<String, AiPersona> existingByKey = repository.findAll().stream()
+          .collect(Collectors.toMap(AiPersona::getPersonaKey, Function.identity()));
       List<AiPersona> toSave = new ArrayList<>();
       int inserted = 0;
       int updated = 0;
@@ -51,7 +55,7 @@ public class PersonaSeedLoader implements ApplicationRunner {
         String silenceVideoUrl = (String) p.get("silenceVideoUrl");
         validateVideoUrls(personaKey, speakingVideoUrl, silenceVideoUrl);
 
-        AiPersona existing = repository.findByPersonaKey(personaKey).orElse(null);
+        AiPersona existing = existingByKey.get(personaKey);
         if (existing != null) {
           existing.updateVideoUrls(speakingVideoUrl, silenceVideoUrl);
           toSave.add(existing);
