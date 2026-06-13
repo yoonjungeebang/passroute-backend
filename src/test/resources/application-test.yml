@@ -53,3 +53,12 @@ swagger:
   server-url:
     local: http://localhost:8080/api
     prod: https://pass-route.com/api
+
+persona-video:
+  interviewers:
+    TECH_INTERVIEWER:
+      speaking-video-url: https://test-bucket.s3.ap-northeast-2.amazonaws.com/interviewer-speaking.mp4
+      silence-video-url: https://test-bucket.s3.ap-northeast-2.amazonaws.com/interviewer-silence.mp4
+  moderator:
+    speaking-video-url: https://test-bucket.s3.ap-northeast-2.amazonaws.com/moderator-speaking.mp4
+    silence-video-url: https://test-bucket.s3.ap-northeast-2.amazonaws.com/moderator-silence.mp4

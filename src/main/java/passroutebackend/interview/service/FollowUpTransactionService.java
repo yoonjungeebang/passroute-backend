@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.global.property.FollowUpProperties;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.FollowUpRequest;
 import passroutebackend.interview.dto.QATurn;
@@ -35,7 +34,6 @@ public class FollowUpTransactionService {
       "장점", "단점", "장단점"
   );
 
-  private final FollowUpProperties followUpProperties;
   private final InterviewQuestionRepository questionRepository;
   private final InterviewAnswerRepository answerRepository;
 
@@ -53,6 +51,7 @@ public class FollowUpTransactionService {
     answerRepository.save(answer);
 
     InterviewSession session = question.getSession();
+    InterviewRoom room = session.getInterviewRoom();
     int setNumber = question.getSetNumber();
 
     List<InterviewQuestion> questions =
@@ -64,12 +63,11 @@ public class FollowUpTransactionService {
       return null;
     }
 
-    if (isMaxTurnReached(questions)) {
+    if (isMaxTurnReached(questions, room.getFollowupCount())) {
       return null;
     }
 
     List<QATurn> conversation = buildConversation(questions);
-    InterviewRoom room = session.getInterviewRoom();
 
     return new FollowUpRequest(
         room.getInterviewType().getValue(),
@@ -116,11 +114,11 @@ public class FollowUpTransactionService {
         .anyMatch(questionText::contains);
   }
 
-  private boolean isMaxTurnReached(List<InterviewQuestion> questions) {
+  private boolean isMaxTurnReached(List<InterviewQuestion> questions, int maxTurn) {
     long followUpCount = questions.stream()
         .filter(InterviewQuestion::isFollowUp)
         .count();
-    return followUpCount >= followUpProperties.getMaxTurn();
+    return followUpCount >= maxTurn;
   }
 
   private List<QATurn> buildConversation(List<InterviewQuestion> questions) {

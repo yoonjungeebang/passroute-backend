@@ -35,6 +35,7 @@ import passroutebackend.debate.dto.response.DebatePersonaResponse;
 import passroutebackend.debate.dto.response.DebateTopicResponse;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.global.service.PersonaVideoService;
 import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.debate.DebateClosingRequest;
 import passroutebackend.interview.dto.debate.DebateClosingResponse;
@@ -56,6 +57,7 @@ import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
 import passroutebackend.interview.dto.debate.TopicDetailAiResponse;
 import passroutebackend.interview.dto.debate.TopicSuggestAiRequest;
 import passroutebackend.interview.dto.debate.TopicSuggestAiResponse;
+import passroutebackend.interview.dto.response.PersonaVideoResponse;
 import passroutebackend.selfintro.entity.SelfIntro;
 
 import java.util.List;
@@ -71,6 +73,7 @@ import java.util.UUID;
 public class DebateService {
 
   private final DebateTransactionService transactionService;
+  private final PersonaVideoService personaVideoService;
   private final DebateStateMachine stateMachine;
   private final DebateEvaluationService evaluationService;
   private final AiServerClient aiServerClient;
@@ -119,6 +122,8 @@ public class DebateService {
         .difficulty(persona.getDifficulty())
         .strengths(parseStringList(persona.getStrengths()))
         .weaknesses(parseStringList(persona.getWeaknesses()))
+        .speakingVideoUrl(persona.getSpeakingVideoUrl())
+        .silenceVideoUrl(persona.getSilenceVideoUrl())
         .build();
   }
 
@@ -229,6 +234,8 @@ public class DebateService {
         .sessionId(session.getId())
         .mode(session.getMode())
         .prepSeconds(session.getPrepSeconds())
+        .moderator(personaVideoService.getModerator())
+        .opponent(PersonaVideoResponse.from(persona))
         .build();
   }
 
@@ -300,6 +307,8 @@ public class DebateService {
             : List.of())
         .version(session.getVersion())
         .latestTurns(latestTurns)
+        .moderator(personaVideoService.getModerator())
+        .opponent(PersonaVideoResponse.from(session.getAiCompetitor().getPersona()))
         .build();
   }
 

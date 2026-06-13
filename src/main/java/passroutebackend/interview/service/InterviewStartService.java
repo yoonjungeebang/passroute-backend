@@ -2,6 +2,7 @@ package passroutebackend.interview.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import passroutebackend.global.service.PersonaVideoService;
 import passroutebackend.interview.client.AiServerClient;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
 import passroutebackend.interview.dto.generate.SessionPreparation;
@@ -17,6 +18,7 @@ public class InterviewStartService {
 
   private final InterviewStartTxService txService;
   private final AiServerClient aiServerClient;
+  private final PersonaVideoService personaVideoService;
 
   public InterviewStartResponse start(Long userId, InterviewStartRequest request) {
     SessionPreparation prep = txService.prepareSession(request.getRoomId(), userId);
@@ -25,6 +27,10 @@ public class InterviewStartService {
 
     List<QuestionDto> questions = txService.saveQuestions(prep.getSessionId(), aiResponse.getQuestions());
 
-    return new InterviewStartResponse(prep.getSessionId(), questions);
+    return new InterviewStartResponse(
+        prep.getSessionId(),
+        questions,
+        personaVideoService.getInterviewer(prep.getAiInterviewer())
+    );
   }
 }

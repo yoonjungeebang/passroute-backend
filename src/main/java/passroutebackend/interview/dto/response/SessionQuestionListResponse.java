@@ -10,4 +10,5 @@ import java.util.List;
 public class SessionQuestionListResponse {
 
   private List<QuestionDto> questions;
+  private PersonaVideoResponse interviewer;
 }

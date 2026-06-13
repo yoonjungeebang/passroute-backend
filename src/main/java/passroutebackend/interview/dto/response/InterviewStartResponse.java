@@ -11,4 +11,5 @@ public class InterviewStartResponse {
 
   private Long sessionId;
   private List<QuestionDto> questions;
+  private PersonaVideoResponse interviewer;
 }

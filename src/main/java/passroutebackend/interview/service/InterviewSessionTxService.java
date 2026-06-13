@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.global.service.PersonaVideoService;
 import passroutebackend.interview.dto.WorstClipResponse;
 import passroutebackend.interview.dto.response.QuestionDto;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
@@ -29,6 +30,7 @@ public class InterviewSessionTxService {
   private final InterviewSessionRepository sessionRepository;
   private final InterviewQuestionRepository questionRepository;
   private final InterviewAnswerRepository answerRepository;
+  private final PersonaVideoService personaVideoService;
 
   @Transactional(readOnly = true)
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {
@@ -40,7 +42,10 @@ public class InterviewSessionTxService {
         .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getSetNumber(), q.getAudioUrl()))
         .toList();
 
-    return new SessionQuestionListResponse(questions);
+    return new SessionQuestionListResponse(
+        questions,
+        personaVideoService.getInterviewer(session.getInterviewRoom().getAiInterviewer())
+    );
   }
 
   @Transactional(readOnly = true)

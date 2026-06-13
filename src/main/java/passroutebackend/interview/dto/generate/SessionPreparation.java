@@ -9,4 +9,5 @@ public class SessionPreparation {
 
     private Long sessionId;
     private QuestionGenerateRequest aiRequest;
+    private String aiInterviewer;
 }
