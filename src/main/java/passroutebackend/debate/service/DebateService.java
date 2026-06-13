@@ -113,6 +113,7 @@ public class DebateService {
   }
 
   private DebatePersonaResponse toPersonaResponse(AiPersona persona) {
+    PersonaVideoResponse video = personaVideoService.getPersona(persona);
     return DebatePersonaResponse.builder()
         .id(persona.getId())
         .personaKey(persona.getPersonaKey())
@@ -122,8 +123,8 @@ public class DebateService {
         .difficulty(persona.getDifficulty())
         .strengths(parseStringList(persona.getStrengths()))
         .weaknesses(parseStringList(persona.getWeaknesses()))
-        .speakingVideoUrl(persona.getSpeakingVideoUrl())
-        .silenceVideoUrl(persona.getSilenceVideoUrl())
+        .speakingVideoUrl(video.getSpeakingVideoUrl())
+        .silenceVideoUrl(video.getSilenceVideoUrl())
         .build();
   }
 
@@ -235,7 +236,7 @@ public class DebateService {
         .mode(session.getMode())
         .prepSeconds(session.getPrepSeconds())
         .moderator(personaVideoService.getModerator())
-        .opponent(PersonaVideoResponse.from(persona))
+        .opponent(personaVideoService.getPersona(persona))
         .build();
   }
 
@@ -308,7 +309,7 @@ public class DebateService {
         .version(session.getVersion())
         .latestTurns(latestTurns)
         .moderator(personaVideoService.getModerator())
-        .opponent(PersonaVideoResponse.from(session.getAiCompetitor().getPersona()))
+        .opponent(personaVideoService.getPersona(session.getAiCompetitor().getPersona()))
         .build();
   }
 

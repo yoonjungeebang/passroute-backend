@@ -55,6 +55,7 @@ swagger:
     prod: https://pass-route.com/api
 
 persona-video:
+  presign-enabled: false
   interviewers:
     TECH_INTERVIEWER:
       speaking-video-url: https://test-bucket.s3.ap-northeast-2.amazonaws.com/interviewer-speaking.mp4

@@ -124,13 +124,14 @@ class DebateModeServiceTest {
     void realModeGets60Seconds() {
       DebateTopic topic = DebateTopic.builder().topicKey("k").title("AI 윤리").build();
       AiPersona persona = org.mockito.Mockito.mock(AiPersona.class);
-      when(persona.getSpeakingVideoUrl()).thenReturn("https://s3/opponent-speaking.mp4");
-      when(persona.getSilenceVideoUrl()).thenReturn("https://s3/opponent-silence.mp4");
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
       when(personaVideoService.getModerator())
           .thenReturn(new PersonaVideoResponse("https://s3/moderator-speaking.mp4",
               "https://s3/moderator-silence.mp4"));
+      when(personaVideoService.getPersona(persona))
+          .thenReturn(new PersonaVideoResponse("https://s3/opponent-speaking.mp4",
+              "https://s3/opponent-silence.mp4"));
       DebateSession saved = sessionWithMode(DebateMode.REAL);
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
@@ -161,6 +162,7 @@ class DebateModeServiceTest {
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
       when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(personaVideoService.getPersona(persona)).thenReturn(PersonaVideoResponse.empty());
       DebateSession saved = sessionWithMode(DebateMode.PRACTICE);
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
@@ -375,6 +377,10 @@ class DebateModeServiceTest {
               .build();
       ReflectionTestUtils.setField(session, "aiCompetitor", competitor);
       when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(personaVideoService.getPersona(persona))
+          .thenReturn(new PersonaVideoResponse(
+              "https://s3/opponent-speaking.mp4",
+              "https://s3/opponent-silence.mp4"));
     }
   }
 }

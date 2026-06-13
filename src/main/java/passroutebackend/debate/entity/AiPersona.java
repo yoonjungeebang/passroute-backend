@@ -72,4 +72,9 @@ public class AiPersona {
     this.speakingVideoUrl = speakingVideoUrl;
     this.silenceVideoUrl = silenceVideoUrl;
   }
+
+  public void updateVideoUrls(String speakingVideoUrl, String silenceVideoUrl) {
+    this.speakingVideoUrl = speakingVideoUrl;
+    this.silenceVideoUrl = silenceVideoUrl;
+  }
 }
