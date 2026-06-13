@@ -8,6 +8,7 @@ import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.FollowUpRequest;
 import passroutebackend.interview.dto.QATurn;
+import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
@@ -90,6 +91,12 @@ public class FollowUpTransactionService {
         questionRepository.findBySessionAndSetNumberOrderByQuestionOrderAsc(session, setNumber);
     int nextOrder = questions.size();
 
+    CsTopic csTopic = questions.stream()
+        .filter(q -> !q.isFollowUp())
+        .findFirst()
+        .map(InterviewQuestion::getCsTopic)
+        .orElse(null);
+
     InterviewQuestion followUpQuestion = InterviewQuestion.builder()
         .session(session)
         .setNumber(setNumber)
@@ -97,6 +104,7 @@ public class FollowUpTransactionService {
         .questionOrder(nextOrder)
         .followUp(true)
         .audioUrl(audioUrl)
+        .csTopic(csTopic)
         .build();
     return questionRepository.save(followUpQuestion);
   }
