@@ -26,6 +26,9 @@ public interface InterviewQuestionRepository extends JpaRepository<InterviewQues
   // 세트 순서 → 세트 내 순서로 정렬 (saveQuestions 픽스 이후 생성된 세션용)
   List<InterviewQuestion> findBySessionOrderBySetNumberAscQuestionOrderAsc(InterviewSession session);
 
+  // FollowUpTransactionService: 세션 전체 꼬리질문 수 카운트
+  long countBySessionAndFollowUpTrue(InterviewSession session);
+
   // CsTopicAnalysisService: 사용자의 1:1 기술면접 질문을 토픽별로 집계
   @Query("SELECT q.csTopic AS csTopic, COUNT(q) AS questionCount, AVG(a.percentage) AS avgPercentage "
       + "FROM InterviewQuestion q JOIN InterviewAnswer a ON a.question = q "

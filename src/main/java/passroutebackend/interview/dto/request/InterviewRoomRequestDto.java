@@ -40,7 +40,7 @@ public class InterviewRoomRequestDto {
 
     private String debateTopic;
 
-    @Min(1) @Max(20)
+    @Min(1) @Max(10)
     private int interviewCount = 5;
 
     @NotNull

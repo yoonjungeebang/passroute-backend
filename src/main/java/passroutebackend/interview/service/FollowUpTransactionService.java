@@ -42,6 +42,10 @@ public class FollowUpTransactionService {
     InterviewQuestion question = questionRepository.findById(request.getQuestionId())
         .orElseThrow(() -> CustomException.of(ErrorCode.QUESTION_NOT_FOUND));
 
+    if (answerRepository.findByQuestion(question).isPresent()) {
+      throw CustomException.of(ErrorCode.ANSWER_ALREADY_EXISTS);
+    }
+
     InterviewAnswer answer = InterviewAnswer.builder()
         .question(question)
         .answerText(request.getAnswerText())
@@ -53,6 +57,11 @@ public class FollowUpTransactionService {
 
     InterviewSession session = question.getSession();
     InterviewRoom room = session.getInterviewRoom();
+
+    if (room.getFollowupCount() == 0) {
+      return null;
+    }
+
     int setNumber = question.getSetNumber();
 
     List<InterviewQuestion> questions =
@@ -64,7 +73,8 @@ public class FollowUpTransactionService {
       return null;
     }
 
-    if (isMaxTurnReached(questions, room.getFollowupCount())) {
+    long totalFollowUps = questionRepository.countBySessionAndFollowUpTrue(session);
+    if (totalFollowUps >= room.getFollowupCount()) {
       return null;
     }
 
@@ -85,6 +95,13 @@ public class FollowUpTransactionService {
         .orElseThrow(() -> CustomException.of(ErrorCode.QUESTION_NOT_FOUND));
 
     InterviewSession session = question.getSession();
+    InterviewRoom room = session.getInterviewRoom();
+
+    long totalFollowUps = questionRepository.countBySessionAndFollowUpTrue(session);
+    if (totalFollowUps >= room.getFollowupCount()) {
+      return null;
+    }
+
     int setNumber = question.getSetNumber();
 
     List<InterviewQuestion> questions =
@@ -122,12 +139,6 @@ public class FollowUpTransactionService {
         .anyMatch(questionText::contains);
   }
 
-  private boolean isMaxTurnReached(List<InterviewQuestion> questions, int maxTurn) {
-    long followUpCount = questions.stream()
-        .filter(InterviewQuestion::isFollowUp)
-        .count();
-    return followUpCount >= maxTurn;
-  }
 
   private List<QATurn> buildConversation(List<InterviewQuestion> questions) {
     Map<Long, InterviewAnswer> answerMap = answerRepository.findByQuestionIn(questions).stream()

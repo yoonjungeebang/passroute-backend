@@ -41,6 +41,10 @@ public class FollowUpService {
         request.getQuestionId(), aiResponse.getFollowUpQuestion(), aiResponse.getAudioUrl()
     );
 
+    if (followUpQuestion == null) {
+      return AnswerSubmitResponse.noFollowUp();
+    }
+
     return AnswerSubmitResponse.followUp(
         followUpQuestion.getId(), followUpQuestion.getQuestionText(), followUpQuestion.getAudioUrl());
   }
