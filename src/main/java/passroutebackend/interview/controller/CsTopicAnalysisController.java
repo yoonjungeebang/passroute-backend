@@ -15,7 +15,7 @@ import passroutebackend.interview.service.CsTopicAnalysisService;
 
 @Tag(name = "CsTopicAnalysis", description = "CS 토픽 분석 API")
 @RestController
-@RequestMapping("/interviews/cs-topics")
+@RequestMapping("/interview/cs-topics")
 @RequiredArgsConstructor
 public class CsTopicAnalysisController {
 
