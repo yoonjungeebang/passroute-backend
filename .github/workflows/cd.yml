@@ -1,0 +1,176 @@
+name: CD Dev
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [develop, main]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download JAR artifact from CI
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: build/libs
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Docker image build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Check deploy file changes
+        id: deploy-files
+        run: |
+          if git diff HEAD~1 --name-only -- docker-compose.yml 'nginx/' 'scripts/' | grep -q .; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "::notice::배포 파일 변경 감지 — EC2 동기화 실행"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "::notice::배포 파일 변경 없음 — 동기화 생략"
+          fi
+      - name: Sync deploy files via SSM
+        if: steps.deploy-files.outputs.changed == 'true'
+        run: |
+          COMPOSE_B64=$(base64 -w0 < docker-compose.yml)
+          DEPLOY_B64=$(base64 -w0 < scripts/deploy.sh)
+          ROLLBACK_B64=$(base64 -w0 < scripts/rollback.sh)
+          NGINX_B64=$(base64 -w0 < nginx/nginx.conf)
+
+          jq -n \
+            --arg inst "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --arg c1 "echo $COMPOSE_B64 | base64 -d > ~/docker-compose.yml" \
+            --arg c2 "echo $DEPLOY_B64 | base64 -d > ~/deploy.sh && chmod +x ~/deploy.sh" \
+            --arg c3 "mkdir -p ~/nginx" \
+            --arg c4 "echo $NGINX_B64 | base64 -d > ~/nginx/nginx.conf" \
+            --arg c5 "echo $ROLLBACK_B64 | base64 -d > ~/rollback.sh && chmod +x ~/rollback.sh" \
+            '{
+              InstanceIds: [$inst],
+              DocumentName: "AWS-RunShellScript",
+              Comment: "Sync deploy files",
+              TimeoutSeconds: 30,
+              Parameters: { commands: [$c1, $c2, $c3, $c4, $c5] }
+            }' > /tmp/ssm-sync.json
+
+          COMMAND_ID=$(aws ssm send-command \
+            --cli-input-json file:///tmp/ssm-sync.json \
+            --query 'Command.CommandId' --output text)
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}"
+
+          SYNC_STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --query 'Status' --output text)
+
+          if [ "$SYNC_STATUS" != "Success" ]; then
+            echo "::error::배포 파일 동기화 실패: $SYNC_STATUS"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+              --query 'StandardErrorContent' --output text
+            exit 1
+          fi
+
+      - name: Deploy via SSM
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Blue-Green Deploy passroute-dev" \
+            --timeout-seconds 120 \
+            --parameters 'commands=[
+              "set -euo pipefail",
+              "aws ssm get-parameters-by-path --path /passroute/dev/ --with-decryption --query Parameters[].[Name,Value] --output text | while IFS=$'"'"'\\t'"'"' read -r name value; do echo \"${name##*/}=$value\"; done > ~/.env",
+              "echo DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }} >> ~/.env",
+              "cd ~ && bash deploy.sh"
+            ]' \
+            --query 'Command.CommandId' \
+            --output text)
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}"
+
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+            --query 'Status' --output text)
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "::error::Deployment failed with status: $STATUS"
+            aws ssm get-command-invocation \
+              --command-id "$COMMAND_ID" \
+              --instance-id "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
+              --query 'StandardErrorContent' --output text
+            exit 1
+          fi
+
+      - name: CD Success Notification
+        if: success()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          title: ✅ 개발 환경 배포 성공 ✅
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          color: 0x00FF00
+          username: PassRoute Bot
+
+      - name: CD Failure Notification
+        if: failure()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          title: ❗️ 개발 환경 배포 실패 ❗️
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          color: 0xFF0000
+          username: PassRoute Bot

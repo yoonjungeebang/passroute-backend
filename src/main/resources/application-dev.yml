@@ -4,10 +4,10 @@ spring:
       on-profile: dev
 
   datasource:
-    url: ${DEV_MYSQL_URL}
-    username: ${DEV_MYSQL_USER}
-    password: ${DEV_MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DEV_DB_URL}
+    username: ${DEV_DB_USER}
+    password: ${DEV_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
   sql:
     init:
@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
     properties:
       hibernate:
         show_sql: true

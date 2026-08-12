@@ -1,13 +1,37 @@
 services:
-  app:
-    image: ${DOCKER_IMAGE}
-    container_name: ${CONTAINER_NAME:-passroute-dev}
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: passroute-nginx
     restart: always
     ports:
-      - "8080:8080"
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+
+  blue:
+    image: ${DOCKER_IMAGE}
+    container_name: passroute-blue
+    restart: always
+    expose:
+      - "8080"
     env_file: .env
     depends_on:
       - redis
+    profiles:
+      - blue
+
+  green:
+    image: ${DOCKER_IMAGE}
+    container_name: passroute-green
+    restart: always
+    expose:
+      - "8080"
+    env_file: .env
+    depends_on:
+      - redis
+    profiles:
+      - green
 
   redis:
     image: redis:7-alpine

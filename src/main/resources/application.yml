@@ -33,7 +33,7 @@ spring:
     name: passroute-backend
 
   profiles:
-    active: local
+    active: dev
 
 server:
   servlet:
