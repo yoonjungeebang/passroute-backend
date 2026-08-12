@@ -11,15 +11,12 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
 
-# .env 생성 (SSM Parameter Store에서 가져오기)
-log ".env 생성 중"
-aws ssm get-parameters-by-path \
-    --path /passroute/dev/ \
-    --with-decryption \
-    --query 'Parameters[].[Name,Value]' \
-    --output text | awk -F'\t' '{n=$1; sub(/.*\//, "", n); print n"="$2}' > "$PROJECT_DIR/.env"
-echo "DOCKER_IMAGE=$DOCKER_IMAGE" >> "$PROJECT_DIR/.env"
-log ".env 생성 완료"
+# .env 확인 (CD 파이프라인에서 동기화됨)
+if [ ! -f "$PROJECT_DIR/.env" ]; then
+    log "ERROR: .env 파일이 없습니다. CD 파이프라인에서 동기화되었는지 확인하세요."
+    exit 1
+fi
+log ".env 확인 완료"
 
 get_active_color() {
     if [ -f "$UPSTREAM_CONF" ]; then

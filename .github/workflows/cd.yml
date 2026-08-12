@@ -68,11 +68,17 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Sync deploy files via SSM
+        env:
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE }}
         run: |
+          DOCKER_TAG="${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}"
+          printf '%s\nDOCKER_IMAGE=%s\n' "$ENV_FILE_CONTENT" "$DOCKER_TAG" > /tmp/app.env
+
           COMPOSE_B64=$(base64 -w0 < docker-compose.yml)
           DEPLOY_B64=$(base64 -w0 < scripts/deploy.sh)
           ROLLBACK_B64=$(base64 -w0 < scripts/rollback.sh)
           NGINX_B64=$(base64 -w0 < nginx/nginx.conf)
+          ENV_B64=$(base64 -w0 < /tmp/app.env)
 
           jq -n \
             --arg inst "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
@@ -81,12 +87,13 @@ jobs:
             --arg c3 "mkdir -p /home/ubuntu/nginx" \
             --arg c4 "echo $NGINX_B64 | base64 -d > /home/ubuntu/nginx/nginx.conf" \
             --arg c5 "echo $ROLLBACK_B64 | base64 -d > /home/ubuntu/rollback.sh && chmod +x /home/ubuntu/rollback.sh" \
+            --arg c6 "echo $ENV_B64 | base64 -d > /home/ubuntu/.env" \
             '{
               InstanceIds: [$inst],
               DocumentName: "AWS-RunShellScript",
               Comment: "Sync deploy files",
               TimeoutSeconds: 30,
-              Parameters: { commands: [$c1, $c2, $c3, $c4, $c5] }
+              Parameters: { commands: [$c1, $c2, $c3, $c4, $c5, $c6] }
             }' > /tmp/ssm-sync.json
 
           COMMAND_ID=$(aws ssm send-command \
