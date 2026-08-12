@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-PROJECT_DIR="$HOME"
+PROJECT_DIR="/home/ubuntu"
 UPSTREAM_CONF="$PROJECT_DIR/nginx/conf.d/upstream.conf"
 MAX_RETRIES=60
 RETRY_INTERVAL=3
