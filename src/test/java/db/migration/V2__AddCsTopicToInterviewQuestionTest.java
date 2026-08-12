@@ -16,7 +16,7 @@ class V2__AddCsTopicToInterviewQuestionTest {
   @Test
   void addsCsTopicColumnAndCanRunAgain() throws Exception {
     try (Connection connection = DriverManager.getConnection(
-        "jdbc:h2:mem:cs_topic_migration;MODE=MySQL;DB_CLOSE_DELAY=-1");
+        "jdbc:h2:mem:cs_topic_migration;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
         Statement statement = connection.createStatement()) {
       statement.execute("DROP TABLE IF EXISTS interview_questions");
       statement.execute("CREATE TABLE interview_questions (id BIGINT PRIMARY KEY)");

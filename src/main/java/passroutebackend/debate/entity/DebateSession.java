@@ -71,7 +71,7 @@ public class DebateSession {
   @Version
   private Long version;
 
-  @Column(columnDefinition = "LONGTEXT")
+  @Column(columnDefinition = "TEXT")
   private String pendingStt;
 
   @Column(length = 500)

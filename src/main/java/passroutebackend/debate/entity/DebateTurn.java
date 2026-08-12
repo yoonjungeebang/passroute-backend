@@ -49,7 +49,7 @@ public class DebateTurn {
   @Column(nullable = false, length = 20)
   private DebateRound round;
 
-  @Column(nullable = false, columnDefinition = "LONGTEXT")
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
   // AI 서버 TTS 음성 URL

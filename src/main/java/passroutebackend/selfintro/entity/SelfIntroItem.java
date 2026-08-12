@@ -22,7 +22,7 @@ public class SelfIntroItem {
     @Column(name = "question_text", nullable = false, columnDefinition = "TEXT")
     private String questionText;
 
-    @Column(name = "answer_text", columnDefinition = "LONGTEXT")
+    @Column(name = "answer_text", columnDefinition = "TEXT")
     private String answerText;
 
     @Column(name = "order_num", nullable = false)

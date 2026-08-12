@@ -16,7 +16,7 @@ class V1__AddPersonaVideoUrlsTest {
   @Test
   void addsOnlyMissingColumnsAndCanRunAgain() throws Exception {
     try (Connection connection = DriverManager.getConnection(
-        "jdbc:h2:mem:persona_migration;MODE=MySQL;DB_CLOSE_DELAY=-1");
+        "jdbc:h2:mem:persona_migration;MODE=PostgreSQL;DB_CLOSE_DELAY=-1");
         Statement statement = connection.createStatement()) {
       statement.execute("DROP TABLE IF EXISTS ai_personas");
       statement.execute("CREATE TABLE ai_personas (id BIGINT PRIMARY KEY)");

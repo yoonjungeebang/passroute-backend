@@ -31,7 +31,7 @@ public class InterviewAnswer {
   @JoinColumn(name = "question_id", nullable = false)
   private InterviewQuestion question;
 
-  @Column(nullable = false, columnDefinition = "LONGTEXT")
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String answerText;
 
   @Column
