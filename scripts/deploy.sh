@@ -96,7 +96,7 @@ for i in $(seq 1 $MAX_RETRIES); do
         STATUS_CODE="000"
     fi
 
-    if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "403" ] || [ "$STATUS_CODE" = "401" ]; then
+    if [ "$STATUS_CODE" = "200" ] || [ "$STATUS_CODE" = "302" ] || [ "$STATUS_CODE" = "403" ] || [ "$STATUS_CODE" = "401" ]; then
         log "헬스체크 성공 (HTTP ${STATUS_CODE}) - ${i}/${MAX_RETRIES}"
         break
     fi
