@@ -68,11 +68,40 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Sync deploy files via SSM
-        env:
-          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE }}
         run: |
-          DOCKER_TAG="${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}"
-          printf '%s\nDOCKER_IMAGE=%s\n' "$ENV_FILE_CONTENT" "$DOCKER_TAG" > /tmp/app.env
+          cat > /tmp/app.env << 'ENVEOF'
+          SPRING_PROFILES_ACTIVE=${{ secrets.SPRING_PROFILES_ACTIVE }}
+          DEV_DB_URL=${{ secrets.DEV_DB_URL }}
+          DEV_DB_USER=${{ secrets.DEV_DB_USER }}
+          DEV_DB_PASSWORD=${{ secrets.DEV_DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          FRONT_ORIGIN=${{ secrets.FRONT_ORIGIN }}
+          KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          OAUTH2_REDIRECT_URI=${{ secrets.OAUTH2_REDIRECT_URI }}
+          AI_SERVER_URL=${{ secrets.AI_SERVER_URL }}
+          AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+          AWS_S3_CLIP_BUCKET=${{ secrets.AWS_S3_CLIP_BUCKET }}
+          COOLSMS_API_KEY=${{ secrets.COOLSMS_API_KEY }}
+          COOLSMS_API_SECRET=${{ secrets.COOLSMS_API_SECRET }}
+          COOLSMS_SENDER=${{ secrets.COOLSMS_SENDER }}
+          HR_MANAGER_SPEAKING_VIDEO_URL=${{ secrets.HR_MANAGER_SPEAKING_VIDEO_URL }}
+          HR_MANAGER_SILENCE_VIDEO_URL=${{ secrets.HR_MANAGER_SILENCE_VIDEO_URL }}
+          TEAM_LEAD_SPEAKING_VIDEO_URL=${{ secrets.TEAM_LEAD_SPEAKING_VIDEO_URL }}
+          TEAM_LEAD_SILENCE_VIDEO_URL=${{ secrets.TEAM_LEAD_SILENCE_VIDEO_URL }}
+          EXECUTIVE_SPEAKING_VIDEO_URL=${{ secrets.EXECUTIVE_SPEAKING_VIDEO_URL }}
+          EXECUTIVE_SILENCE_VIDEO_URL=${{ secrets.EXECUTIVE_SILENCE_VIDEO_URL }}
+          TECH_INTERVIEWER_SPEAKING_VIDEO_URL=${{ secrets.TECH_INTERVIEWER_SPEAKING_VIDEO_URL }}
+          TECH_INTERVIEWER_SILENCE_VIDEO_URL=${{ secrets.TECH_INTERVIEWER_SILENCE_VIDEO_URL }}
+          MODERATOR_SPEAKING_VIDEO_URL=${{ secrets.MODERATOR_SPEAKING_VIDEO_URL }}
+          MODERATOR_SILENCE_VIDEO_URL=${{ secrets.MODERATOR_SILENCE_VIDEO_URL }}
+          DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}
+          ENVEOF
+          sed -i 's/^ *//' /tmp/app.env
 
           COMPOSE_B64=$(base64 -w0 < docker-compose.yml)
           DEPLOY_B64=$(base64 -w0 < scripts/deploy.sh)
