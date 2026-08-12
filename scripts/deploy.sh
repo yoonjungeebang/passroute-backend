@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT_DIR="$HOME"
 UPSTREAM_CONF="$PROJECT_DIR/nginx/conf.d/upstream.conf"
-MAX_RETRIES=20
+MAX_RETRIES=60
 RETRY_INTERVAL=3
 
 log() {
