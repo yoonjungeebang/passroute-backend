@@ -1,14 +1,25 @@
-  #!/bin/bash
+#!/bin/bash
 set -euo pipefail
 
 PROJECT_DIR="/home/ubuntu"
 UPSTREAM_CONF="$PROJECT_DIR/nginx/conf.d/upstream.conf"
 MAX_RETRIES=60
 RETRY_INTERVAL=3
+DOCKER_IMAGE="${1:?DOCKER_IMAGE 인자가 필요합니다}"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
+
+# .env 생성 (SSM Parameter Store에서 가져오기)
+log ".env 생성 중"
+aws ssm get-parameters-by-path \
+    --path /passroute/dev/ \
+    --with-decryption \
+    --query 'Parameters[].[Name,Value]' \
+    --output text | awk -F'\t' '{n=$1; sub(/.*\//, "", n); print n"="$2}' > "$PROJECT_DIR/.env"
+echo "DOCKER_IMAGE=$DOCKER_IMAGE" >> "$PROJECT_DIR/.env"
+log ".env 생성 완료"
 
 get_active_color() {
     if [ -f "$UPSTREAM_CONF" ]; then
@@ -50,7 +61,6 @@ NEW_CONTAINER="passroute-${NEW_COLOR}"
 log "현재 활성: ${ACTIVE}, 새로 배포할 색상: ${NEW_COLOR}"
 
 # 새 이미지 Pull
-DOCKER_IMAGE=$(grep DOCKER_IMAGE "$PROJECT_DIR/.env" | cut -d= -f2 | tr -d ' ')
 log "이미지 Pull: ${DOCKER_IMAGE}"
 docker pull "$DOCKER_IMAGE"
 

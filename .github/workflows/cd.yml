@@ -119,10 +119,7 @@ jobs:
             --comment "Blue-Green Deploy passroute-dev" \
             --timeout-seconds 300 \
             --parameters 'commands=[
-              "set -euo pipefail",
-              "aws ssm get-parameters-by-path --path /passroute/dev/ --with-decryption --query Parameters[].[Name,Value] --output text | while IFS=$'"'"'\\t'"'"' read -r name value; do echo \"${name##*/}=$value\"; done > /home/ubuntu/.env",
-              "echo DOCKER_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }} >> /home/ubuntu/.env",
-              "cd /home/ubuntu && bash deploy.sh"
+              "cd /home/ubuntu && bash deploy.sh ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}"
             ]' \
             --query 'Command.CommandId' \
             --output text)
