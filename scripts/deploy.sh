@@ -20,6 +20,10 @@ cleanup_all() {
     fi
     CLEANUP_DONE=true
     log "ERROR: 배포 실패. 모든 컨테이너를 정리합니다."
+    log "=== 컨테이너 로그 (최근 30줄) ==="
+    docker logs passroute-blue --tail 30 2>&1 || true
+    docker logs passroute-green --tail 30 2>&1 || true
+    log "=== 컨테이너 로그 끝 ==="
     cd "$PROJECT_DIR"
     docker compose --profile blue --profile green down 2>/dev/null || true
     rm -f "$UPSTREAM_CONF" 2>/dev/null || true
@@ -75,6 +79,17 @@ NEW_CONTAINER="passroute-${NEW_COLOR}"
 
 log "현재 활성: ${ACTIVE}, 새로 배포할 색상: ${NEW_COLOR}"
 
+# 이전 이미지 백업 (롤백용)
+echo "$DOCKER_IMAGE" > "$PROJECT_DIR/.current_image"
+if [ -n "$OLD_COLOR" ]; then
+    PREV_IMAGE=$(docker inspect --format='{{.Config.Image}}' "passroute-${OLD_COLOR}" 2>/dev/null || echo "")
+    if [ -n "$PREV_IMAGE" ]; then
+        echo "$PREV_IMAGE" > "$PROJECT_DIR/.previous_image"
+        log "이전 이미지 백업: $PREV_IMAGE"
+    fi
+fi
+echo "$NEW_COLOR" > "$PROJECT_DIR/.current_slot"
+
 # 새 이미지 Pull
 log "이미지 Pull: ${DOCKER_IMAGE}"
 docker pull "$DOCKER_IMAGE"
@@ -97,7 +112,11 @@ upstream app {
 EOF
 fi
 
-docker compose --profile "$NEW_COLOR" up -d redis nginx "$NEW_COLOR"
+# redis, nginx 먼저 기동 (앱과 분리하여 up -d 실패 격리)
+docker compose up -d redis nginx
+
+# 앱 컨테이너 기동 (크래시 시에도 헬스체크에서 판단)
+docker compose --profile "$NEW_COLOR" up -d "$NEW_COLOR" || true
 
 # 헬스체크
 log "헬스체크 시작 (최대 ${MAX_RETRIES}회, 간격 ${RETRY_INTERVAL}초)"
@@ -117,7 +136,8 @@ for i in $(seq 1 $MAX_RETRIES); do
     fi
 
     if [ "$i" -eq "$MAX_RETRIES" ]; then
-        log "ERROR: 헬스체크 실패. 모든 컨테이너를 정리합니다."
+        log "ERROR: 헬스체크 실패. 컨테이너 로그:"
+        docker logs "$NEW_CONTAINER" --tail 50 2>&1 || true
         exit 1
     fi
 

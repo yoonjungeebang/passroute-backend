@@ -2,7 +2,7 @@ services:
   nginx:
     image: nginx:1.25-alpine
     container_name: passroute-nginx
-    restart: always
+    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
@@ -12,7 +12,7 @@ services:
   blue:
     image: ${DOCKER_IMAGE}
     container_name: passroute-blue
-    restart: always
+    restart: unless-stopped
     expose:
       - "8080"
     env_file: .env
@@ -24,7 +24,7 @@ services:
   green:
     image: ${DOCKER_IMAGE}
     container_name: passroute-green
-    restart: always
+    restart: unless-stopped
     expose:
       - "8080"
     env_file: .env
@@ -36,4 +36,4 @@ services:
   redis:
     image: redis:7-alpine
     container_name: passroute-redis
-    restart: always
+    restart: unless-stopped
