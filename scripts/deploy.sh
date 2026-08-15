@@ -3,13 +3,31 @@ set -euo pipefail
 
 PROJECT_DIR="/home/ubuntu"
 UPSTREAM_CONF="$PROJECT_DIR/nginx/conf.d/upstream.conf"
-MAX_RETRIES=60
+MAX_RETRIES=40
 RETRY_INTERVAL=3
 DOCKER_IMAGE="${1:?DOCKER_IMAGE 인자가 필요합니다}"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
 }
+
+DEPLOY_SUCCESS=false
+CLEANUP_DONE=false
+
+cleanup_all() {
+    if [ "$DEPLOY_SUCCESS" = true ] || [ "$CLEANUP_DONE" = true ]; then
+        return
+    fi
+    CLEANUP_DONE=true
+    log "ERROR: 배포 실패. 모든 컨테이너를 정리합니다."
+    cd "$PROJECT_DIR"
+    docker compose --profile blue --profile green down 2>/dev/null || true
+    rm -f "$UPSTREAM_CONF" 2>/dev/null || true
+    docker image prune -f 2>/dev/null || true
+}
+
+trap 'cleanup_all; exit 1' SIGTERM SIGINT
+trap cleanup_all EXIT
 
 # .env 확인 (CD 파이프라인에서 동기화됨)
 if [ ! -f "$PROJECT_DIR/.env" ]; then
@@ -99,9 +117,7 @@ for i in $(seq 1 $MAX_RETRIES); do
     fi
 
     if [ "$i" -eq "$MAX_RETRIES" ]; then
-        log "ERROR: 헬스체크 실패. 배포를 롤백합니다."
-        docker compose --profile "$NEW_COLOR" stop "$NEW_COLOR"
-        docker compose --profile "$NEW_COLOR" rm -f "$NEW_COLOR"
+        log "ERROR: 헬스체크 실패. 모든 컨테이너를 정리합니다."
         exit 1
     fi
 
@@ -120,13 +136,15 @@ EOF
 docker exec passroute-nginx nginx -s reload
 log "nginx reload 완료"
 
+DEPLOY_SUCCESS=true
+
 # 이전 컨테이너 중지 (삭제하지 않음 — 롤백 대비)
 if [ -n "$OLD_COLOR" ]; then
     log "이전 컨테이너(${OLD_COLOR}) 중지 (롤백 대비 유지)"
     sleep 5
-    docker compose --profile "$OLD_COLOR" stop "$OLD_COLOR"
+    docker compose --profile "$OLD_COLOR" stop "$OLD_COLOR" || true
 fi
 
 # 정리
-docker image prune -f
+docker image prune -f || true
 log "배포 완료: ${NEW_COLOR} 활성화"

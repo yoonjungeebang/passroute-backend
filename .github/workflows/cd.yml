@@ -153,9 +153,9 @@ jobs:
             --instance-ids "${{ secrets.DEV_EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --comment "Blue-Green Deploy passroute-dev" \
-            --timeout-seconds 300 \
+            --timeout-seconds 240 \
             --parameters 'commands=[
-              "cd /home/ubuntu && bash deploy.sh ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}"
+              "cd /home/ubuntu && exec bash deploy.sh ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:develop-${{ github.event.workflow_run.head_sha }}"
             ]' \
             --query 'Command.CommandId' \
             --output text)
