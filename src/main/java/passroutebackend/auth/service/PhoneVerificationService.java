@@ -10,7 +10,6 @@ import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.global.sms.SmsService;
 import passroutebackend.user.repository.UserRepository;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Service

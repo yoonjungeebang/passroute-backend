@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import passroutebackend.global.property.JwtProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtTokenProviderTest {
 
