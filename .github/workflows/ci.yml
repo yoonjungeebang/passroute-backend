@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DISCORD_WEBHOOK_URL: "${{ secrets.DISCORD_WEBHOOK_URL }}"
 
     steps:
       - name: Checkout
@@ -53,7 +55,7 @@ jobs:
         if: success()
         with:
           title: CI 성공
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           color: 0x00FF00
           username: PassRoute CI
 
@@ -62,6 +64,6 @@ jobs:
         if: failure()
         with:
           title: CI 실패
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          webhook: ${{ env.DISCORD_WEBHOOK_URL }}
           color: 0xFF0000
           username: PassRoute CI
