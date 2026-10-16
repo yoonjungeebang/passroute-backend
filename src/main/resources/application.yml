@@ -91,3 +91,10 @@ cloud:
     s3:
       bucket: ${AWS_S3_BUCKET}
       clip-bucket: ${AWS_S3_CLIP_BUCKET}
+
+crawler:
+  websocket:
+    endpoint: ${CRAWLER_WS_ENDPOINT}
+    api-key: ${CRAWLER_API_KEY}
+    timeout-seconds: 120
+    max-articles: 10

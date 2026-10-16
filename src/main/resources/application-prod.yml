@@ -14,13 +14,11 @@ spring:
       mode: never
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
+    enabled: false
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         show_sql: false
