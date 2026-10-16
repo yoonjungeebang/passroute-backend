@@ -64,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: "${{ secrets.DOCKERHUB_USERNAME }}"
+      DOCKERHUB_PASSWORD: "${{ secrets.DOCKERHUB_PASSWORD }}"
       DOCKER_IMAGE_NAME: "${{ secrets.DOCKER_IMAGE_NAME }}"
       DEV_EC2_INSTANCE_ID: "${{ secrets.DEV_EC2_INSTANCE_ID }}"
       AWS_ROLE_ARN: "${{ secrets.AWS_ROLE_ARN }}"
@@ -94,21 +95,32 @@ jobs:
       TECH_INTERVIEWER_SILENCE_VIDEO_URL: "${{ secrets.TECH_INTERVIEWER_SILENCE_VIDEO_URL }}"
       MODERATOR_SPEAKING_VIDEO_URL: "${{ secrets.MODERATOR_SPEAKING_VIDEO_URL }}"
       MODERATOR_SILENCE_VIDEO_URL: "${{ secrets.MODERATOR_SILENCE_VIDEO_URL }}"
+      CRAWLER_WS_ENDPOINT: "${{ secrets.CRAWLER_WS_ENDPOINT }}"
+      CRAWLER_API_KEY: "${{ secrets.CRAWLER_API_KEY }}"
       DISCORD_WEBHOOK_URL: "${{ secrets.DISCORD_WEBHOOK_URL }}"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: "${{ env.AWS_ROLE_ARN }}"
           aws-region: ap-northeast-2
 
-      - name: Sync deploy files via SSM
+      - name: Docker login on EC2 via SSM
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "$DEV_EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Docker login" \
+            --timeout-seconds 30 \
+            --parameters "commands=[\"docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD\"]" \
+            --query 'Command.CommandId' --output text)
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$DEV_EC2_INSTANCE_ID"
+
+      - name: Sync env file via SSM
         run: |
           cat > /tmp/app.env << ENVEOF
           SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE
@@ -138,34 +150,19 @@ jobs:
           TECH_INTERVIEWER_SILENCE_VIDEO_URL=$TECH_INTERVIEWER_SILENCE_VIDEO_URL
           MODERATOR_SPEAKING_VIDEO_URL=$MODERATOR_SPEAKING_VIDEO_URL
           MODERATOR_SILENCE_VIDEO_URL=$MODERATOR_SILENCE_VIDEO_URL
-          DOCKER_IMAGE=$DOCKERHUB_USERNAME/$DOCKER_IMAGE_NAME:develop-${{ github.event.workflow_run.head_sha }}
+          CRAWLER_WS_ENDPOINT=$CRAWLER_WS_ENDPOINT
+          CRAWLER_API_KEY=$CRAWLER_API_KEY
           ENVEOF
           sed -i 's/^ *//' /tmp/app.env
 
-          COMPOSE_B64=$(base64 -w0 < docker-compose.yml)
-          DEPLOY_B64=$(base64 -w0 < scripts/deploy.sh)
-          ROLLBACK_B64=$(base64 -w0 < scripts/rollback.sh)
-          NGINX_B64=$(base64 -w0 < nginx/nginx.conf)
           ENV_B64=$(base64 -w0 < /tmp/app.env)
 
-          jq -n \
-            --arg inst "$DEV_EC2_INSTANCE_ID" \
-            --arg c1 "echo $COMPOSE_B64 | base64 -d > /home/ubuntu/docker-compose.yml" \
-            --arg c2 "echo $DEPLOY_B64 | base64 -d > /home/ubuntu/deploy.sh && chmod +x /home/ubuntu/deploy.sh" \
-            --arg c3 "mkdir -p /home/ubuntu/nginx" \
-            --arg c4 "echo $NGINX_B64 | base64 -d > /home/ubuntu/nginx/nginx.conf" \
-            --arg c5 "echo $ROLLBACK_B64 | base64 -d > /home/ubuntu/rollback.sh && chmod +x /home/ubuntu/rollback.sh" \
-            --arg c6 "echo $ENV_B64 | base64 -d > /home/ubuntu/.env" \
-            '{
-              InstanceIds: [$inst],
-              DocumentName: "AWS-RunShellScript",
-              Comment: "Sync deploy files",
-              TimeoutSeconds: 30,
-              Parameters: { commands: [$c1, $c2, $c3, $c4, $c5, $c6] }
-            }' > /tmp/ssm-sync.json
-
           COMMAND_ID=$(aws ssm send-command \
-            --cli-input-json file:///tmp/ssm-sync.json \
+            --instance-ids "$DEV_EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Sync env file" \
+            --timeout-seconds 30 \
+            --parameters "commands=[\"echo $ENV_B64 | base64 -d > /home/ubuntu/.env\"]" \
             --query 'Command.CommandId' --output text)
 
           aws ssm wait command-executed \
@@ -178,7 +175,7 @@ jobs:
             --query 'Status' --output text)
 
           if [ "$SYNC_STATUS" != "Success" ]; then
-            echo "::error::배포 파일 동기화 실패: $SYNC_STATUS"
+            echo "::error::env 파일 동기화 실패: $SYNC_STATUS"
             aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
               --instance-id "$DEV_EC2_INSTANCE_ID" \
@@ -193,15 +190,26 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$DEV_EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --comment "Blue-Green Deploy passroute-dev" \
-            --timeout-seconds 240 \
+            --comment "Deploy passroute-dev" \
+            --timeout-seconds 120 \
             --parameters "commands=[
-              \"cd /home/ubuntu && exec bash deploy.sh $DOCKER_IMAGE\"
+              \"docker stop passroute-blue passroute-green passroute-nginx 2>/dev/null || true\",
+              \"docker rm passroute-blue passroute-green passroute-nginx 2>/dev/null || true\",
+              \"docker pull $DOCKER_IMAGE\",
+              \"docker stop passroute-app 2>/dev/null || true\",
+              \"docker rm passroute-app 2>/dev/null || true\",
+              \"docker network create passroute-net 2>/dev/null || true\",
+              \"docker network connect passroute-net passroute-redis 2>/dev/null || true\",
+              \"docker start passroute-redis 2>/dev/null || docker run -d --name passroute-redis --network passroute-net --restart unless-stopped redis:7-alpine\",
+              \"docker run -d --name passroute-app --network passroute-net -p 8080:8080 --env-file /home/ubuntu/.env --restart unless-stopped $DOCKER_IMAGE\",
+              \"sleep 10\",
+              \"docker inspect -f '{{.State.Running}}' passroute-app | grep -q true && echo 'Health check passed' || (echo '::error::App container not running' && exit 1)\",
+              \"docker image prune -f\"
             ]" \
             --query 'Command.CommandId' \
             --output text)
 
-          for i in $(seq 1 60); do
+          for i in $(seq 1 40); do
             STATUS=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
               --instance-id "$DEV_EC2_INSTANCE_ID" \
@@ -219,7 +227,7 @@ jobs:
               exit 1
             fi
 
-            echo "배포 진행 중... ($i/60)"
+            echo "배포 진행 중... ($i/40)"
             sleep 5
           done
 
