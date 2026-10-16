@@ -3,11 +3,13 @@ package passroutebackend.global.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
 @EnableAsync
+@EnableScheduling
 @Configuration
 public class AsyncConfig {
 
@@ -55,6 +57,18 @@ public class AsyncConfig {
     executor.setMaxPoolSize(10);
     executor.setQueueCapacity(50);
     executor.setThreadNamePrefix("debate-");
+    executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
+    executor.initialize();
+    return executor;
+  }
+
+  @Bean("crawlerExecutor")
+  public Executor crawlerExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);
+    executor.setMaxPoolSize(5);
+    executor.setQueueCapacity(50);
+    executor.setThreadNamePrefix("crawler-ws-");
     executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
     executor.initialize();
     return executor;

@@ -5,17 +5,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.request.InterviewRoomRequestDto;
 import passroutebackend.interview.dto.request.InterviewStartRequest;
 import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
 import passroutebackend.interview.dto.response.InterviewStartResponse;
+import passroutebackend.interview.service.CrawlStatusService;
 import passroutebackend.interview.service.InterviewRoomService;
 import passroutebackend.interview.service.InterviewStartService;
 
@@ -27,6 +32,7 @@ public class InterviewRoomController {
 
     private final InterviewRoomService interviewRoomService;
     private final InterviewStartService interviewStartService;
+    private final CrawlStatusService crawlStatusService;
 
     @Operation(summary = "면접 설정", description = "면접 옵션을 설정하고 면접 방 ID를 반환합니다.")
     @ApiResponses({
@@ -54,5 +60,11 @@ public class InterviewRoomController {
             @Valid @RequestBody InterviewStartRequest request) {
         InterviewStartResponse response = interviewStartService.start(userId, request);
         return ResponseEntity.status(201).body(ApiResponse.created(response));
+    }
+
+    @Operation(summary = "크롤링 상태 구독", description = "면접방의 크롤링 수집 상태를 SSE로 실시간 수신합니다.")
+    @GetMapping(value = "/rooms/{roomId}/crawl-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter crawlEvents(@PathVariable Long roomId) {
+        return crawlStatusService.subscribe(roomId);
     }
 }

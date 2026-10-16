@@ -40,6 +40,13 @@ cloud:
       bucket: dummy
       clip-bucket: dummy
 
+crawler:
+  websocket:
+    endpoint: ws://localhost:0/dummy
+    api-key: dummy
+    timeout-seconds: 5
+    max-articles: 10
+
 jwt:
   secret: cGFzc3JvdXRlLWJhY2tlbmQtand0LXNlY3JldC1rZXktZm9yLWRldmVsb3BtZW50LW9ubHk=
   access-token-expiration: 1800000

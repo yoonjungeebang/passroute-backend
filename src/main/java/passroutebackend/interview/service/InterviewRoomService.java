@@ -1,6 +1,7 @@
 package passroutebackend.interview.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
@@ -24,6 +25,7 @@ public class InterviewRoomService {
     private static final int DEFAULT_FOLLOWUP_COUNT = 3;
 
     private final InterviewRoomRepository interviewRoomRepository;
+    private final ObjectProvider<CrawlerWebSocketService> crawlerWebSocketServiceProvider;
 
     @Transactional
     public InterviewRoomResponseDto setup(Long userId, InterviewRoomRequestDto request) {
@@ -50,6 +52,7 @@ public class InterviewRoomService {
                 .build();
 
         interviewRoomRepository.save(room);
+        triggerCrawlIfAvailable(room.getId(), request.getCompanyName(), request.getJobPosition());
         return new InterviewRoomResponseDto(room.getId());
     }
 
@@ -70,7 +73,15 @@ public class InterviewRoomService {
                 .build();
 
         interviewRoomRepository.save(room);
+        triggerCrawlIfAvailable(room.getId(), companyName, jobPosition);
         return room.getId();
+    }
+
+    private void triggerCrawlIfAvailable(Long roomId, String companyName, String jobPosition) {
+        CrawlerWebSocketService service = crawlerWebSocketServiceProvider.getIfAvailable();
+        if (service != null && companyName != null) {
+            service.triggerCrawl(roomId, companyName, jobPosition);
+        }
     }
 
     private void validateFormatConstraints(InterviewRoomRequestDto request) {
