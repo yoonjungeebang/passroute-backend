@@ -1,4 +1,4 @@
-package passroutebackend.global.config;
+package passroutebackend.global.property;
 
 import lombok.Getter;
 import lombok.Setter;

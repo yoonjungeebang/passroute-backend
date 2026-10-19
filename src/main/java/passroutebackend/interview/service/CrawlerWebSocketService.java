@@ -16,7 +16,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import passroutebackend.global.config.CrawlerProperties;
+import passroutebackend.global.property.CrawlerProperties;
 import passroutebackend.interview.entity.CrawlRequestStatus;
 import passroutebackend.interview.entity.RoomCrawlRequest;
 import passroutebackend.interview.repository.RoomCrawlRequestRepository;
