@@ -22,7 +22,6 @@ import passroutebackend.interview.entity.InterviewType;
 import passroutebackend.interview.entity.JobDescription;
 import passroutebackend.interview.entity.RoomCrawlRequest;
 import passroutebackend.interview.entity.RoomStatus;
-import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
