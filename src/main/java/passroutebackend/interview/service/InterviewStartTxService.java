@@ -1,5 +1,7 @@
 package passroutebackend.interview.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,23 +14,31 @@ import passroutebackend.document.repository.DocumentRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.ai.request.QuestionGenerateRequest;
+import passroutebackend.interview.dto.ai.request.QuestionGenerateRequest.CrawledData;
 import passroutebackend.interview.dto.ai.response.QuestionGenerateResponse.QuestionItem;
 import passroutebackend.interview.dto.ai.common.SelfIntroItem;
 import passroutebackend.interview.dto.ai.common.SessionPreparation;
 
+import passroutebackend.global.util.CompanyNameNormalizer;
+import passroutebackend.interview.entity.CrawlRequestStatus;
 import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
+import passroutebackend.interview.entity.JobDescription;
+import passroutebackend.interview.entity.RoomCrawlRequest;
 import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
+import passroutebackend.interview.repository.JobDescriptionRepository;
+import passroutebackend.interview.repository.RoomCrawlRequestRepository;
 import passroutebackend.selfintro.repository.SelfIntroRepository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 @Slf4j
 @Service
@@ -38,9 +48,12 @@ public class InterviewStartTxService {
   private final InterviewRoomRepository interviewRoomRepository;
   private final InterviewSessionRepository interviewSessionRepository;
   private final InterviewQuestionRepository interviewQuestionRepository;
+  private final RoomCrawlRequestRepository roomCrawlRequestRepository;
+  private final JobDescriptionRepository jobDescriptionRepository;
   private final SelfIntroRepository selfIntroRepository;
   private final DocumentRepository documentRepository;
   private final DocumentAnalysisRepository documentAnalysisRepository;
+  private final ObjectMapper objectMapper;
 
   @Transactional(readOnly = true)
   public Optional<InterviewSession> findActiveSession(Long roomId) {
@@ -85,6 +98,8 @@ public class InterviewStartTxService {
         .reduce((a, b) -> a + "\n\n" + b)
         .orElse("");
 
+    CrawledData crawledData = buildCrawledData(roomId, room.getCompanyName());
+
     QuestionGenerateRequest aiRequest = new QuestionGenerateRequest(
         userId.toString(),
         room.getInterviewType().name(),
@@ -98,7 +113,8 @@ public class InterviewStartTxService {
         room.getPressureLevel(),
         room.getFollowupCount(),
         room.getInterviewFormat().name(),
-        coverLetter
+        coverLetter,
+        crawledData
     );
 
     return new SessionPreparation(session.getId(), aiRequest, room.getAiInterviewer());
@@ -138,6 +154,79 @@ public class InterviewStartTxService {
         log.info("세션 준비 실패 처리: sessionId={}", sessionId);
       }
     });
+  }
+
+  private static final List<String> JD_SOURCES = List.of("jumpit", "programmers", "rallit");
+
+  private CrawledData buildCrawledData(Long roomId, String companyName) {
+    String news = null;
+    String techBlog = null;
+
+    RoomCrawlRequest crawlRequest = roomCrawlRequestRepository.findByRoomId(roomId)
+        .orElse(null);
+
+    if (crawlRequest != null
+        && crawlRequest.getStatus() == CrawlRequestStatus.COMPLETED
+        && crawlRequest.getResultPayload() != null) {
+      try {
+        JsonNode root = objectMapper.readTree(crawlRequest.getResultPayload());
+        news = joinArrayItems(root.path("news"), "title", "description");
+        techBlog = joinArrayItems(root.path("tech_articles"), "title", "content");
+      } catch (Exception e) {
+        log.warn("크롤링 결과 파싱 실패: roomId={}", roomId, e);
+      }
+    }
+
+    String jd = buildJdText(companyName);
+
+    if (news == null && techBlog == null && jd == null) {
+      return null;
+    }
+    return new CrawledData(techBlog, jd, news);
+  }
+
+  private String buildJdText(String companyName) {
+    String normalized = CompanyNameNormalizer.normalize(companyName);
+    if (normalized.isEmpty()) {
+      return null;
+    }
+
+    List<JobDescription> jdList = jobDescriptionRepository
+        .findByCompanyNameNormAndSourceIn(normalized, JD_SOURCES);
+
+    if (jdList.isEmpty()) {
+      return null;
+    }
+
+    StringJoiner joiner = new StringJoiner("\n\n");
+    for (JobDescription jd : jdList) {
+      String title = jd.getTitle();
+      String document = jd.getDocument();
+      if (title != null && !title.isEmpty()) {
+        joiner.add(title + "\n" + (document != null ? document : ""));
+      } else if (document != null && !document.isEmpty()) {
+        joiner.add(document);
+      }
+    }
+    String result = joiner.toString();
+    return result.isEmpty() ? null : result;
+  }
+
+  private String joinArrayItems(JsonNode arrayNode, String titleField, String bodyField) {
+    if (arrayNode.isMissingNode() || !arrayNode.isArray() || arrayNode.isEmpty()) {
+      return null;
+    }
+
+    StringJoiner joiner = new StringJoiner("\n\n");
+    for (JsonNode item : arrayNode) {
+      String title = item.path(titleField).asText("");
+      String body = item.path(bodyField).asText("");
+      if (!title.isEmpty() || !body.isEmpty()) {
+        joiner.add(title + "\n" + body);
+      }
+    }
+    String result = joiner.toString();
+    return result.isEmpty() ? null : result;
   }
 
   private List<SelfIntroItem> loadSelfIntroItems(Long siId) {
