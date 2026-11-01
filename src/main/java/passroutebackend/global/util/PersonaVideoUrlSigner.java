@@ -1,4 +1,4 @@
-package passroutebackend.global.service;
+package passroutebackend.global.util;
 
 import java.net.URI;
 import lombok.RequiredArgsConstructor;

@@ -1,22 +1,19 @@
-package passroutebackend.global.service;
+package passroutebackend.debate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import passroutebackend.debate.entity.AiPersona;
+import passroutebackend.debate.dto.response.PersonaVideoResponse;
 import passroutebackend.global.property.PersonaVideoProperties;
 import passroutebackend.global.property.PersonaVideoProperties.VideoUrls;
-import passroutebackend.debate.entity.AiPersona;
-import passroutebackend.interview.dto.response.PersonaVideoResponse;
+import passroutebackend.global.util.PersonaVideoUrlSigner;
 
 @Service
 @RequiredArgsConstructor
-public class PersonaVideoService {
+public class DebateVideoService {
 
   private final PersonaVideoProperties properties;
   private final PersonaVideoUrlSigner urlSigner;
-
-  public PersonaVideoResponse getInterviewer(String interviewerKey) {
-    return from(properties.findInterviewer(interviewerKey));
-  }
 
   public PersonaVideoResponse getModerator() {
     return from(properties.getModerator());
