@@ -26,10 +26,9 @@ import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
 import passroutebackend.debate.entity.TurnStance;
 import passroutebackend.global.exception.CustomException;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
-import passroutebackend.interview.dto.response.PersonaVideoResponse;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.debate.dto.ai.common.DebateTurnEvalSummary;
+import passroutebackend.debate.dto.response.PersonaVideoResponse;
 import passroutebackend.interview.entity.Difficulty;
 
 import java.util.List;
@@ -68,7 +67,7 @@ class DebateModeServiceTest {
   @Mock private DebateEvaluationService evaluationService;
   @Mock private AiServerClient aiServerClient;
   @Mock private ObjectProvider<DebateService> selfProvider;
-  @Mock private PersonaVideoService personaVideoService;
+  @Mock private DebateVideoService debateVideoService;
 
   @InjectMocks @Spy private DebateService debateService;
 
@@ -126,10 +125,10 @@ class DebateModeServiceTest {
       AiPersona persona = org.mockito.Mockito.mock(AiPersona.class);
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
-      when(personaVideoService.getModerator())
+      when(debateVideoService.getModerator())
           .thenReturn(new PersonaVideoResponse("https://s3/moderator-speaking.mp4",
               "https://s3/moderator-silence.mp4"));
-      when(personaVideoService.getPersona(persona))
+      when(debateVideoService.getPersona(persona))
           .thenReturn(new PersonaVideoResponse("https://s3/opponent-speaking.mp4",
               "https://s3/opponent-silence.mp4"));
       DebateSession saved = sessionWithMode(DebateMode.REAL);
@@ -161,8 +160,8 @@ class DebateModeServiceTest {
       AiPersona persona = org.mockito.Mockito.mock(AiPersona.class);
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
-      when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
-      when(personaVideoService.getPersona(persona)).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getPersona(persona)).thenReturn(PersonaVideoResponse.empty());
       DebateSession saved = sessionWithMode(DebateMode.PRACTICE);
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
@@ -376,8 +375,8 @@ class DebateModeServiceTest {
               .stance(DebateStance.CON)
               .build();
       ReflectionTestUtils.setField(session, "aiCompetitor", competitor);
-      when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
-      when(personaVideoService.getPersona(persona))
+      when(debateVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getPersona(persona))
           .thenReturn(new PersonaVideoResponse(
               "https://s3/opponent-speaking.mp4",
               "https://s3/opponent-silence.mp4"));
