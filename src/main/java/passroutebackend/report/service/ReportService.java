@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import passroutebackend.global.client.AiServerClient;
+import passroutebackend.report.dto.QuestionAnswerData;
+import passroutebackend.report.dto.ReportContext;
 import passroutebackend.report.dto.ai.score.LlmScoreItem;
 import passroutebackend.report.dto.ai.score.LlmScores;
 import passroutebackend.report.dto.ai.summary.BestWorstQ;

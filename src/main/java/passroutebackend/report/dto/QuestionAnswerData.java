@@ -1,4 +1,4 @@
-package passroutebackend.report.service;
+package passroutebackend.report.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

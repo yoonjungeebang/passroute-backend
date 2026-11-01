@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
+import passroutebackend.report.dto.QuestionAnswerData;
+import passroutebackend.report.dto.ReportContext;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.report.dto.ai.score.LlmScores;
 import passroutebackend.interview.entity.InterviewAnswer;
