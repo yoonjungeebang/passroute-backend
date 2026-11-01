@@ -15,7 +15,7 @@ import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse.QuestionItem;
 import passroutebackend.interview.dto.generate.SelfIntroItemDto;
 import passroutebackend.interview.dto.generate.SessionPreparation;
-import passroutebackend.interview.dto.response.QuestionDto;
+
 import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
