@@ -1,6 +1,7 @@
 package passroutebackend.interview.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.document.entity.Document;
@@ -14,12 +15,11 @@ import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
 import passroutebackend.interview.dto.generate.QuestionGenerateResponse.QuestionItem;
 import passroutebackend.interview.dto.generate.SelfIntroItemDto;
 import passroutebackend.interview.dto.generate.SessionPreparation;
-import passroutebackend.interview.dto.response.QuestionDto;
+
 import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
-import passroutebackend.interview.entity.RoomStatus;
 import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InterviewStartTxService {
@@ -41,29 +42,43 @@ public class InterviewStartTxService {
   private final DocumentRepository documentRepository;
   private final DocumentAnalysisRepository documentAnalysisRepository;
 
-  @Transactional
-  public SessionPreparation prepareSession(Long roomId, Long userId) {
+  @Transactional(readOnly = true)
+  public Optional<InterviewSession> findActiveSession(Long roomId) {
     InterviewRoom room = interviewRoomRepository.findById(roomId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.ROOM_NOT_FOUND));
+    return interviewSessionRepository.findByInterviewRoomAndStatusIn(
+        room, List.of(SessionStatus.PREPARING, SessionStatus.IN_PROGRESS));
+  }
+
+  @Transactional
+  public SessionPreparation createPreparingSession(Long roomId, Long userId) {
+    InterviewRoom room = interviewRoomRepository.findByIdForUpdate(roomId)
         .orElseThrow(() -> CustomException.of(ErrorCode.ROOM_NOT_FOUND));
 
     if (!room.getUserId().equals(userId)) {
       throw CustomException.of(ErrorCode.ACCESS_DENIED);
     }
 
-    List<SelfIntroItemDto> selfIntroItems = loadSelfIntroItems(room.getSiId());
+    Optional<InterviewSession> existing = interviewSessionRepository
+        .findByInterviewRoomAndStatusIn(room,
+            List.of(SessionStatus.PREPARING, SessionStatus.IN_PROGRESS));
+    if (existing.isPresent()) {
+      throw CustomException.of(ErrorCode.SESSION_PREPARING);
+    }
 
-    String resumeText = extractedTextByIdOrRepresentative(room.getResumeId(), userId, DocumentType.RESUME);
-    String portfolioText = extractedTextByIdOrRepresentative(room.getPortfolioId(), userId, DocumentType.PORTFOLIO);
+    List<SelfIntroItemDto> selfIntroItems = loadSelfIntroItems(room.getSiId());
+    String resumeText = extractedTextByIdOrRepresentative(
+        room.getResumeId(), userId, DocumentType.RESUME);
+    String portfolioText = extractedTextByIdOrRepresentative(
+        room.getPortfolioId(), userId, DocumentType.PORTFOLIO);
 
     int sessionNumber = interviewSessionRepository.countByInterviewRoom(room) + 1;
     InterviewSession session = InterviewSession.builder()
         .interviewRoom(room)
         .sessionNumber(sessionNumber)
-        .status(SessionStatus.IN_PROGRESS)
+        .status(SessionStatus.PREPARING)
         .build();
     interviewSessionRepository.save(session);
-
-    room.updateStatus(RoomStatus.IN_PROGRESS);
 
     String coverLetter = selfIntroItems.stream()
         .map(item -> item.getQuestion() + "\n" + item.getAnswer())
@@ -90,8 +105,14 @@ public class InterviewStartTxService {
   }
 
   @Transactional
-  public List<QuestionDto> saveQuestions(Long sessionId, List<QuestionItem> questionItems) {
-    InterviewSession session = interviewSessionRepository.getReferenceById(sessionId);
+  public boolean saveQuestionsAndActivate(Long sessionId, List<QuestionItem> questionItems) {
+    InterviewSession session = interviewSessionRepository.findById(sessionId)
+        .orElseThrow(() -> CustomException.of(ErrorCode.SESSION_NOT_FOUND));
+
+    if (!session.markInProgress()) {
+      log.warn("세션 상태 전이 실패: sessionId={}, status={}", sessionId, session.getStatus());
+      return false;
+    }
 
     List<InterviewQuestion> questions = new ArrayList<>();
     for (int i = 0; i < questionItems.size(); i++) {
@@ -107,10 +128,16 @@ public class InterviewStartTxService {
           .build());
     }
     interviewQuestionRepository.saveAll(questions);
+    return true;
+  }
 
-    return questions.stream()
-        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getQuestionOrder(), q.getAudioUrl()))
-        .toList();
+  @Transactional
+  public void markPrepareFailed(Long sessionId) {
+    interviewSessionRepository.findById(sessionId).ifPresent(session -> {
+      if (session.markPrepareFailed()) {
+        log.info("세션 준비 실패 처리: sessionId={}", sessionId);
+      }
+    });
   }
 
   private List<SelfIntroItemDto> loadSelfIntroItems(Long siId) {

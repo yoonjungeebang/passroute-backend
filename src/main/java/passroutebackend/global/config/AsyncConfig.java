@@ -62,6 +62,18 @@ public class AsyncConfig {
     return executor;
   }
 
+  @Bean("interviewStartExecutor")
+  public Executor interviewStartExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(3);
+    executor.setMaxPoolSize(3);
+    executor.setQueueCapacity(0);
+    executor.setThreadNamePrefix("interview-start-");
+    executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
+    executor.initialize();
+    return executor;
+  }
+
   @Bean("crawlerExecutor")
   public Executor crawlerExecutor() {
     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

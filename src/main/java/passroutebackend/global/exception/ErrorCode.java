@@ -57,6 +57,9 @@ public enum ErrorCode {
   SESSION_NOT_ENDED(HttpStatus.BAD_REQUEST, "I011", "아직 종료되지 않은 면접 세션입니다."),
   REPORT_NO_ANSWERS(HttpStatus.UNPROCESSABLE_ENTITY, "I013", "답변 기록이 없어 리포트를 생성할 수 없습니다."),
   ANSWER_ALREADY_EXISTS(HttpStatus.CONFLICT, "I014", "이미 답변이 제출된 질문입니다."),
+  INTERVIEW_START_BUSY(HttpStatus.SERVICE_UNAVAILABLE, "I015", "동시 면접 준비 수가 초과되었습니다. 잠시 후 다시 시도해주세요."),
+  SESSION_PREPARING(HttpStatus.CONFLICT, "I016", "면접 질문을 준비 중입니다."),
+  SESSION_NOT_READY(HttpStatus.BAD_REQUEST, "I017", "아직 준비되지 않은 면접 세션입니다."),
 
   // Schedule
   SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "면접 일정을 찾을 수 없습니다."),

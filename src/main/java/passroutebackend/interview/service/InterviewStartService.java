@@ -1,36 +1,43 @@
 package passroutebackend.interview.service;
 
+import java.util.Optional;
+import java.util.concurrent.RejectedExecutionException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.generate.SessionPreparation;
 import passroutebackend.interview.dto.request.InterviewStartRequest;
 import passroutebackend.interview.dto.response.InterviewStartResponse;
-import passroutebackend.interview.dto.response.QuestionDto;
+import passroutebackend.interview.entity.InterviewSession;
 
-import java.util.List;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InterviewStartService {
 
   private final InterviewStartTxService txService;
-  private final AiServerClient aiServerClient;
-  private final PersonaVideoService personaVideoService;
+  private final InterviewStartAsyncService asyncService;
 
   public InterviewStartResponse start(Long userId, InterviewStartRequest request) {
-    SessionPreparation prep = txService.prepareSession(request.getRoomId(), userId);
+    Optional<InterviewSession> existing = txService.findActiveSession(request.getRoomId());
+    if (existing.isPresent()) {
+      InterviewSession session = existing.get();
+      return InterviewStartResponse.existing(session.getId(), session.getStatus());
+    }
 
-    QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.getAiRequest());
+    SessionPreparation prep = txService.createPreparingSession(
+        request.getRoomId(), userId);
 
-    List<QuestionDto> questions = txService.saveQuestions(prep.getSessionId(), aiResponse.getQuestions());
+    try {
+      asyncService.prepareInBackground(prep);
+    } catch (RejectedExecutionException e) {
+      log.warn("면접 시작 스레드풀 포화: sessionId={}", prep.getSessionId());
+      txService.markPrepareFailed(prep.getSessionId());
+      throw CustomException.of(ErrorCode.INTERVIEW_START_BUSY);
+    }
 
-    return new InterviewStartResponse(
-        prep.getSessionId(),
-        questions,
-        personaVideoService.getInterviewer(prep.getAiInterviewer())
-    );
+    return InterviewStartResponse.preparing(prep.getSessionId());
   }
 }

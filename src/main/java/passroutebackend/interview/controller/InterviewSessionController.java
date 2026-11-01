@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,13 +16,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.AnswerSubmitRequest;
 import passroutebackend.interview.dto.ClipUploadUrlResponse;
 import passroutebackend.interview.dto.SaveWorstClipRequest;
 import passroutebackend.interview.dto.WorstClipResponse;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
+
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
+import passroutebackend.interview.service.InterviewPreparationSseService;
 import passroutebackend.interview.service.InterviewSessionService;
 
 @Tag(name = "Interview", description = "면접 API")
@@ -31,6 +35,16 @@ import passroutebackend.interview.service.InterviewSessionService;
 public class InterviewSessionController {
 
   private final InterviewSessionService sessionService;
+  private final InterviewPreparationSseService preparationSseService;
+
+  @Operation(summary = "면접 준비 상태 SSE 구독", description = "면접 질문 준비 완료/실패를 실시간으로 수신합니다. "
+      + "30초 간격 heartbeat를 포함하며, 준비 완료 시 interviewer 정보와 함께 전달됩니다.")
+  @GetMapping(value = "/{sessionId}/preparation-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter preparationEvents(
+      @AuthenticationPrincipal Long userId,
+      @PathVariable Long sessionId) {
+    return preparationSseService.subscribe(sessionId, userId);
+  }
 
   @Operation(summary = "질문 목록 조회", description = "세션의 질문 목록을 questionOrder 오름차순으로 반환합니다.")
   @ApiResponses({

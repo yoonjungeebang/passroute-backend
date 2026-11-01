@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -39,6 +40,9 @@ public class InterviewSession {
   @Column(nullable = false, length = 20)
   private SessionStatus status;
 
+  @Version
+  private Long version;
+
   private LocalDateTime startedAt;
 
   private LocalDateTime endedAt;
@@ -57,12 +61,32 @@ public class InterviewSession {
     this.startedAt = LocalDateTime.now();
   }
 
+  public boolean markInProgress() {
+    if (this.status != SessionStatus.PREPARING) {
+      return false;
+    }
+    this.status = SessionStatus.IN_PROGRESS;
+    return true;
+  }
+
+  public boolean markPrepareFailed() {
+    if (this.status != SessionStatus.PREPARING) {
+      return false;
+    }
+    this.status = SessionStatus.PREPARE_FAILED;
+    return true;
+  }
+
   public void end(SessionStatus status) {
     this.status = status;
     this.endedAt = LocalDateTime.now();
   }
 
-  // ── 소프트 딜리트 (SelfIntro 컨벤션) ─────────────────────────
+  public boolean isExpired(long timeoutMinutes) {
+    return this.status == SessionStatus.PREPARING
+        && this.startedAt.plusMinutes(timeoutMinutes).isBefore(LocalDateTime.now());
+  }
+
   public void softDelete() {
     this.isActive = false;
     this.deletedAt = LocalDateTime.now();

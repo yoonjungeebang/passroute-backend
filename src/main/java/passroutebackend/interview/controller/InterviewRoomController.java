@@ -48,18 +48,19 @@ public class InterviewRoomController {
         return ResponseEntity.status(201).body(ApiResponse.created(response));
     }
 
-    @Operation(summary = "면접 시작", description = "면접 세션을 생성하고 AI가 생성한 질문 목록을 반환합니다.")
+    @Operation(summary = "면접 시작", description = "면접 질문 준비를 요청하고 세션 ID와 상태를 즉시 반환합니다. "
+            + "PREPARING 상태인 경우 SSE(/sessions/{id}/preparation-events)로 완료 알림을 수신하세요.")
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "면접 세션 생성 및 질문 반환 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "면접 시작 요청 수락"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "면접 방을 찾을 수 없음"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "AI 서버 오류")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 준비 중이거나 진행 중인 세션 존재"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "503", description = "동시 준비 수 초과")
     })
     @PostMapping("/start")
-    public ResponseEntity<ApiResponse<InterviewStartResponse>> start(
+    public ApiResponse<InterviewStartResponse> start(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody InterviewStartRequest request) {
-        InterviewStartResponse response = interviewStartService.start(userId, request);
-        return ResponseEntity.status(201).body(ApiResponse.created(response));
+        return ApiResponse.success(interviewStartService.start(userId, request));
     }
 
     @Operation(summary = "크롤링 상태 구독", description = "면접방의 크롤링 수집 상태를 SSE로 실시간 수신합니다.")
