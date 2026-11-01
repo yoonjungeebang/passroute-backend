@@ -13,7 +13,7 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.interview.dto.ai.request.QuestionGenerateRequest;
 import passroutebackend.interview.dto.ai.response.QuestionGenerateResponse.QuestionItem;
-import passroutebackend.interview.dto.ai.common.SelfIntroItemDto;
+import passroutebackend.interview.dto.ai.common.SelfIntroItem;
 import passroutebackend.interview.dto.ai.common.SessionPreparation;
 
 import passroutebackend.interview.entity.CsTopic;
@@ -66,7 +66,7 @@ public class InterviewStartTxService {
       throw CustomException.of(ErrorCode.SESSION_PREPARING);
     }
 
-    List<SelfIntroItemDto> selfIntroItems = loadSelfIntroItems(room.getSiId());
+    List<SelfIntroItem> selfIntroItems = loadSelfIntroItems(room.getSiId());
     String resumeText = extractedTextByIdOrRepresentative(
         room.getResumeId(), userId, DocumentType.RESUME);
     String portfolioText = extractedTextByIdOrRepresentative(
@@ -140,13 +140,13 @@ public class InterviewStartTxService {
     });
   }
 
-  private List<SelfIntroItemDto> loadSelfIntroItems(Long siId) {
+  private List<SelfIntroItem> loadSelfIntroItems(Long siId) {
     if (siId == null) {
       return List.of();
     }
     return selfIntroRepository.findById(siId)
         .map(si -> si.getItems().stream()
-            .map(item -> new SelfIntroItemDto(item.getQuestionText(), item.getAnswerText()))
+            .map(item -> new SelfIntroItem(item.getQuestionText(), item.getAnswerText()))
             .toList())
         .orElse(List.of());
   }

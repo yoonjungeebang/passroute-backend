@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class SelfIntroItemDto {
+public class SelfIntroItem {
 
   @JsonProperty("question")
   private final String question;
