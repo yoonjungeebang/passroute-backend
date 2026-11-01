@@ -1,6 +1,7 @@
-package passroutebackend.debate.service;
+package passroutebackend.report.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import passroutebackend.debate.service.DebateTransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -25,8 +26,6 @@ import passroutebackend.report.dto.ai.summary.VoiceAnalysisSummary;
 import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.report.entity.ReportStatus;
 import passroutebackend.interview.entity.VoiceAnalysis;
-import passroutebackend.report.service.InterviewScoreCalculator;
-import passroutebackend.report.service.ReportTransactionService;
 
 import java.util.List;
 import java.util.Optional;

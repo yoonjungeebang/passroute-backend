@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.report.entity.DebateReport;
 import passroutebackend.debate.dto.response.DebateReportApiResponse;
-import passroutebackend.debate.service.DebateReportService;
+import passroutebackend.report.service.DebateReportService;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
