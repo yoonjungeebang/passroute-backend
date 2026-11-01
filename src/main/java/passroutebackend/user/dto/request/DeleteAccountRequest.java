@@ -3,7 +3,7 @@ package passroutebackend.user.dto.request;
 import lombok.Getter;
 
 @Getter
-public class WithdrawRequest {
+public class DeleteAccountRequest {
 
     private String password;
 }

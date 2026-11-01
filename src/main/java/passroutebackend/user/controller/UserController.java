@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.user.dto.request.UpdateProfileRequest;
-import passroutebackend.user.dto.request.WithdrawRequest;
+import passroutebackend.user.dto.request.DeleteAccountRequest;
 import passroutebackend.user.dto.response.UserInfoResponse;
 import passroutebackend.user.service.UserService;
 
@@ -60,7 +60,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> withdraw(
             @AuthenticationPrincipal Long userId,
             @RequestHeader("Authorization") String accessToken,
-            @RequestBody(required = false) WithdrawRequest request) {
+            @RequestBody(required = false) DeleteAccountRequest request) {
         userService.withdraw(userId, accessToken, request != null ? request.getPassword() : null);
         return ResponseEntity.ok(ApiResponse.success("회원탈퇴가 완료되었습니다.", null));
     }
