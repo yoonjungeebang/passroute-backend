@@ -68,6 +68,7 @@ interview:
 
 ai:
   debate:
+    server-url: ${AI_SERVER_URL:http://localhost:8000}
     timeout: 180s
 
 persona-video:

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.generate.SessionPreparation;
+import passroutebackend.interview.dto.ai.common.SessionPreparation;
 import passroutebackend.interview.dto.request.InterviewStartRequest;
 import passroutebackend.interview.dto.response.InterviewStartResponse;
 import passroutebackend.interview.entity.InterviewSession;

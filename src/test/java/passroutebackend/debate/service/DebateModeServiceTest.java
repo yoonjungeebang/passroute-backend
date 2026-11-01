@@ -8,7 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 import passroutebackend.debate.dto.request.DebateSessionCreateRequest;
 import passroutebackend.debate.dto.request.DebateTurnSubmitRequest;
@@ -26,11 +25,10 @@ import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
 import passroutebackend.debate.entity.TurnStance;
 import passroutebackend.global.exception.CustomException;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
-import passroutebackend.interview.dto.response.PersonaVideoResponse;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.debate.dto.ai.common.DebateTurnEvalSummary;
+import passroutebackend.debate.dto.response.PersonaVideoResponse;
+import passroutebackend.global.type.Difficulty;
 
 import java.util.List;
 
@@ -40,7 +38,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -55,7 +52,7 @@ import static org.mockito.Mockito.when;
  *   <li>평가 노출: PRACTICE만 /state에 평가 결과 노출, REAL은 마스킹</li>
  * </ul>
  *
- * <p>AI 경쟁자 비동기 생성은 {@code @Spy}로 차단하여 분기 호출 여부만 검증한다.
+ * <p>AI 경쟁자 비동기 생성은 {@code @Mock}으로 차단하여 분기 호출 여부만 검증한다.
  */
 @ExtendWith(MockitoExtension.class)
 class DebateModeServiceTest {
@@ -67,8 +64,8 @@ class DebateModeServiceTest {
   @Mock private DebateStateMachine stateMachine;
   @Mock private DebateEvaluationService evaluationService;
   @Mock private AiServerClient aiServerClient;
-  @Mock private ObjectProvider<DebateService> selfProvider;
-  @Mock private PersonaVideoService personaVideoService;
+  @Mock private DebateAiGenerationService aiGenerationService;
+  @Mock private DebateVideoService debateVideoService;
 
   @InjectMocks @Spy private DebateService debateService;
 
@@ -126,10 +123,10 @@ class DebateModeServiceTest {
       AiPersona persona = org.mockito.Mockito.mock(AiPersona.class);
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
-      when(personaVideoService.getModerator())
+      when(debateVideoService.getModerator())
           .thenReturn(new PersonaVideoResponse("https://s3/moderator-speaking.mp4",
               "https://s3/moderator-silence.mp4"));
-      when(personaVideoService.getPersona(persona))
+      when(debateVideoService.getPersona(persona))
           .thenReturn(new PersonaVideoResponse("https://s3/opponent-speaking.mp4",
               "https://s3/opponent-silence.mp4"));
       DebateSession saved = sessionWithMode(DebateMode.REAL);
@@ -161,8 +158,8 @@ class DebateModeServiceTest {
       AiPersona persona = org.mockito.Mockito.mock(AiPersona.class);
       when(transactionService.findTopicOrThrow(10L)).thenReturn(topic);
       when(transactionService.findPersonaOrThrow(20L)).thenReturn(persona);
-      when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
-      when(personaVideoService.getPersona(persona)).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getPersona(persona)).thenReturn(PersonaVideoResponse.empty());
       DebateSession saved = sessionWithMode(DebateMode.PRACTICE);
       ReflectionTestUtils.setField(saved, "id", SESSION_ID);
       when(transactionService.createSession(
@@ -202,7 +199,7 @@ class DebateModeServiceTest {
           any(), any(), any(), any(), any(), any(), any(), any());
       // 라운드 미확정: lock/AI 진행 없음
       verify(stateMachine, never()).onUserTurnSubmitted(any());
-      verify(debateService, never()).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
+      verify(aiGenerationService, never()).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
       // 직전 시도 교체(삭제+저장 원자적)는 호출된다
       verify(transactionService).replaceUserTurn(eq(session), eq(DebateRound.OPENING), any(), any());
       // pendingStt 소비는 세션 저장 1회로 반영된다
@@ -216,15 +213,12 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
-      when(selfProvider.getObject()).thenReturn(debateService);
-      doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
-
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(true));
 
       verify(evaluationService).evaluateAsync(
           any(), any(), any(), any(), any(), any(), any(), any());
       verify(stateMachine).onUserTurnSubmitted(session);
-      verify(debateService).generateAiCompetitorTurnAsync(SESSION_ID, USER_ID, DebateRound.OPENING);
+      verify(aiGenerationService).generateAiCompetitorTurnAsync(SESSION_ID, USER_ID, DebateRound.OPENING);
     }
 
     @Test
@@ -233,13 +227,10 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.REAL);
       session.updatePendingStt("내 발화");
       stubForSubmit(session);
-      when(selfProvider.getObject()).thenReturn(debateService);
-      doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
-
       debateService.submitUserTurn(USER_ID, SESSION_ID, submitRequest(false));
 
       verify(stateMachine).onUserTurnSubmitted(session);
-      verify(debateService).generateAiCompetitorTurnAsync(SESSION_ID, USER_ID, DebateRound.OPENING);
+      verify(aiGenerationService).generateAiCompetitorTurnAsync(SESSION_ID, USER_ID, DebateRound.OPENING);
     }
 
     @Test
@@ -248,8 +239,6 @@ class DebateModeServiceTest {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       session.updatePendingStt("AI가 DB에 늦게 써준 값");
       stubForSubmit(session);
-      when(selfProvider.getObject()).thenReturn(debateService);
-      doNothing().when(debateService).generateAiCompetitorTurnAsync(anyLong(), anyLong(), any());
       DebateTurnSubmitRequest req = submitRequest(true);
       ReflectionTestUtils.setField(req, "content", "FE가 보낸 전사");
 
@@ -289,14 +278,12 @@ class DebateModeServiceTest {
     void delegatesAndTriggersCue() {
       DebateSession session = sessionWithMode(DebateMode.PRACTICE);
       when(transactionService.findSessionForUserOrThrow(SESSION_ID, USER_ID)).thenReturn(session);
-      when(selfProvider.getObject()).thenReturn(debateService);
-      doNothing().when(debateService).generateInterviewerCueAsync(anyLong(), anyLong());
 
       debateService.chooseBranch(USER_ID, SESSION_ID, DebateBranchChoice.FINISH);
 
       verify(stateMachine).onBranchChosen(session, DebateBranchChoice.FINISH);
       verify(transactionService).saveSession(session);
-      verify(debateService).generateInterviewerCueAsync(SESSION_ID, USER_ID);
+      verify(aiGenerationService).generateInterviewerCueAsync(SESSION_ID, USER_ID);
     }
   }
 
@@ -376,8 +363,8 @@ class DebateModeServiceTest {
               .stance(DebateStance.CON)
               .build();
       ReflectionTestUtils.setField(session, "aiCompetitor", competitor);
-      when(personaVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
-      when(personaVideoService.getPersona(persona))
+      when(debateVideoService.getModerator()).thenReturn(PersonaVideoResponse.empty());
+      when(debateVideoService.getPersona(persona))
           .thenReturn(new PersonaVideoResponse(
               "https://s3/opponent-speaking.mp4",
               "https://s3/opponent-silence.mp4"));

@@ -1,0 +1,27 @@
+package passroutebackend.report.dto.ai.score;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import passroutebackend.report.dto.ai.summary.ReadinessForReport;
+
+import java.util.List;
+
+@Getter
+@AllArgsConstructor
+public class SessionResult {
+
+  private double percentage;
+
+  @JsonProperty("consistency_score")
+  private double consistencyScore;
+
+  @JsonProperty("item_averages")
+  private ItemAverages itemAverages;
+
+  @JsonProperty("key_weakness")
+  private List<String> keyWeakness;
+
+  @JsonProperty("interview_readiness")
+  private ReadinessForReport interviewReadiness;
+}

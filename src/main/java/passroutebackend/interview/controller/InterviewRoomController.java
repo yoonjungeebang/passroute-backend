@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import passroutebackend.global.ApiResponse;
-import passroutebackend.interview.dto.request.InterviewRoomRequestDto;
+import passroutebackend.interview.dto.request.InterviewRoomRequest;
 import passroutebackend.interview.dto.request.InterviewStartRequest;
-import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
+import passroutebackend.interview.dto.response.InterviewRoomResponse;
 import passroutebackend.interview.dto.response.InterviewStartResponse;
 import passroutebackend.interview.service.CrawlStatusService;
 import passroutebackend.interview.service.InterviewRoomService;
@@ -41,10 +41,10 @@ public class InterviewRoomController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 필요")
     })
     @PostMapping("/setup")
-    public ResponseEntity<ApiResponse<InterviewRoomResponseDto>> setup(
+    public ResponseEntity<ApiResponse<InterviewRoomResponse>> setup(
             @AuthenticationPrincipal Long userId,
-            @Valid @RequestBody InterviewRoomRequestDto request) {
-        InterviewRoomResponseDto response = interviewRoomService.setup(userId, request);
+            @Valid @RequestBody InterviewRoomRequest request) {
+        InterviewRoomResponse response = interviewRoomService.setup(userId, request);
         return ResponseEntity.status(201).body(ApiResponse.created(response));
     }
 

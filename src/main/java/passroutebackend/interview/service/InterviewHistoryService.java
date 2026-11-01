@@ -11,7 +11,7 @@ import passroutebackend.interview.dto.response.HistoryDetailResponse;
 import passroutebackend.interview.dto.response.HistoryDetailResponse.QuestionAnswer;
 import passroutebackend.interview.dto.response.HistoryDetailResponse.SessionDetail;
 import passroutebackend.interview.dto.response.HistoryListResponse;
-import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
+import passroutebackend.interview.dto.response.InterviewRoomResponse;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewQuestion;
@@ -78,7 +78,7 @@ public class InterviewHistoryService {
     }
 
     @Transactional
-    public InterviewRoomResponseDto retry(Long userId, Long roomId) {
+    public InterviewRoomResponse retry(Long userId, Long roomId) {
         InterviewRoom originalRoom = findRoomByIdAndValidateOwner(userId, roomId);
 
         InterviewRoom newRoom = InterviewRoom.builder()
@@ -99,7 +99,7 @@ public class InterviewHistoryService {
                 .build();
 
         interviewRoomRepository.save(newRoom);
-        return new InterviewRoomResponseDto(newRoom.getId());
+        return new InterviewRoomResponse(newRoom.getId());
     }
 
     @Transactional(readOnly = true)

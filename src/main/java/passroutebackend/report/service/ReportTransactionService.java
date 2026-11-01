@@ -1,4 +1,4 @@
-package passroutebackend.interview.service;
+package passroutebackend.report.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -8,22 +8,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
+import passroutebackend.report.dto.QuestionAnswerData;
+import passroutebackend.report.dto.ReportContext;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.evaluation.LlmScores;
+import passroutebackend.report.dto.ai.score.LlmScores;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewQuestion;
-import passroutebackend.interview.entity.InterviewReadiness;
-import passroutebackend.interview.entity.InterviewReport;
+import passroutebackend.report.entity.InterviewReadiness;
+import passroutebackend.report.entity.InterviewReport;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
-import passroutebackend.interview.entity.ReportStatus;
+import passroutebackend.report.entity.ReportStatus;
 import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.entity.FaceAnalysis;
 import passroutebackend.interview.entity.VoiceAnalysis;
 import passroutebackend.interview.repository.FaceAnalysisRepository;
 import passroutebackend.interview.repository.InterviewAnswerRepository;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
-import passroutebackend.interview.repository.InterviewReportRepository;
+import passroutebackend.report.repository.InterviewReportRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
 import passroutebackend.interview.repository.VoiceAnalysisRepository;
 

@@ -2,7 +2,7 @@ package passroutebackend.selfintro.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import passroutebackend.interview.dto.report.WeaknessItem;
+import passroutebackend.report.dto.ai.feedback.WeaknessItem;
 
 import java.time.LocalDateTime;
 import java.util.List;

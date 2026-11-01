@@ -28,7 +28,7 @@ import passroutebackend.debate.dto.response.DebateTopicResponse;
 import passroutebackend.debate.dto.response.DebateTopicSuggestResponse;
 import passroutebackend.debate.dto.response.DebateWorstClipResponse;
 import passroutebackend.debate.entity.TopicCategory;
-import passroutebackend.debate.service.DebateReportService;
+import passroutebackend.report.service.DebateReportService;
 import passroutebackend.debate.service.DebateService;
 import passroutebackend.global.ApiResponse;
 

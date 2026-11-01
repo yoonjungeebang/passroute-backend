@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import passroutebackend.selfintro.dto.SelfIntroRequestDto;
+import passroutebackend.selfintro.dto.request.SelfIntroRequest;
 import passroutebackend.user.entity.User;
 
 import java.time.LocalDate;
@@ -97,7 +97,7 @@ public class SelfIntro {
 
     // ── 생성 ─────────────────────────────────────────────────
 
-    public static SelfIntro create(User user, SelfIntroRequestDto dto) {
+    public static SelfIntro create(User user, SelfIntroRequest dto) {
         SelfIntro selfIntro = new SelfIntro();
         selfIntro.user = user;
         selfIntro.apply(dto);
@@ -106,7 +106,7 @@ public class SelfIntro {
 
     // ── 수정 ─────────────────────────────────────────────────
 
-    public void update(SelfIntroRequestDto dto) {
+    public void update(SelfIntroRequest dto) {
         apply(dto);
         this.version++;
     }
@@ -130,7 +130,7 @@ public class SelfIntro {
 
     // ── private ──────────────────────────────────────────────
 
-    private void apply(SelfIntroRequestDto dto) {
+    private void apply(SelfIntroRequest dto) {
         this.companyName = dto.getCompanyName();
         this.jobPosition = dto.getJobPosition();
         this.careerLevel = dto.getCareerLevel();

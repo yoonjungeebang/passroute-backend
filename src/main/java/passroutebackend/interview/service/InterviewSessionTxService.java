@@ -5,10 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.dto.WorstClipResponse;
+import passroutebackend.interview.dto.response.WorstClipResponse;
 
-import passroutebackend.interview.dto.response.QuestionDto;
+import passroutebackend.interview.dto.response.QuestionItem;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewQuestion;
@@ -31,21 +30,21 @@ public class InterviewSessionTxService {
   private final InterviewSessionRepository sessionRepository;
   private final InterviewQuestionRepository questionRepository;
   private final InterviewAnswerRepository answerRepository;
-  private final PersonaVideoService personaVideoService;
+  private final InterviewVideoService interviewVideoService;
 
   @Transactional(readOnly = true)
   public SessionQuestionListResponse getQuestions(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
 
-    List<QuestionDto> questions = questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session)
+    List<QuestionItem> questions = questionRepository.findBySessionOrderBySetNumberAscQuestionOrderAsc(session)
         .stream()
         .filter(q -> !q.isFollowUp())
-        .map(q -> new QuestionDto(q.getId(), q.getQuestionText(), q.getSetNumber(), q.getAudioUrl()))
+        .map(q -> new QuestionItem(q.getId(), q.getQuestionText(), q.getSetNumber(), q.getAudioUrl()))
         .toList();
 
     return new SessionQuestionListResponse(
         questions,
-        personaVideoService.getInterviewer(session.getInterviewRoom().getAiInterviewer())
+        interviewVideoService.getInterviewer(session.getInterviewRoom().getAiInterviewer())
     );
   }
 

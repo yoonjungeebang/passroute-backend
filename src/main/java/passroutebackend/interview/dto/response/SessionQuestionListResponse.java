@@ -9,6 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 public class SessionQuestionListResponse {
 
-  private List<QuestionDto> questions;
+  private List<QuestionItem> questions;
   private PersonaVideoResponse interviewer;
 }

@@ -13,7 +13,7 @@ import passroutebackend.document.entity.Document.EmbedStatus;
 import passroutebackend.document.entity.DocumentAnalysis;
 import passroutebackend.document.repository.DocumentAnalysisRepository;
 import passroutebackend.document.repository.DocumentRepository;
-import passroutebackend.interview.client.AiServerClient;
+import passroutebackend.global.client.AiServerClient;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;

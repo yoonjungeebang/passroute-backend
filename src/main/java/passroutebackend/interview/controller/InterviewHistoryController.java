@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.global.ApiResponse;
 import passroutebackend.interview.dto.response.HistoryDetailResponse;
 import passroutebackend.interview.dto.response.HistoryListResponse;
-import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
+import passroutebackend.interview.dto.response.InterviewRoomResponse;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewType;
 import passroutebackend.interview.service.InterviewHistoryService;
@@ -68,10 +68,10 @@ public class InterviewHistoryController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "면접 방을 찾을 수 없음")
     })
     @PostMapping("/{roomId}/retry")
-    public ResponseEntity<ApiResponse<InterviewRoomResponseDto>> retry(
+    public ResponseEntity<ApiResponse<InterviewRoomResponse>> retry(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long roomId) {
-        InterviewRoomResponseDto response = interviewHistoryService.retry(userId, roomId);
+        InterviewRoomResponse response = interviewHistoryService.retry(userId, roomId);
         return ResponseEntity.status(201).body(ApiResponse.created(response));
     }
 

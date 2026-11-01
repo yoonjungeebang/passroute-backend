@@ -3,10 +3,10 @@ package passroutebackend.debate.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import passroutebackend.interview.dto.debate.DebateTurnFeedback;
-import passroutebackend.interview.dto.debate.DebateWeaknessItem;
-import passroutebackend.interview.dto.report.FaceAnalysisSummary;
-import passroutebackend.interview.dto.report.VoiceAnalysisSummary;
+import passroutebackend.debate.dto.ai.common.DebateTurnFeedback;
+import passroutebackend.debate.dto.ai.common.DebateWeaknessItem;
+import passroutebackend.report.dto.ai.summary.FaceAnalysisSummary;
+import passroutebackend.report.dto.ai.summary.VoiceAnalysisSummary;
 
 import java.time.LocalDateTime;
 import java.util.List;

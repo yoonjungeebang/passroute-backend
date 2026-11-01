@@ -12,7 +12,7 @@ import org.yaml.snakeyaml.Yaml;
 import passroutebackend.debate.entity.AiPersona;
 import passroutebackend.debate.entity.DebateStyle;
 import passroutebackend.debate.repository.AiPersonaRepository;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 import java.io.InputStream;
 import java.util.ArrayList;

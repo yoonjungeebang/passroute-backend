@@ -16,7 +16,6 @@ import passroutebackend.report.repository.ReportListQueryRepository;
 public class ReportListService {
 
   public static final int MAX_PAGE_SIZE = 100;
-  public static final int DEFAULT_PAGE_SIZE = 20;
 
   private final ReportListQueryRepository queryRepository;
 

@@ -11,5 +11,6 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "ai.debate")
 public class DebateProperties {
 
+  private String serverUrl;
   private Duration timeout = Duration.ofSeconds(180);
 }

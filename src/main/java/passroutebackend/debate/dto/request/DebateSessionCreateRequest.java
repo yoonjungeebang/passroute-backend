@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import passroutebackend.debate.entity.DebateMode;
 import passroutebackend.debate.entity.DebateStance;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 @Getter
 @NoArgsConstructor

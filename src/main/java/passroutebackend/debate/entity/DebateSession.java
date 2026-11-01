@@ -19,7 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 import java.time.LocalDateTime;
 

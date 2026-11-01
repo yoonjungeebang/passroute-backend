@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import passroutebackend.debate.entity.DebateStyle;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 import java.util.List;
 

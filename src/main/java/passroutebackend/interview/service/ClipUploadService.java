@@ -3,7 +3,7 @@ package passroutebackend.interview.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import passroutebackend.interview.dto.ClipUploadUrlResponse;
+import passroutebackend.interview.dto.response.ClipUploadUrlResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;

@@ -67,7 +67,7 @@ public class RestClientConfig {
     HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
 
     return RestClient.builder()
-        .baseUrl(followUpProperties.getAiServerUrl())
+        .baseUrl(debateProperties.getServerUrl())
         .requestFactory(factory)
         .build();
   }

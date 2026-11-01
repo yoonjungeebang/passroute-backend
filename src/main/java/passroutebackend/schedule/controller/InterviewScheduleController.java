@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import passroutebackend.global.ApiResponse;
-import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
+import passroutebackend.interview.dto.response.InterviewRoomResponse;
 import passroutebackend.schedule.dto.request.ScheduleCreateRequest;
 import passroutebackend.schedule.dto.request.ScheduleStatusUpdateRequest;
 import passroutebackend.schedule.dto.request.ScheduleUpdateRequest;
@@ -140,10 +140,10 @@ public class InterviewScheduleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "일정을 찾을 수 없음")
     })
     @PostMapping("/{scheduleId}/practice")
-    public ResponseEntity<ApiResponse<InterviewRoomResponseDto>> practice(
+    public ResponseEntity<ApiResponse<InterviewRoomResponse>> practice(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long scheduleId) {
         Long roomId = interviewScheduleService.practice(userId, scheduleId);
-        return ResponseEntity.status(201).body(ApiResponse.created(new InterviewRoomResponseDto(roomId)));
+        return ResponseEntity.status(201).body(ApiResponse.created(new InterviewRoomResponse(roomId)));
     }
 }
