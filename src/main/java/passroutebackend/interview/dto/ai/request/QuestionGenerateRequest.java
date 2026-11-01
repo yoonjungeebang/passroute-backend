@@ -48,4 +48,22 @@ public class QuestionGenerateRequest {
 
   @JsonProperty("cover_letter")
   private final String coverLetter;
+
+  @JsonProperty("crawled_data")
+  private final CrawledData crawledData;
+
+  @Getter
+  @AllArgsConstructor
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class CrawledData {
+
+    @JsonProperty("tech_blog")
+    private final String techBlog;
+
+    @JsonProperty("jd")
+    private final String jd;
+
+    @JsonProperty("news")
+    private final String news;
+  }
 }
