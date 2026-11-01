@@ -10,10 +10,10 @@ import passroutebackend.debate.entity.DebateSession;
 import passroutebackend.debate.entity.DebateStance;
 import passroutebackend.debate.entity.DebateTurn;
 import passroutebackend.debate.entity.SpeakerType;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.debate.DebateTurnEvalRequest;
-import passroutebackend.interview.dto.debate.DebateTurnEvalResponse;
-import passroutebackend.interview.dto.debate.DebateTurnItem;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.debate.dto.ai.request.DebateTurnEvalRequest;
+import passroutebackend.debate.dto.ai.response.DebateTurnEvalResponse;
+import passroutebackend.debate.dto.ai.common.DebateTurnItem;
 
 import java.util.List;
 

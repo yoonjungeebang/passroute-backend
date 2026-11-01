@@ -35,29 +35,28 @@ import passroutebackend.debate.dto.response.DebatePersonaResponse;
 import passroutebackend.debate.dto.response.DebateTopicResponse;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.debate.DebateClosingRequest;
-import passroutebackend.interview.dto.debate.DebateClosingResponse;
-import passroutebackend.interview.dto.debate.DebateOpeningRequest;
-import passroutebackend.interview.dto.debate.DebateOpeningResponse;
-import passroutebackend.interview.dto.debate.DebateRebuttalRequest;
-import passroutebackend.interview.dto.debate.DebateRebuttalResponse;
-import passroutebackend.interview.dto.debate.DebateTurnEvalSummary;
-import passroutebackend.interview.dto.debate.DebateTurnItem;
-import passroutebackend.interview.dto.debate.InterviewerClosingRequest;
-import passroutebackend.interview.dto.debate.InterviewerClosingResponse;
-import passroutebackend.interview.dto.debate.InterviewerCueRequest;
-import passroutebackend.interview.dto.debate.InterviewerCueResponse;
-import passroutebackend.interview.dto.debate.InterviewerCueType;
-import passroutebackend.interview.dto.debate.InterviewerOpeningRequest;
-import passroutebackend.interview.dto.debate.InterviewerOpeningResponse;
-import passroutebackend.interview.dto.debate.PersonaPayload;
-import passroutebackend.interview.dto.debate.TopicDetailAiRequest;
-import passroutebackend.interview.dto.debate.TopicDetailAiResponse;
-import passroutebackend.interview.dto.debate.TopicSuggestAiRequest;
-import passroutebackend.interview.dto.debate.TopicSuggestAiResponse;
-import passroutebackend.interview.dto.response.PersonaVideoResponse;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.debate.dto.ai.request.DebateClosingRequest;
+import passroutebackend.debate.dto.ai.response.DebateClosingResponse;
+import passroutebackend.debate.dto.ai.request.DebateOpeningRequest;
+import passroutebackend.debate.dto.ai.response.DebateOpeningResponse;
+import passroutebackend.debate.dto.ai.request.DebateRebuttalRequest;
+import passroutebackend.debate.dto.ai.response.DebateRebuttalResponse;
+import passroutebackend.debate.dto.ai.common.DebateTurnEvalSummary;
+import passroutebackend.debate.dto.ai.common.DebateTurnItem;
+import passroutebackend.debate.dto.ai.request.InterviewerClosingRequest;
+import passroutebackend.debate.dto.ai.response.InterviewerClosingResponse;
+import passroutebackend.debate.dto.ai.request.InterviewerCueRequest;
+import passroutebackend.debate.dto.ai.response.InterviewerCueResponse;
+import passroutebackend.debate.dto.ai.type.InterviewerCueType;
+import passroutebackend.debate.dto.ai.request.InterviewerOpeningRequest;
+import passroutebackend.debate.dto.ai.response.InterviewerOpeningResponse;
+import passroutebackend.debate.dto.ai.common.PersonaPayload;
+import passroutebackend.debate.dto.ai.request.TopicDetailAiRequest;
+import passroutebackend.debate.dto.ai.response.TopicDetailAiResponse;
+import passroutebackend.debate.dto.ai.request.TopicSuggestAiRequest;
+import passroutebackend.debate.dto.ai.response.TopicSuggestAiResponse;
+import passroutebackend.debate.dto.response.PersonaVideoResponse;
 import passroutebackend.selfintro.entity.SelfIntro;
 
 import java.util.List;
@@ -73,7 +72,7 @@ import java.util.UUID;
 public class DebateService {
 
   private final DebateTransactionService transactionService;
-  private final PersonaVideoService personaVideoService;
+  private final DebateVideoService debateVideoService;
   private final DebateStateMachine stateMachine;
   private final DebateEvaluationService evaluationService;
   private final AiServerClient aiServerClient;
@@ -113,7 +112,7 @@ public class DebateService {
   }
 
   private DebatePersonaResponse toPersonaResponse(AiPersona persona) {
-    PersonaVideoResponse video = personaVideoService.getPersona(persona);
+    PersonaVideoResponse video = debateVideoService.getPersona(persona);
     return DebatePersonaResponse.builder()
         .id(persona.getId())
         .personaKey(persona.getPersonaKey())
@@ -235,8 +234,8 @@ public class DebateService {
         .sessionId(session.getId())
         .mode(session.getMode())
         .prepSeconds(session.getPrepSeconds())
-        .moderator(personaVideoService.getModerator())
-        .opponent(personaVideoService.getPersona(persona))
+        .moderator(debateVideoService.getModerator())
+        .opponent(debateVideoService.getPersona(persona))
         .build();
   }
 
@@ -308,8 +307,8 @@ public class DebateService {
             : List.of())
         .version(session.getVersion())
         .latestTurns(latestTurns)
-        .moderator(personaVideoService.getModerator())
-        .opponent(personaVideoService.getPersona(session.getAiCompetitor().getPersona()))
+        .moderator(debateVideoService.getModerator())
+        .opponent(debateVideoService.getPersona(session.getAiCompetitor().getPersona()))
         .build();
   }
 

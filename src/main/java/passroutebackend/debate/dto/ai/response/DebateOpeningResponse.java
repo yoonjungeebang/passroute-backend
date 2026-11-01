@@ -1,0 +1,18 @@
+package passroutebackend.debate.dto.ai.response;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class DebateOpeningResponse {
+
+  private String content;
+
+  // AI 서버 TTS 음성 URL (null 가능)
+  @JsonProperty("audio_url")
+  private String audioUrl;
+}
