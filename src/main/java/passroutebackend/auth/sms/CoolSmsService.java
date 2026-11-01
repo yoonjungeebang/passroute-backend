@@ -1,4 +1,4 @@
-package passroutebackend.global.sms;
+package passroutebackend.auth.sms;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
