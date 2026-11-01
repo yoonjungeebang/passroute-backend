@@ -6,9 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.request.InterviewRoomRequestDto;
-import passroutebackend.interview.dto.response.InterviewRoomResponseDto;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.interview.dto.request.InterviewRoomRequest;
+import passroutebackend.interview.dto.response.InterviewRoomResponse;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewType;
@@ -28,7 +28,7 @@ public class InterviewRoomService {
     private final ObjectProvider<CrawlerWebSocketService> crawlerWebSocketServiceProvider;
 
     @Transactional
-    public InterviewRoomResponseDto setup(Long userId, InterviewRoomRequestDto request) {
+    public InterviewRoomResponse setup(Long userId, InterviewRoomRequest request) {
         validateFormatConstraints(request);
 
         InterviewRoom room = InterviewRoom.builder()
@@ -53,7 +53,7 @@ public class InterviewRoomService {
 
         interviewRoomRepository.save(room);
         triggerCrawlIfAvailable(room.getId(), request.getCompanyName(), request.getJobPosition());
-        return new InterviewRoomResponseDto(room.getId());
+        return new InterviewRoomResponse(room.getId());
     }
 
     @Transactional
@@ -84,7 +84,7 @@ public class InterviewRoomService {
         }
     }
 
-    private void validateFormatConstraints(InterviewRoomRequestDto request) {
+    private void validateFormatConstraints(InterviewRoomRequest request) {
         if (InterviewFormat.DEBATE == request.getInterviewFormat()) {
             if (request.getAiCompetitors() == null || request.getDebateTopic() == null) {
                 throw CustomException.of(ErrorCode.INVALID_INTERVIEW_FORMAT);

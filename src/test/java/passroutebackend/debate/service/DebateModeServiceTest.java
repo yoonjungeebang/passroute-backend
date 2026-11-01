@@ -29,7 +29,7 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.client.AiServerClient;
 import passroutebackend.debate.dto.ai.common.DebateTurnEvalSummary;
 import passroutebackend.debate.dto.response.PersonaVideoResponse;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 import java.util.List;
 

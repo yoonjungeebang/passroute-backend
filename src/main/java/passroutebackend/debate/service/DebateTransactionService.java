@@ -27,7 +27,7 @@ import passroutebackend.debate.repository.DebateTopicRepository;
 import passroutebackend.debate.repository.DebateTurnRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.report.entity.ReportStatus;
 import passroutebackend.selfintro.entity.SelfIntro;
 import passroutebackend.selfintro.repository.SelfIntroRepository;

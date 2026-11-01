@@ -33,7 +33,7 @@ import passroutebackend.global.jwt.JwtTokenProvider;
 import passroutebackend.global.client.AiServerClient;
 import passroutebackend.report.dto.ai.score.ItemAvg;
 import passroutebackend.report.dto.ai.score.ItemAverages;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewQuestion;
@@ -54,7 +54,7 @@ import passroutebackend.report.service.EvaluationService;
 import passroutebackend.schedule.entity.InterviewSchedule;
 import passroutebackend.schedule.entity.ScheduleStatus;
 import passroutebackend.schedule.repository.InterviewScheduleRepository;
-import passroutebackend.selfintro.dto.request.SelfIntroRequestDto;
+import passroutebackend.selfintro.dto.request.SelfIntroRequest;
 import passroutebackend.selfintro.entity.SelfIntro;
 import passroutebackend.selfintro.repository.SelfIntroRepository;
 import passroutebackend.user.entity.AuthProvider;
@@ -638,7 +638,7 @@ class ReportControllerIntegrationTest {
     String json = String.format("""
         { "companyName": "%s", "jobPosition": "%s", "careerLevel": "JUNIOR", "items": [] }
         """, companyName, jobPosition);
-    SelfIntroRequestDto dto = objectMapper.readValue(json, SelfIntroRequestDto.class);
+    SelfIntroRequest dto = objectMapper.readValue(json, SelfIntroRequest.class);
     return selfIntroRepository.save(SelfIntro.create(user, dto));
   }
 

@@ -20,7 +20,7 @@ import passroutebackend.global.config.S3TestConfig;
 import passroutebackend.global.jwt.JwtTokenProvider;
 import passroutebackend.global.client.AiServerClient;
 import passroutebackend.interview.dto.response.FollowUpResponse;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.interview.entity.InterviewAnswer;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewQuestion;

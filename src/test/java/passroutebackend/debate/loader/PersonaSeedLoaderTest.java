@@ -16,7 +16,7 @@ import org.springframework.boot.ApplicationArguments;
 import passroutebackend.debate.entity.AiPersona;
 import passroutebackend.debate.entity.DebateStyle;
 import passroutebackend.debate.repository.AiPersonaRepository;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 
 @ExtendWith(MockitoExtension.class)
 class PersonaSeedLoaderTest {

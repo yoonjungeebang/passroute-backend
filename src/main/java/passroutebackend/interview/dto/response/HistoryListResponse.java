@@ -2,7 +2,7 @@ package passroutebackend.interview.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewType;
