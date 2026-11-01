@@ -1,6 +1,6 @@
 package passroutebackend.interview.service;
 
-import java.util.concurrent.Semaphore;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -11,6 +11,7 @@ import passroutebackend.interview.dto.generate.SessionPreparation;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class InterviewStartAsyncService {
 
   private final InterviewStartTxService txService;
@@ -18,19 +19,8 @@ public class InterviewStartAsyncService {
   private final PersonaVideoService personaVideoService;
   private final InterviewPreparationSseService sseService;
 
-  public InterviewStartAsyncService(
-      InterviewStartTxService txService,
-      AiServerClient aiServerClient,
-      PersonaVideoService personaVideoService,
-      InterviewPreparationSseService sseService) {
-    this.txService = txService;
-    this.aiServerClient = aiServerClient;
-    this.personaVideoService = personaVideoService;
-    this.sseService = sseService;
-  }
-
   @Async("interviewStartExecutor")
-  public void prepareInBackground(SessionPreparation prep, Semaphore semaphore) {
+  public void prepareInBackground(SessionPreparation prep) {
     try {
       QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.getAiRequest());
 
@@ -50,8 +40,6 @@ public class InterviewStartAsyncService {
         log.error("실패 상태 저장 오류: sessionId={}", prep.getSessionId(), ex);
       }
       sseService.sendFailed(prep.getSessionId(), "질문 생성에 실패했습니다.");
-    } finally {
-      semaphore.release();
     }
   }
 }

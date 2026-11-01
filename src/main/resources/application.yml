@@ -63,7 +63,6 @@ follow-up:
 
 interview:
   preparation:
-    max-concurrent: 3
     timeout-minutes: 3
     cleanup-interval-seconds: 60
 
