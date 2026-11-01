@@ -2,7 +2,7 @@ package passroutebackend.selfintro.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import passroutebackend.interview.entity.InterviewReadiness;
+import passroutebackend.report.entity.InterviewReadiness;
 
 @Getter
 @AllArgsConstructor

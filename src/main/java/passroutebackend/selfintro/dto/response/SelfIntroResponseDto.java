@@ -1,4 +1,4 @@
-package passroutebackend.selfintro.dto;
+package passroutebackend.selfintro.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;
