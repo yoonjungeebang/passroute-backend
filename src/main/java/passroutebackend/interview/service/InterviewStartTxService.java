@@ -19,6 +19,7 @@ import passroutebackend.interview.dto.ai.response.QuestionGenerateResponse.Quest
 import passroutebackend.interview.dto.ai.common.SelfIntroItem;
 import passroutebackend.interview.dto.ai.common.SessionPreparation;
 
+import passroutebackend.global.util.CompanyNameNormalizer;
 import passroutebackend.interview.entity.CrawlRequestStatus;
 import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
@@ -185,11 +186,11 @@ public class InterviewStartTxService {
   }
 
   private String buildJdText(String companyName) {
-    if (companyName == null || companyName.isBlank()) {
+    String normalized = CompanyNameNormalizer.normalize(companyName);
+    if (normalized.isEmpty()) {
       return null;
     }
 
-    String normalized = companyName.strip().toLowerCase();
     List<JobDescription> jdList = jobDescriptionRepository
         .findByCompanyNameNormAndSourceIn(normalized, JD_SOURCES);
 
