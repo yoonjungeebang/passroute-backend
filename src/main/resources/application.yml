@@ -61,6 +61,12 @@ follow-up:
   max-turn: 1
   timeout-seconds: 120
 
+interview:
+  preparation:
+    max-concurrent: 3
+    timeout-minutes: 3
+    cleanup-interval-seconds: 60
+
 ai:
   debate:
     timeout: 180s

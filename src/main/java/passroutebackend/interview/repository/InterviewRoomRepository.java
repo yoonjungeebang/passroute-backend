@@ -1,8 +1,10 @@
 package passroutebackend.interview.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import passroutebackend.interview.entity.InterviewFormat;
@@ -10,7 +12,13 @@ import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewType;
 import passroutebackend.interview.entity.RoomStatus;
 
+import java.util.Optional;
+
 public interface InterviewRoomRepository extends JpaRepository<InterviewRoom, Long> {
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM InterviewRoom r WHERE r.id = :roomId")
+    Optional<InterviewRoom> findByIdForUpdate(@Param("roomId") Long roomId);
 
     @Query("SELECT r FROM InterviewRoom r " +
             "WHERE r.userId = :userId AND r.status = :status " +

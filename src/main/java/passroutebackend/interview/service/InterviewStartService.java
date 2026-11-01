@@ -1,36 +1,58 @@
 package passroutebackend.interview.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.Optional;
+import java.util.concurrent.Semaphore;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
+import passroutebackend.global.exception.CustomException;
+import passroutebackend.global.exception.ErrorCode;
+import passroutebackend.global.property.InterviewPreparationProperties;
 import passroutebackend.interview.dto.generate.SessionPreparation;
 import passroutebackend.interview.dto.request.InterviewStartRequest;
 import passroutebackend.interview.dto.response.InterviewStartResponse;
-import passroutebackend.interview.dto.response.QuestionDto;
+import passroutebackend.interview.entity.InterviewSession;
 
-import java.util.List;
-
+@Slf4j
 @Service
-@RequiredArgsConstructor
 public class InterviewStartService {
 
   private final InterviewStartTxService txService;
-  private final AiServerClient aiServerClient;
-  private final PersonaVideoService personaVideoService;
+  private final InterviewStartAsyncService asyncService;
+  private final Semaphore preparationPermits;
+
+  public InterviewStartService(
+      InterviewStartTxService txService,
+      InterviewStartAsyncService asyncService,
+      InterviewPreparationProperties properties) {
+    this.txService = txService;
+    this.asyncService = asyncService;
+    this.preparationPermits = new Semaphore(properties.getMaxConcurrent());
+  }
 
   public InterviewStartResponse start(Long userId, InterviewStartRequest request) {
-    SessionPreparation prep = txService.prepareSession(request.getRoomId(), userId);
+    Optional<InterviewSession> existing = txService.findActiveSession(request.getRoomId());
+    if (existing.isPresent()) {
+      InterviewSession session = existing.get();
+      return InterviewStartResponse.existing(session.getId(), session.getStatus());
+    }
 
-    QuestionGenerateResponse aiResponse = aiServerClient.generateQuestions(prep.getAiRequest());
+    if (!preparationPermits.tryAcquire()) {
+      throw CustomException.of(ErrorCode.INTERVIEW_START_BUSY);
+    }
 
-    List<QuestionDto> questions = txService.saveQuestions(prep.getSessionId(), aiResponse.getQuestions());
+    boolean handedOff = false;
+    try {
+      SessionPreparation prep = txService.createPreparingSession(
+          request.getRoomId(), userId);
 
-    return new InterviewStartResponse(
-        prep.getSessionId(),
-        questions,
-        personaVideoService.getInterviewer(prep.getAiInterviewer())
-    );
+      asyncService.prepareInBackground(prep, preparationPermits);
+      handedOff = true;
+
+      return InterviewStartResponse.preparing(prep.getSessionId());
+    } finally {
+      if (!handedOff) {
+        preparationPermits.release();
+      }
+    }
   }
 }
