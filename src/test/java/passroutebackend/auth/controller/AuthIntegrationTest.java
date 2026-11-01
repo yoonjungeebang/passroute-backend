@@ -18,7 +18,7 @@ import passroutebackend.auth.repository.PhoneVerificationRepository;
 import passroutebackend.auth.dto.request.LoginRequest;
 import passroutebackend.auth.dto.request.SignUpRequest;
 import passroutebackend.global.config.S3TestConfig;
-import passroutebackend.global.sms.SmsService;
+import passroutebackend.auth.sms.SmsService;
 
 import java.time.LocalDateTime;
 

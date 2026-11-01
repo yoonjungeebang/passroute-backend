@@ -7,22 +7,26 @@ import passroutebackend.auth.entity.PhoneVerification;
 import passroutebackend.auth.repository.PhoneVerificationRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.global.sms.SmsService;
+import passroutebackend.auth.sms.SmsService;
 import passroutebackend.user.repository.UserRepository;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
 public class PhoneVerificationService {
 
-    // private static final SecureRandom SECURE_RANDOM = new SecureRandom(); - 임시로 인증번호 고정
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int CODE_VALIDITY_MINUTES = 3;
     private static final int VERIFIED_VALIDITY_MINUTES = 30;
 
     private final PhoneVerificationRepository phoneVerificationRepository;
     private final UserRepository userRepository;
     private final SmsService smsService;
+
+    @org.springframework.beans.factory.annotation.Value("${phone-verification.fixed-code:}")
+    private String fixedCode;
 
     @Transactional
     public void sendVerificationCode(String phone) {
@@ -43,8 +47,9 @@ public class PhoneVerificationService {
 
         phoneVerificationRepository.deleteByPhone(phone);
 
-        // String code = String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
-        String code = "123456"; // 임시로 인증번호 고정
+        String code = (fixedCode != null && !fixedCode.isBlank())
+                ? fixedCode
+                : String.format("%06d", SECURE_RANDOM.nextInt(1_000_000));
 
         PhoneVerification verification = PhoneVerification.builder()
                 .phone(phone)
