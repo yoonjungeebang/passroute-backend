@@ -7,6 +7,7 @@ import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.global.service.PersonaVideoService;
 import passroutebackend.interview.dto.WorstClipResponse;
+
 import passroutebackend.interview.dto.response.QuestionDto;
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
 import passroutebackend.interview.entity.InterviewAnswer;
@@ -52,7 +53,10 @@ public class InterviewSessionTxService {
   public void validateSessionForAnswer(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
 
-    if (session.getStatus() == SessionStatus.COMPLETED) {
+    if (session.getStatus() == SessionStatus.PREPARING) {
+      throw CustomException.of(ErrorCode.SESSION_NOT_READY);
+    }
+    if (session.getStatus() != SessionStatus.IN_PROGRESS) {
       throw CustomException.of(ErrorCode.SESSION_ALREADY_ENDED);
     }
   }
@@ -101,7 +105,10 @@ public class InterviewSessionTxService {
   public void endSession(Long sessionId, Long userId) {
     InterviewSession session = findAndValidateOwnership(sessionId, userId);
 
-    if (session.getStatus() == SessionStatus.COMPLETED) {
+    if (session.getStatus() == SessionStatus.PREPARING) {
+      throw CustomException.of(ErrorCode.SESSION_NOT_READY);
+    }
+    if (session.getStatus() != SessionStatus.IN_PROGRESS) {
       throw CustomException.of(ErrorCode.SESSION_ALREADY_ENDED);
     }
 
