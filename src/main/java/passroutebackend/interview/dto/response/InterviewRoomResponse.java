@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class InterviewRoomResponseDto {
+public class InterviewRoomResponse {
 
     private Long roomId;
 }

@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import passroutebackend.interview.entity.Difficulty;
+import passroutebackend.global.type.Difficulty;
 import passroutebackend.interview.entity.InterviewFormat;
 import passroutebackend.interview.entity.InterviewType;
 
 @Getter
-public class InterviewRoomRequestDto {
+public class InterviewRoomRequest {
 
     private Long siId;
 

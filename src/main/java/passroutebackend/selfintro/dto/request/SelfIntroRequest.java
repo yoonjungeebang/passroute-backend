@@ -13,7 +13,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
-public class SelfIntroRequestDto {
+public class SelfIntroRequest {
 
     @NotBlank(message = "기업명은 필수입니다.")
     private String companyName;

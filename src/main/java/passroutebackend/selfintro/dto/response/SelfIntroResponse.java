@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @Builder
-public class SelfIntroResponseDto {
+public class SelfIntroResponse {
 
     private Long id;
     private String companyName;
@@ -38,8 +38,8 @@ public class SelfIntroResponseDto {
         private int orderNum;
     }
 
-    public static SelfIntroResponseDto from(SelfIntro entity) {
-        return SelfIntroResponseDto.builder()
+    public static SelfIntroResponse from(SelfIntro entity) {
+        return SelfIntroResponse.builder()
                 .id(entity.getId())
                 .companyName(entity.getCompanyName())
                 .jobPosition(entity.getJobPosition())

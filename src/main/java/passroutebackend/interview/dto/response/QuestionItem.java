@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class QuestionDto {
+public class QuestionItem {
 
   private Long questionId;
   private String questionText;

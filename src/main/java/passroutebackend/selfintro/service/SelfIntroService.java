@@ -8,8 +8,8 @@ import passroutebackend.global.exception.ErrorCode;
 import passroutebackend.schedule.entity.InterviewSchedule;
 import passroutebackend.schedule.entity.ScheduleStatus;
 import passroutebackend.schedule.repository.InterviewScheduleRepository;
-import passroutebackend.selfintro.dto.request.SelfIntroRequestDto;
-import passroutebackend.selfintro.dto.response.SelfIntroResponseDto;
+import passroutebackend.selfintro.dto.request.SelfIntroRequest;
+import passroutebackend.selfintro.dto.response.SelfIntroResponse;
 import passroutebackend.selfintro.entity.SelfIntro;
 import passroutebackend.selfintro.entity.SelfIntroItem;
 import passroutebackend.selfintro.repository.SelfIntroRepository;
@@ -34,7 +34,7 @@ public class SelfIntroService {
 
     // ── 목록 조회 ─────────────────────────────────────────────
 
-    public List<SelfIntroResponseDto> getList(Long userId, String filter) {
+    public List<SelfIntroResponse> getList(Long userId, String filter) {
         User user = getUser(userId);
 
         List<SelfIntro> list = switch (filter) {
@@ -52,22 +52,22 @@ public class SelfIntroService {
         };
 
         return list.stream()
-                .map(SelfIntroResponseDto::from)
+                .map(SelfIntroResponse::from)
                 .collect(Collectors.toList());
     }
 
     // ── 단건 조회 ─────────────────────────────────────────────
 
-    public SelfIntroResponseDto getOne(Long userId, Long selfIntroId) {
+    public SelfIntroResponse getOne(Long userId, Long selfIntroId) {
         User user = getUser(userId);
         SelfIntro selfIntro = getSelfIntro(selfIntroId, user);
-        return SelfIntroResponseDto.from(selfIntro);
+        return SelfIntroResponse.from(selfIntro);
     }
 
     // ── 생성 ─────────────────────────────────────────────────
 
     @Transactional
-    public SelfIntroResponseDto create(Long userId, SelfIntroRequestDto dto) {
+    public SelfIntroResponse create(Long userId, SelfIntroRequest dto) {
         User user = getUser(userId);
         SelfIntro selfIntro = SelfIntro.create(user, dto);
         selfIntro.updateItems(buildItems(selfIntro, dto.getItems()));
@@ -75,19 +75,19 @@ public class SelfIntroService {
         if (dto.getInterviewDate() != null) {
             createPendingSchedule(userId, selfIntro, dto.getInterviewDate(), dto.getInterviewTime());
         }
-        return SelfIntroResponseDto.from(selfIntro);
+        return SelfIntroResponse.from(selfIntro);
     }
 
     // ── 수정 ─────────────────────────────────────────────────
 
     @Transactional
-    public SelfIntroResponseDto update(Long userId, Long selfIntroId, SelfIntroRequestDto dto) {
+    public SelfIntroResponse update(Long userId, Long selfIntroId, SelfIntroRequest dto) {
         User user = getUser(userId);
         SelfIntro selfIntro = getSelfIntro(selfIntroId, user);
         selfIntro.update(dto);
         selfIntro.updateItems(buildItems(selfIntro, dto.getItems()));
         syncPendingSchedule(userId, selfIntro, dto.getInterviewDate(), dto.getInterviewTime());
-        return SelfIntroResponseDto.from(selfIntro);
+        return SelfIntroResponse.from(selfIntro);
     }
 
     // ── 삭제 (소프트 딜리트) ──────────────────────────────────
@@ -112,10 +112,10 @@ public class SelfIntroService {
     }
 
     private List<SelfIntroItem> buildItems(SelfIntro selfIntro,
-                                           List<SelfIntroRequestDto.ItemDto> dtos) {
+                                           List<SelfIntroRequest.ItemDto> dtos) {
         List<SelfIntroItem> items = new ArrayList<>();
         for (int i = 0; i < dtos.size(); i++) {
-            SelfIntroRequestDto.ItemDto dto = dtos.get(i);
+            SelfIntroRequest.ItemDto dto = dtos.get(i);
             items.add(SelfIntroItem.create(selfIntro, dto.getQuestionText(), dto.getAnswerText(), i));
         }
         return items;

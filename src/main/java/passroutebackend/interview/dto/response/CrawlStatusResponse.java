@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class CrawlStatusResponseDto {
+public class CrawlStatusResponse {
 
     private String status;
 }

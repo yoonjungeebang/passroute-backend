@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import passroutebackend.interview.dto.response.CrawlStatusResponseDto;
+import passroutebackend.interview.dto.response.CrawlStatusResponse;
 import passroutebackend.interview.entity.CrawlRequestStatus;
 import passroutebackend.interview.entity.RoomCrawlRequest;
 import passroutebackend.interview.repository.RoomCrawlRequestRepository;
@@ -56,7 +56,7 @@ public class CrawlStatusService {
 
         SseEmitter emitter = emitters.get(roomId);
         if (emitter != null) {
-            sendEvent(emitter, roomId, new CrawlStatusResponseDto(status.name()));
+            sendEvent(emitter, roomId, new CrawlStatusResponse(status.name()));
             if (isTerminal(status)) {
                 emitter.complete();
                 emitters.remove(roomId);
@@ -74,7 +74,7 @@ public class CrawlStatusService {
             CrawlRequestStatus status = request.getStatus();
             emitter.send(SseEmitter.event()
                     .name("crawl-status")
-                    .data(new CrawlStatusResponseDto(status.name())));
+                    .data(new CrawlStatusResponse(status.name())));
             if (isTerminal(status)) {
                 emitter.complete();
                 emitters.remove(roomId);
@@ -86,7 +86,7 @@ public class CrawlStatusService {
         }
     }
 
-    private void sendEvent(SseEmitter emitter, Long roomId, CrawlStatusResponseDto data) {
+    private void sendEvent(SseEmitter emitter, Long roomId, CrawlStatusResponse data) {
         try {
             emitter.send(SseEmitter.event().name("crawl-status").data(data));
         } catch (Exception e) {
