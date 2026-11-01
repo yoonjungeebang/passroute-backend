@@ -1,8 +1,8 @@
-package passroutebackend.interview.service;
+package passroutebackend.report.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import passroutebackend.interview.dto.evaluation.LlmScores;
+import passroutebackend.report.dto.ai.score.LlmScores;
 
 @Getter
 @AllArgsConstructor

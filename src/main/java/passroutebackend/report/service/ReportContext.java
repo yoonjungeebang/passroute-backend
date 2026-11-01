@@ -1,4 +1,4 @@
-package passroutebackend.interview.service;
+package passroutebackend.report.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

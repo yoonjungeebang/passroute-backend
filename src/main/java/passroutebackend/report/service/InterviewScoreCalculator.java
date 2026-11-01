@@ -1,4 +1,4 @@
-package passroutebackend.interview.service;
+package passroutebackend.report.service;
 
 import org.springframework.stereotype.Component;
 import passroutebackend.interview.entity.FaceAnalysis;

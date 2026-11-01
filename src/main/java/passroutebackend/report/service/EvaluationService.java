@@ -1,4 +1,4 @@
-package passroutebackend.interview.service;
+package passroutebackend.report.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,15 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.EvaluationContext;
-import passroutebackend.interview.dto.VoiceData;
-import passroutebackend.interview.dto.evaluation.LlmScoreItem;
-import passroutebackend.interview.dto.evaluation.LlmScores;
-import passroutebackend.interview.dto.evaluation.QuestionEvaluationRequest;
-import passroutebackend.interview.dto.evaluation.QuestionEvaluationResponse;
-import passroutebackend.interview.dto.evaluation.StarEvaluationRequest;
-import passroutebackend.interview.dto.evaluation.StarEvaluationResponse;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.report.dto.EvaluationContext;
+import passroutebackend.interview.dto.request.VoiceData;
+import passroutebackend.report.dto.ai.score.LlmScoreItem;
+import passroutebackend.report.dto.ai.score.LlmScores;
+import passroutebackend.report.dto.ai.request.QuestionEvaluationRequest;
+import passroutebackend.report.dto.ai.response.QuestionEvaluationResponse;
+import passroutebackend.report.dto.ai.request.StarEvaluationRequest;
+import passroutebackend.report.dto.ai.response.StarEvaluationResponse;
 import passroutebackend.interview.entity.InterviewType;
 
 import java.util.List;
