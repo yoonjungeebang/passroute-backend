@@ -1,6 +1,7 @@
-package passroutebackend.interview.dto.generate;
+package passroutebackend.interview.dto.ai.common;
 
 import lombok.AllArgsConstructor;
+import passroutebackend.interview.dto.ai.request.QuestionGenerateRequest;
 import lombok.Getter;
 
 @Getter

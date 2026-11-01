@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import passroutebackend.global.ApiResponse;
-import passroutebackend.interview.dto.AnswerSubmitRequest;
-import passroutebackend.interview.dto.ClipUploadUrlResponse;
-import passroutebackend.interview.dto.SaveWorstClipRequest;
-import passroutebackend.interview.dto.WorstClipResponse;
+import passroutebackend.interview.dto.request.AnswerSubmitRequest;
+import passroutebackend.interview.dto.response.ClipUploadUrlResponse;
+import passroutebackend.interview.dto.request.SaveWorstClipRequest;
+import passroutebackend.interview.dto.response.WorstClipResponse;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;

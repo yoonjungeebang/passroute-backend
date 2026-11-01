@@ -1,4 +1,4 @@
-package passroutebackend.interview.dto;
+package passroutebackend.interview.dto.ai.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

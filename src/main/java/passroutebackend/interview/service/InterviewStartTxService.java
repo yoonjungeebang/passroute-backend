@@ -11,10 +11,10 @@ import passroutebackend.document.repository.DocumentAnalysisRepository;
 import passroutebackend.document.repository.DocumentRepository;
 import passroutebackend.global.exception.CustomException;
 import passroutebackend.global.exception.ErrorCode;
-import passroutebackend.interview.dto.generate.QuestionGenerateRequest;
-import passroutebackend.interview.dto.generate.QuestionGenerateResponse.QuestionItem;
-import passroutebackend.interview.dto.generate.SelfIntroItemDto;
-import passroutebackend.interview.dto.generate.SessionPreparation;
+import passroutebackend.interview.dto.ai.request.QuestionGenerateRequest;
+import passroutebackend.interview.dto.ai.response.QuestionGenerateResponse.QuestionItem;
+import passroutebackend.interview.dto.ai.common.SelfIntroItemDto;
+import passroutebackend.interview.dto.ai.common.SessionPreparation;
 
 import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;

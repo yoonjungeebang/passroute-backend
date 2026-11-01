@@ -2,14 +2,15 @@ package passroutebackend.interview.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import passroutebackend.interview.dto.AnswerSubmitRequest;
-import passroutebackend.interview.dto.AnswerSubmitResponse;
-import passroutebackend.interview.dto.ClipUploadUrlResponse;
-import passroutebackend.interview.dto.SaveWorstClipRequest;
-import passroutebackend.interview.dto.WorstClipResponse;
+import passroutebackend.interview.dto.request.AnswerSubmitRequest;
+import passroutebackend.interview.dto.response.AnswerSubmitResponse;
+import passroutebackend.interview.dto.response.ClipUploadUrlResponse;
+import passroutebackend.interview.dto.request.SaveWorstClipRequest;
+import passroutebackend.interview.dto.response.WorstClipResponse;
 import passroutebackend.interview.dto.response.AnswerProgressResponse;
 
 import passroutebackend.interview.dto.response.SessionQuestionListResponse;
+import passroutebackend.report.service.ReportService;
 
 @Service
 @RequiredArgsConstructor

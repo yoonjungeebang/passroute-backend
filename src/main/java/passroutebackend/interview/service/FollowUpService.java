@@ -2,12 +2,13 @@ package passroutebackend.interview.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.AnswerSubmitRequest;
-import passroutebackend.interview.dto.AnswerSubmitResponse;
-import passroutebackend.interview.dto.FollowUpRequest;
-import passroutebackend.interview.dto.FollowUpResponse;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.interview.dto.request.AnswerSubmitRequest;
+import passroutebackend.interview.dto.response.AnswerSubmitResponse;
+import passroutebackend.interview.dto.request.FollowUpRequest;
+import passroutebackend.interview.dto.response.FollowUpResponse;
 import passroutebackend.interview.entity.InterviewQuestion;
+import passroutebackend.report.service.EvaluationService;
 
 @Service
 @RequiredArgsConstructor

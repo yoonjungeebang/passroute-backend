@@ -1,4 +1,4 @@
-package passroutebackend.interview.dto.generate;
+package passroutebackend.interview.dto.ai.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;

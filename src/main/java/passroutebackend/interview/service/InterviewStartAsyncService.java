@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import passroutebackend.global.service.PersonaVideoService;
-import passroutebackend.interview.client.AiServerClient;
-import passroutebackend.interview.dto.generate.QuestionGenerateResponse;
-import passroutebackend.interview.dto.generate.SessionPreparation;
+import passroutebackend.global.client.AiServerClient;
+import passroutebackend.interview.dto.ai.response.QuestionGenerateResponse;
+import passroutebackend.interview.dto.ai.common.SessionPreparation;
 
 @Slf4j
 @Service
@@ -16,7 +15,7 @@ public class InterviewStartAsyncService {
 
   private final InterviewStartTxService txService;
   private final AiServerClient aiServerClient;
-  private final PersonaVideoService personaVideoService;
+  private final InterviewVideoService interviewVideoService;
   private final InterviewPreparationSseService sseService;
 
   @Async("interviewStartExecutor")
@@ -28,7 +27,7 @@ public class InterviewStartAsyncService {
           prep.getSessionId(), aiResponse.getQuestions());
 
       if (activated) {
-        sseService.sendReady(prep.getSessionId(), personaVideoService.getInterviewer(prep.getAiInterviewer()));
+        sseService.sendReady(prep.getSessionId(), interviewVideoService.getInterviewer(prep.getAiInterviewer()));
       } else {
         sseService.sendFailed(prep.getSessionId(), "세션 상태 전이에 실패했습니다.");
       }

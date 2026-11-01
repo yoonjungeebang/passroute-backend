@@ -1,4 +1,4 @@
-package passroutebackend.interview.dto;
+package passroutebackend.interview.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
