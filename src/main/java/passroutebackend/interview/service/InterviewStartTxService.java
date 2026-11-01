@@ -24,11 +24,13 @@ import passroutebackend.interview.entity.CsTopic;
 import passroutebackend.interview.entity.InterviewQuestion;
 import passroutebackend.interview.entity.InterviewRoom;
 import passroutebackend.interview.entity.InterviewSession;
+import passroutebackend.interview.entity.JobDescription;
 import passroutebackend.interview.entity.RoomCrawlRequest;
 import passroutebackend.interview.entity.SessionStatus;
 import passroutebackend.interview.repository.InterviewQuestionRepository;
 import passroutebackend.interview.repository.InterviewRoomRepository;
 import passroutebackend.interview.repository.InterviewSessionRepository;
+import passroutebackend.interview.repository.JobDescriptionRepository;
 import passroutebackend.interview.repository.RoomCrawlRequestRepository;
 import passroutebackend.selfintro.repository.SelfIntroRepository;
 
@@ -46,6 +48,7 @@ public class InterviewStartTxService {
   private final InterviewSessionRepository interviewSessionRepository;
   private final InterviewQuestionRepository interviewQuestionRepository;
   private final RoomCrawlRequestRepository roomCrawlRequestRepository;
+  private final JobDescriptionRepository jobDescriptionRepository;
   private final SelfIntroRepository selfIntroRepository;
   private final DocumentRepository documentRepository;
   private final DocumentAnalysisRepository documentAnalysisRepository;
@@ -94,7 +97,7 @@ public class InterviewStartTxService {
         .reduce((a, b) -> a + "\n\n" + b)
         .orElse("");
 
-    CrawledData crawledData = buildCrawledData(roomId);
+    CrawledData crawledData = buildCrawledData(roomId, room.getCompanyName());
 
     QuestionGenerateRequest aiRequest = new QuestionGenerateRequest(
         userId.toString(),
@@ -152,30 +155,60 @@ public class InterviewStartTxService {
     });
   }
 
-  private CrawledData buildCrawledData(Long roomId) {
+  private static final List<String> JD_SOURCES = List.of("jumpit", "programmers", "rallit");
+
+  private CrawledData buildCrawledData(Long roomId, String companyName) {
+    String news = null;
+    String techBlog = null;
+
     RoomCrawlRequest crawlRequest = roomCrawlRequestRepository.findByRoomId(roomId)
         .orElse(null);
 
-    if (crawlRequest == null
-        || crawlRequest.getStatus() != CrawlRequestStatus.COMPLETED
-        || crawlRequest.getResultPayload() == null) {
-      return null;
-    }
-
-    try {
-      JsonNode root = objectMapper.readTree(crawlRequest.getResultPayload());
-
-      String news = joinArrayItems(root.path("news"), "title", "description");
-      String techBlog = joinArrayItems(root.path("tech_articles"), "title", "content");
-
-      if (news == null && techBlog == null) {
-        return null;
+    if (crawlRequest != null
+        && crawlRequest.getStatus() == CrawlRequestStatus.COMPLETED
+        && crawlRequest.getResultPayload() != null) {
+      try {
+        JsonNode root = objectMapper.readTree(crawlRequest.getResultPayload());
+        news = joinArrayItems(root.path("news"), "title", "description");
+        techBlog = joinArrayItems(root.path("tech_articles"), "title", "content");
+      } catch (Exception e) {
+        log.warn("크롤링 결과 파싱 실패: roomId={}", roomId, e);
       }
-      return new CrawledData(techBlog, null, news);
-    } catch (Exception e) {
-      log.warn("크롤링 결과 파싱 실패: roomId={}", roomId, e);
+    }
+
+    String jd = buildJdText(companyName);
+
+    if (news == null && techBlog == null && jd == null) {
       return null;
     }
+    return new CrawledData(techBlog, jd, news);
+  }
+
+  private String buildJdText(String companyName) {
+    if (companyName == null || companyName.isBlank()) {
+      return null;
+    }
+
+    String normalized = companyName.strip().toLowerCase();
+    List<JobDescription> jdList = jobDescriptionRepository
+        .findByCompanyNameNormAndSourceIn(normalized, JD_SOURCES);
+
+    if (jdList.isEmpty()) {
+      return null;
+    }
+
+    StringJoiner joiner = new StringJoiner("\n\n");
+    for (JobDescription jd : jdList) {
+      String title = jd.getTitle();
+      String document = jd.getDocument();
+      if (title != null && !title.isEmpty()) {
+        joiner.add(title + "\n" + (document != null ? document : ""));
+      } else if (document != null && !document.isEmpty()) {
+        joiner.add(document);
+      }
+    }
+    String result = joiner.toString();
+    return result.isEmpty() ? null : result;
   }
 
   private String joinArrayItems(JsonNode arrayNode, String titleField, String bodyField) {
