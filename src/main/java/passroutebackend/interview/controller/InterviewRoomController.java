@@ -64,6 +64,10 @@ public class InterviewRoomController {
     }
 
     @Operation(summary = "크롤링 상태 구독", description = "면접방의 크롤링 수집 상태를 SSE로 실시간 수신합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "면접 방을 찾을 수 없음")
+    })
     @GetMapping(value = "/rooms/{roomId}/crawl-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter crawlEvents(@PathVariable Long roomId) {
         return crawlStatusService.subscribe(roomId);

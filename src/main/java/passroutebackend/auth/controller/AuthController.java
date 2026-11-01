@@ -99,6 +99,11 @@ public class AuthController {
     }
 
     @Operation(summary = "아이디(이메일) 찾기 - 인증번호 발송", description = "가입된 휴대폰으로 인증번호를 발송합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가입되지 않은 휴대폰번호", content = @Content(schema = @Schema(hidden = true)))
+    })
     @SecurityRequirements
     @PostMapping("/find-email/send")
     public ResponseEntity<ApiResponse<Void>> sendFindEmailCode(@Valid @RequestBody PhoneSendRequest request) {
@@ -107,6 +112,10 @@ public class AuthController {
     }
 
     @Operation(summary = "아이디(이메일) 찾기 - 인증 확인", description = "인증번호 확인 후 마스킹된 이메일을 반환합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "이메일 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 만료", content = @Content(schema = @Schema(hidden = true)))
+    })
     @SecurityRequirements
     @PostMapping("/find-email/confirm")
     public ResponseEntity<ApiResponse<FindEmailResponse>> confirmFindEmail(@Valid @RequestBody PhoneVerifyRequest request) {
@@ -115,6 +124,11 @@ public class AuthController {
     }
 
     @Operation(summary = "비밀번호 찾기 - 인증번호 발송", description = "가입된 휴대폰으로 비밀번호 재설정 인증번호를 발송합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류", content = @Content(schema = @Schema(hidden = true))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가입되지 않은 휴대폰번호", content = @Content(schema = @Schema(hidden = true)))
+    })
     @SecurityRequirements
     @PostMapping("/find-password/send")
     public ResponseEntity<ApiResponse<Void>> sendPasswordResetCode(@Valid @RequestBody PhoneSendRequest request) {
@@ -123,6 +137,10 @@ public class AuthController {
     }
 
     @Operation(summary = "비밀번호 재설정", description = "인증번호 확인 후 새 비밀번호로 변경합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 만료", content = @Content(schema = @Schema(hidden = true)))
+    })
     @SecurityRequirements
     @PostMapping("/find-password/reset")
     public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody PasswordResetRequest request) {

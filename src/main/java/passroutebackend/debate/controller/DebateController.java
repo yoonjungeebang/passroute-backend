@@ -1,6 +1,7 @@
 package passroutebackend.debate.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,9 @@ public class DebateController {
   private final DebateReportService reportService;
 
   @Operation(summary = "토론 주제 목록 조회")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+  })
   @GetMapping("/topics")
   public ResponseEntity<ApiResponse<List<DebateTopicResponse>>> listTopics(
       @RequestParam(required = false) TopicCategory category) {
@@ -51,6 +55,10 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 주제 후보 추천 (크롤링 뉴스 기반)")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "추천 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류")
+  })
   @PostMapping("/topics/suggest")
   public ResponseEntity<ApiResponse<DebateTopicSuggestResponse>> suggestTopics(
       @AuthenticationPrincipal Long userId,
@@ -59,6 +67,10 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 주제 생성 + 저장 (선택 후보 상세화 → topicId 발급)")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "주제 생성 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류")
+  })
   @PostMapping("/topics/generate")
   public ResponseEntity<ApiResponse<DebateTopicResponse>> generateTopic(
       @AuthenticationPrincipal Long userId,
@@ -68,12 +80,20 @@ public class DebateController {
   }
 
   @Operation(summary = "AI 페르소나 목록 조회")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+  })
   @GetMapping("/personas")
   public ResponseEntity<ApiResponse<List<DebatePersonaResponse>>> listPersonas() {
     return ResponseEntity.ok(ApiResponse.success(debateService.listPersonas()));
   }
 
   @Operation(summary = "토론 세션 생성")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "세션 생성 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력값 오류"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "주제 또는 페르소나를 찾을 수 없음")
+  })
   @PostMapping("/sessions")
   public ResponseEntity<ApiResponse<DebateSessionCreateResponse>> createSession(
       @AuthenticationPrincipal Long userId,
@@ -83,6 +103,11 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 시작 (면접관 오프닝 비동기 생성)")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "토론 시작 요청 수락"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "이미 시작된 세션")
+  })
   @PostMapping("/{sessionId}/start")
   public ResponseEntity<ApiResponse<Void>> startSession(
       @AuthenticationPrincipal Long userId,
@@ -93,6 +118,11 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 상태 + 턴 목록 조회 (폴링)")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "상태 조회 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @GetMapping("/{sessionId}/state")
   public ResponseEntity<ApiResponse<DebateStateResponse>> getState(
       @AuthenticationPrincipal Long userId,
@@ -101,6 +131,11 @@ public class DebateController {
   }
 
   @Operation(summary = "사용자 발화 제출")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "발화 제출 수락"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 상태에서의 제출"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @PostMapping("/{sessionId}/turn")
   public ResponseEntity<ApiResponse<Void>> submitTurn(
       @AuthenticationPrincipal Long userId,
@@ -112,6 +147,11 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 분기 선택 (반박 한 번 더 / 토론 마무리)")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "선택 반영 수락"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 상태에서의 선택"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @PostMapping("/{sessionId}/branch")
   public ResponseEntity<ApiResponse<Void>> chooseBranch(
       @AuthenticationPrincipal Long userId,
@@ -123,6 +163,11 @@ public class DebateController {
   }
 
   @Operation(summary = "토론 종료 + 리포트 비동기 생성")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "202", description = "종료 및 리포트 생성 요청 수락"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 종료된 세션"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @PostMapping("/{sessionId}/end")
   public ResponseEntity<ApiResponse<Void>> endSession(
       @AuthenticationPrincipal Long userId,
@@ -134,6 +179,11 @@ public class DebateController {
   }
 
   @Operation(summary = "영상 클립 S3 업로드용 presigned URL 발급")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 발급 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @GetMapping("/{sessionId}/clip-upload-url")
   public ResponseEntity<ApiResponse<DebateClipUploadUrlResponse>> getClipUploadUrl(
       @AuthenticationPrincipal Long userId,
@@ -143,6 +193,11 @@ public class DebateController {
   }
 
   @Operation(summary = "가장 못했던 구간 클립 저장")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "저장 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션 또는 질문을 찾을 수 없음")
+  })
   @PostMapping("/{sessionId}/worst-clip")
   public ResponseEntity<ApiResponse<Void>> saveWorstClip(
       @AuthenticationPrincipal Long userId,
@@ -153,6 +208,11 @@ public class DebateController {
   }
 
   @Operation(summary = "가장 못했던 구간 클립 조회")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @GetMapping("/{sessionId}/worst-clip")
   public ResponseEntity<ApiResponse<DebateWorstClipResponse>> getWorstClip(
       @AuthenticationPrincipal Long userId,
