@@ -51,7 +51,7 @@ cors:
 swagger:
   server-url:
     local: http://localhost:8080/api
-    prod: https://pass-route.com/api
+    prod: https://passroute.site/api
 
 oauth2:
   redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/auth/callback}

@@ -36,7 +36,7 @@ logging:
 swagger:
   server-url:
     local: ${SWAGGER_LOCAL_URL:http://localhost:8080/api}
-    prod: ${SWAGGER_PROD_URL:https://pass-route.com/api}
+    prod: ${SWAGGER_PROD_URL:https://passroute.site/api}
 
 sms:
   coolsms:
