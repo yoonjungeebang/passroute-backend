@@ -1,20 +1,31 @@
 package passroutebackend.report.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@Schema(description = "리포트 목록 항목")
 @Getter
 @AllArgsConstructor
 public class ReportListItem {
 
-  private String reportType;        // "interview" | "debate"
-  private Long domainId;            // sessionId
-  private String interviewType;     // "technical" | "personality" | null
-  private String companyName;       // 토론은 null
-  private String jobPosition;       // 토론은 topic.title
-  private LocalDateTime date;       // session.endedAt
+  @Schema(description = "리포트 타입", example = "interview")
+  private String reportType;
+  @Schema(description = "세션 ID")
+  private Long domainId;
+  @Schema(description = "면접 유형")
+  private String interviewType;
+  @Schema(description = "기업명")
+  private String companyName;
+  @Schema(description = "직무")
+  private String jobPosition;
+  @Schema(description = "면접 일시")
+  private LocalDateTime date;
+  @Schema(description = "총점")
   private double totalScore;
-  private String feedbackPreview;   // overall 앞 50자
-  private Long selfIntroId;         // 토론은 null
+  @Schema(description = "피드백 미리보기")
+  private String feedbackPreview;
+  @Schema(description = "자소서 ID")
+  private Long selfIntroId;
 }

@@ -39,6 +39,11 @@ public class InterviewSessionController {
 
   @Operation(summary = "면접 준비 상태 SSE 구독", description = "면접 질문 준비 완료/실패를 실시간으로 수신합니다. "
       + "30초 간격 heartbeat를 포함하며, 준비 완료 시 interviewer 정보와 함께 전달됩니다.")
+  @ApiResponses({
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "접근 권한 없음"),
+      @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "세션을 찾을 수 없음")
+  })
   @GetMapping(value = "/{sessionId}/preparation-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter preparationEvents(
       @AuthenticationPrincipal Long userId,

@@ -1,19 +1,26 @@
 package passroutebackend.global;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 import passroutebackend.global.exception.ErrorCode;
 
+@Schema(description = "공통 API 응답 래퍼")
 @Getter
 public class ApiResponse<T> {
 
   public static final String STATUS_SUCCESS = "success";
   public static final String STATUS_ERROR = "error";
 
+  @Schema(description = "응답 상태", example = "success")
   private final String status;
+  @Schema(description = "HTTP 상태 코드", example = "200")
   private final int httpStatus;
+  @Schema(description = "응답 코드", example = "SUCCESS")
   private final String code;
+  @Schema(description = "응답 메시지", example = "요청이 성공했습니다.")
   private final String message;
+  @Schema(description = "응답 데이터")
   private final T data;
 
   private ApiResponse(String status, int httpStatus, String code, String message, T data) {
